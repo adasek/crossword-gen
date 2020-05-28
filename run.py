@@ -20,7 +20,8 @@ class Cross:
             raise Exception("Bad types")
 
         # Compute coordinates
-        cross_coordinates = set(self.word_space_vertical.spaces()).intersection(set(self.word_space_horizontal.spaces()))
+        cross_coordinates = set(self.word_space_vertical.spaces()).intersection(
+            set(self.word_space_horizontal.spaces()))
         if len(cross) > 1:
             raise Exception("Non Euclidian crossword")
         elif len(cross) == 0:
@@ -42,7 +43,8 @@ class Cross:
         return self.coordinates == other.coordinates
 
     def __str__(self):
-        return f"Cross at {self.coordinates} between {self.word_horizontal} and {self.word_vertical}"
+        return f"Cross at {self.coordinates} between {self.word_space_horizontal} and {self.word_space_vertical}"
+
 
 class Word:
     def __init__(self, word_string):
@@ -63,7 +65,6 @@ class Word:
             raise StopIteration
 
     def __getitem__(self, index):
-        print(f"Getting {index} from {self.word}")
         return self.word[index]
 
     def __str__(self):
@@ -76,6 +77,10 @@ class Mask(object):
 
     def __init__(self, spaces, crosses):
         super(Mask, self).__setattr__("length", len(spaces))
+        # print(f"Creating mask of {len(spaces)} with {spaces} and:")
+        # for cross in crosses:
+        #    print(f"  {cross}")
+
         mask_list = []
         for space in spaces:
             space_cross = [cross for cross in crosses if cross.coordinates == space]
@@ -106,7 +111,6 @@ class Mask(object):
                 mask_string += "."
         return mask_string
 
-
     # Returns relevant chars
     def apply_word(self, word):
         applied_str = ''
@@ -127,6 +131,8 @@ class WordSpace:
 
     def occupy(self, word):
         if word.length != self.length:
+            print(self)
+            print(word)
             raise Exception("Length of word does not correspond with WordSpace")
         self.occupied_by = word
 
@@ -134,10 +140,10 @@ class WordSpace:
     def spaces(self):
         spaces = list()
         if self.type == 'horizontal':
-            for x in range(self.start[0], self.start[0] + length):
+            for x in range(self.start[0], self.start[0] + self.length):
                 spaces.append((x, self.start[1]))
         elif self.type == 'vertical':
-            for y in range(self.start[1], self.start[1] + length):
+            for y in range(self.start[1], self.start[1] + self.length):
                 spaces.append((self.start[0], y))
         else:
             raise Exception("Unknown WordSpace type")
@@ -152,14 +158,14 @@ class WordSpace:
         self.crosses.append(new_cross)
 
     def mask(self):
-        spaces = self.spaces()
-        return Mask(spaces, self.crosses)
+        return Mask(self.spaces(), self.crosses)
 
     def my_char_on_cross(self, cross):
         return self.occupied_by[self.index_of_cross(cross)]
 
+    # Zero indexed!
     def index_of_cross(self, cross):
-        for index, space in enumerate(self.spaces(), start=1):
+        for index, space in enumerate(self.spaces(), start=0):
             if cross.coordinates == space:
                 return index
         raise Exception("Cross not found")
@@ -182,11 +188,12 @@ class WordSpace:
             describing_string += f" occupied by {self.occupied_by}"
         return describing_string
 
+
 # Load words
 words = list()
 with open('wordlist.dat', 'r') as fp:
     for word_string in fp.readlines():
-        words.append(Word(word_string))
+        words.append(Word(re.sub(r'[\r\n\t]*', '', word_string)))
 
 # Structure words #1: do split by lengths:
 words_by_length = {}
@@ -224,7 +231,7 @@ for x in range(1, 1 + max([len(line) for line in crossword])):
     for y, line in enumerate(crossword, start=1):
         char = 'X'
         try:
-            char = line[x]
+            char = line[x - 1]
         except IndexError:
             char = 'X'
         word_length = y - in_word
@@ -238,9 +245,6 @@ for x in range(1, 1 + max([len(line) for line in crossword])):
     # flush last word
     if in_word >= 0:
         word_spaces.append(WordSpace((x, in_word), len(crossword) - in_word + 1, 'vertical'))
-
-for word_space in word_spaces:
-    print(word_space)
 
 # Compute all crosses between word_spaces - O(N^2) can be improved
 for word_space_pair in itertools.product(word_spaces, repeat=2):
@@ -260,6 +264,10 @@ for word_space_pair in itertools.product(word_spaces, repeat=2):
 word_spaces_vertical = [w for w in word_spaces if w.type == 'vertical']
 word_spaces_horizontal = [w for w in word_spaces if w.type == 'horizontal']
 
+# for word_space in word_spaces:
+#    print(word_space)
+#    print(word_space.mask())
+
 # Structure words #2: split by all known masks
 # Currently only masks of word_spaces_horizontal are needed
 # Example usage: words_by_masks['..XX.']['ab'] =>
@@ -268,49 +276,61 @@ possible_masks = set([word_space.mask() for word_space in word_spaces])
 
 for word in words:
     for mask in possible_masks:
-        chars = mask.apply_word(word)
-        if mask not in words_by_masks:
-            words_by_masks[mask] = {}
-        if chars not in words_by_masks[mask]:
-            words_by_masks[mask][chars] = set()
-        words_by_masks[mask][chars].add(word)
+        if mask.length == word.length:
+            chars = mask.apply_word(word)
+            if mask not in words_by_masks:
+                words_by_masks[mask] = {}
+            if chars not in words_by_masks[mask]:
+                words_by_masks[mask][chars] = set()
+            words_by_masks[mask][chars].add(word)
 
 print("Data parsing complete.")
 
 print("--------")
-print(len(word_spaces))
 
-# Fill verticals randomly
-for word_space in word_spaces_vertical:
-    word_space.occupy(random.choice(words_by_length[word_space.length]))
+loop_counter = 1
+while True:
+    try:
+        for word_space in word_spaces_vertical:
+            word_space.occupy(random.choice(words_by_length[word_space.length]))
 
-print("Filed verticals randomly")
+        # And get used our data search structure for the horizontal words
+        for word_space in word_spaces_horizontal:
+            mask = word_space.mask()
+            required_chars = word_space.apply_other_words()
+            try:
+                candidates = list(words_by_masks[mask][required_chars])
+            except KeyError:
+                raise Exception('No candidates')
+            if len(candidates) == 0:
+                raise Exception('No candidates')
+            word_space.occupy(random.choice(candidates))
 
-# And get used our data search structure for the horizontal words
-for word_space in word_spaces_horizontal:
-    mask = word_space.mask()
-    required_chars = word_space.apply_other_words()
-    candidates = list(words_by_masks[mask][required_chars])
-    print(mask)
-    if len(candidates) == 0:
-        raise Exception('No candidates')
-    word_space.occupy(random.choice(candidates))
+        break
+    except:
+        # Should re-run Random filling
+        loop_counter += 1
 
 # Debug
-print(len(word_spaces))
-for word_space in word_spaces:
-    print(word_space)
+# for word_space in word_spaces:
+#    print(word_space)
 
 # Print crossword
+print(f"After {loop_counter} randomizes")
 print("--------")
 for y, line in enumerate(crossword, start=1):
     for x, char in enumerate(line, start=1):
         char = None
         for word_space in word_spaces:
-            # Another check
-            if not char:
-                char = word_space.char_at(x, y)
-            elif char != word_space.char_at(x, y):
-                raise Exception("Incoherent WordSpaces")
+            # Check if all crossed word_spaces have equal char
+            word_space_char = word_space.char_at(x, y)
+            if not word_space_char:
+                continue
+            elif not char:
+                char = word_space_char
+            elif char != word_space_char:
+                raise Exception("Incoherent WordSpaces", char, word_space_char)
+        if not char:
+            char = ' '
         print(char, end="")
     print("")
