@@ -73,6 +73,8 @@ class CharList:
     def __hash__(self):
         return hash("/".join(self.char_list))
 
+    def __eq__(self, other):
+        return self.char_list == other.char_list
 
 class Word(CharList):
     def __init__(self, word_string):
@@ -127,8 +129,7 @@ class Mask(object):
         for crossed, char in zip(self.mask, word):
             if crossed:
                 applied.append(char)
-        return "".join(applied)
-        # return CharList(applied)
+        return CharList(applied)
 
 
 class WordSpace:
@@ -185,8 +186,7 @@ class WordSpace:
 
         for cross in self.crosses:
             applied.append(cross.other(self).my_char_on_cross(cross))
-        return "".join(applied)
-        # return  CharList(applied)
+        return CharList(applied)
 
     def char_at(self, x, y):
         if (x, y) not in self.spaces():
@@ -321,7 +321,7 @@ while True:
             word_space.occupy(random.choice(candidates))
         break
 
-    except:
+    except Exception:
         # Should re-run Random filling
         loop_counter += 1
 
