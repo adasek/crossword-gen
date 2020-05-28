@@ -46,10 +46,10 @@ class Cross:
         return f"Cross at {self.coordinates} between {self.word_space_horizontal} and {self.word_space_vertical}"
 
 
-class Word:
-    def __init__(self, word_string):
-        self.word = word_string
-        self.length = len(self.word)
+class CharList:
+    def __init__(self, char_list):
+        self.char_list = char_list
+        self.length = len(self.char_list)
         self._iter_counter = 0
 
     def __iter__(self):
@@ -58,17 +58,26 @@ class Word:
 
     def __next__(self):
         if self._iter_counter < self.length:
-            result = self.word[self._iter_counter]
+            result = self.char_list[self._iter_counter]
             self._iter_counter += 1
             return result
         else:
             raise StopIteration
 
     def __getitem__(self, index):
-        return self.word[index]
+        return self.char_list[index]
 
     def __str__(self):
-        return self.word
+        return "".join(self.char_list)
+
+    def __hash__(self):
+        return hash("/".join(self.char_list))
+
+
+class Word(CharList):
+    def __init__(self, word_string):
+        word_as_list = list(word_string)
+        CharList.__init__(self, word_as_list)
 
 
 class Mask(object):
@@ -113,12 +122,13 @@ class Mask(object):
 
     # Returns relevant chars
     def apply_word(self, word):
-        applied_str = ''
+        applied = []
 
         for crossed, char in zip(self.mask, word):
             if crossed:
-                applied_str += char
-        return applied_str
+                applied.append(char)
+        return "".join(applied)
+        # return CharList(applied)
 
 
 class WordSpace:
@@ -171,11 +181,12 @@ class WordSpace:
         raise Exception("Cross not found")
 
     def apply_other_words(self):
-        applied_str = ''
+        applied = []
 
         for cross in self.crosses:
-            applied_str += cross.other(self).my_char_on_cross(cross)
-        return applied_str
+            applied.append(cross.other(self).my_char_on_cross(cross))
+        return "".join(applied)
+        # return  CharList(applied)
 
     def char_at(self, x, y):
         if (x, y) not in self.spaces():
@@ -286,6 +297,11 @@ for word in words:
 
 print("Data parsing complete.")
 
+# Prolog output
+# with open("words.pl", "r") as word_fill_prolog:
+#    for mask in possible_masks:
+#        for chars in
+#            words_by_masks
 print("--------")
 
 loop_counter = 1
@@ -302,11 +318,9 @@ while True:
                 candidates = list(words_by_masks[mask][required_chars])
             except KeyError:
                 raise Exception('No candidates')
-            if len(candidates) == 0:
-                raise Exception('No candidates')
             word_space.occupy(random.choice(candidates))
-
         break
+
     except:
         # Should re-run Random filling
         loop_counter += 1
