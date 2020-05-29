@@ -29,6 +29,9 @@ class Cross:
         else:
             self.coordinates = cross_coordinates.pop()
 
+    def id(self):
+        return f"C_{self.coordinates[0]}_{self.coordinates[1]}"
+
     def other(self, word_space):
         if word_space == self.word_space_vertical:
             return self.word_space_horizontal
@@ -107,7 +110,8 @@ class Mask(object):
         return hash(self.mask_string())
 
     def __eq__(self, other):
-        if not isinstance(other, type(self)): return NotImplemented
+        if not isinstance(other, type(self)):
+            return NotImplemented
         return self.mask == other.mask
 
     def __str__(self):
@@ -133,12 +137,19 @@ class Mask(object):
 
 
 class WordSpace:
+    counter = 1
+
     def __init__(self, start, length, type):
         self.start = start
         self.length = length
         self.type = type
         self.crosses = []
         self.occupied_by = None
+        self.my_counter = WordSpace.counter
+        WordSpace.counter += 1
+
+    def id(self):
+        return f"WS_{self.my_counter}"
 
     def occupy(self, word):
         if word.length != self.length:
@@ -159,6 +170,10 @@ class WordSpace:
         else:
             raise Exception("Unknown WordSpace type")
         return spaces
+
+    def to_prolog(self):
+        crosses_string = ", ".join([c.id() for c in self.crosses])
+        return f"word_space_fill('{self.mask()}', [{crosses_string}], '{self.id()}')."
 
     def add_cross(self, other_word_space):
         new_cross = Cross(self, other_word_space)
@@ -234,8 +249,9 @@ for y, line in enumerate(crossword, start=1):
                 word_spaces.append(WordSpace((in_word, y), word_length, 'horizontal'))
             in_word = -1
     # flush last word
-    if in_word >= 0:
-        word_spaces.append(WordSpace((in_word, y), len(line) - in_word + 1, 'horizontal'))
+    word_length = len(line) - in_word + 1
+    if in_word >= 0 and word_length > 1:
+        word_spaces.append(WordSpace((in_word, y), word_length, 'horizontal'))
 
 for x in range(1, 1 + max([len(line) for line in crossword])):
     in_word = -1
@@ -254,8 +270,9 @@ for x in range(1, 1 + max([len(line) for line in crossword])):
                 word_spaces.append(WordSpace((x, in_word), word_length, 'vertical'))
             in_word = -1
     # flush last word
-    if in_word >= 0:
-        word_spaces.append(WordSpace((x, in_word), len(crossword) - in_word + 1, 'vertical'))
+    word_length = len(crossword) - in_word + 1
+    if in_word >= 0 and word_length > 1:
+        word_spaces.append(WordSpace((x, in_word), word_length, 'vertical'))
 
 # Compute all crosses between word_spaces - O(N^2) can be improved
 for word_space_pair in itertools.product(word_spaces, repeat=2):
@@ -298,10 +315,24 @@ for word in words:
 print("Data parsing complete.")
 
 # Prolog output
-# with open("words.pl", "r") as word_fill_prolog:
-#    for mask in possible_masks:
-#        for chars in
-#            words_by_masks
+with open("prolog_output/word_masks.pl", "w") as word_masks_prolog:
+    for mask in possible_masks:
+        for chars in words_by_masks[mask]:
+            # word_space('x...x', ['c','t'],'cukat')
+            for word in words_by_masks[mask][chars]:
+                chars_string = "','".join(chars)
+                print(f"word_mask('{mask}', ['{chars_string}'], '{word}').", file=word_masks_prolog)
+            words_by_masks[mask][chars]
+
+with open("prolog_output/word_space_names.pl", "w") as word_space_names:
+    for word_space in word_spaces:
+        print(f"word_space_name('{word_space.id()}').", file=word_space_names)
+
+with open("prolog_output/word_space_fills.pl", "w") as word_space_fills:
+    for word_space in word_spaces:
+        print(f"{word_space.to_prolog()}", file=word_space_fills)
+
+
 print("--------")
 
 loop_counter = 1
