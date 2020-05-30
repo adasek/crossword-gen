@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+    <title>Create crossword</title>
+
+    <style type="text/css">
+    table {border-collapse:collapse}
+    td {
+        border:1px solid black;
+        width: 1em;
+        height: 1em;
+        }
+
+    textarea {width:80%;height:20em}
+    </style>
+
+</head>
+
+<body>
+    <table id="table"></table>
+        <textarea id="output"></textarea>
+        <hr>
+        <textarea id="output_raw"></textarea>
+
+        <script>
+            function elId(x,y){
+                return "C_"+x+'_'+y
+            }
+
+
+            function atomName(x,y,direction){
+                if(direction == 'vertical'){
+                    return "V_"+x+'_'+y
+                }else if(direction == 'horizontal'){
+                    return "H_"+x+'_'+y
+                }else if(direction == 'both'){
+                    return "C_"+x+'_'+y
+                }else{
+                    throw "Unknown direction"
+                }
+            }
+
+            function toggle(x,y){
+                crossword[x][y] = !(crossword[x][y])
+                let el = document.getElementById(elId(x,y))
+                el.style.backgroundColor = (crossword[x][y] ? 'green' : 'white')
+                exportToProlog()
+            }
+
+            function contains_coord(coords_list, coords){
+                return coords_list.map((el) => el[0]+"_"+el[1])
+                    .indexOf(coords[0]+"_"+coords[1]) >= 0;
+            }
+            
+            function printTable(coords_list, direction='both'){
+            output =""
+                for (let y = 0; y < height; y++) {
+                output+='writeln([""'
+                for (let x = 0; x < width; x++) {
+                    if(crossword[x][y] && contains_coord(coords_list,[x,y])){
+                    output+=','+atomName(x,y,direction)
+                    }else{
+                        output+='," "'
+                    }
+                }
+                output+="]),\n"
+                }
+            output += 'writeln("-------"),\n'
+            return output
+            }
+
+            function countNeighbours(cross, crosses, crossword){
+                let count = 0;
+                let i = 1;
+                    while(crossword[cross[0]+i][cross[1]]){
+                        if(contains_coord(crosses,[cross[0]+i,cross[1]])){
+                            count++
+                        }
+                        i++
+                    }
+                    i=-1
+                    while(crossword[cross[0]+i][cross[1]]){
+                        if(contains_coord(crosses,[cross[0]+i,cross[1]])){
+                            count++
+                        }
+                        i--
+                    }
+                    i=1
+                    while(crossword[cross[0]][cross[1]+i]){
+                        if(contains_coord(crosses,[cross[0],cross[1]+i])){
+                            count++
+                        }
+                        i++
+                    }
+                    i=-1
+                    while(crossword[cross[0]][cross[1]+i]){
+                        if(contains_coord(crosses,[cross[0],cross[1]+i])){
+                            count++
+                        }
+                        i--
+                    }
+                return count
+                }
+
+            function exportToProlog(){
+                //gen rows
+                let outputRelations = [];
+                let coords_horizontal=[];
+                let coords_vertical=[];
+                let cross_map = {};
+                
+                // go through rows
+                for (let y = 0; y < height; y++) {
+                    let inWordRow = []
+                    let coords = []
+                    for (let x = 0; x < width; x++) {
+                        if(crossword[x][y]){
+                           coords.push([x,y]) 
+                           inWordRow.push(atomName(x,y,'horizontal')) 
+                        }else if(inWordRow.length > 1){
+                            //flush word that ended
+                            outputRelations.push({
+                                    direction: 'horizontal',
+                                    chars: inWordRow,
+                                    len: inWordRow.length, 
+                                    coords: coords,
+                                    cross: 0
+                                });
+                            coords_horizontal = coords_horizontal.concat(coords)
+
+                            coords=[]
+                            inWordRow=[]
+                        }else{
+                            coords=[]
+                            inWordRow=[]
+                        }
+                    }
+                }
+
+                    for (let x = 0; x < width; x++) {
+                        let inWordColumn = []
+                        let coords = []
+                        for (let y = 0; y < height; y++) {
+                        if(crossword[x][y]){
+                            inWordColumn.push(atomName(x,y,'vertical')) 
+                            coords.push([x,y]) 
+                        }else if(inWordColumn.length > 1){
+                            //flush word that ended
+                            outputRelations.push({
+                                    direction: 'vertical',
+                                    chars: inWordColumn,
+                                    len: inWordColumn.length,
+                                    coords: coords,
+                                    cross: 0
+                                });
+                            coords_vertical = coords_vertical.concat(coords)
+                            coords=[]
+                            inWordColumn=[]
+                        }else{
+                            coords=[]
+                            inWordColumn=[]
+                        }
+                    }
+                }
+
+		outputRelations.forEach(function(relation){
+            relation.coords.forEach(function(coord){
+                if(contains_coord(coords_vertical,coord) && contains_coord(coords_horizontal,coord)){
+                    relation.cross++
+                    if(! (coord in cross_map)){
+                        cross_map[coord] = {words:{}, charPos:{}, x:coord[0], y:coord[1]}
+                    }
+                    cross_map[coord].words[relation.direction] = relation
+                    let firstChar = relation.coords[0]
+                    if(relation.direction == 'horizontal'){
+                        cross_map[coord].charPos[relation.direction] = coord[0] - firstChar[0] + 1
+                    }else if(relation.direction == 'vertical'){
+                        cross_map[coord].charPos[relation.direction] = coord[1] - firstChar[1] + 1
+                    }else{
+                    throw "Unknown direction"
+                    }
+                }
+            })
+		})
+
+		outputRelations.sort(function compare (a, b) {
+             return b.cross - a.cross + 0.01 * (b.len - a.len)
+             })
+
+        output = ""
+        words_counter = 1;
+		outputRelations.forEach(function(relation){
+                  relation.seq = words_counter
+                  relation.atomId = "W"+relation.seq
+		          output += "word_as_list(["+relation.chars.join(',')+"], "+relation.chars.length+", "+relation.atomId+"),\n"
+                  words_counter++;
+		})
+
+
+        let coords_all = coords_vertical.concat(coords_horizontal)
+        let crosses = coords_vertical.filter(function(coord){
+            return contains_coord(coords_horizontal,coord)
+            })
+            
+        crosses.sort(function compare (a, b) {
+             return countNeighbours(b, this.crosses, this.crossword) - countNeighbours(a, this.crosses, this.crossword)
+             }.bind({crosses:crosses, crossword:crossword}))
+
+        previous_cross_list = "[]";
+        cross_list_counter=1;
+        for (let cross_key in cross_map) {
+            cross = cross_map[cross_key]
+            //crosses(W1,W3,6,2,V_5_7,H_5_7,5,7),
+            //cross_map[coord] = {words:{}, charPos:{}, x:coord[0], y:coord[1]}
+            new_cross_list = "Crosses"+(cross_list_counter)++
+            output += "add_cross("+
+                previous_cross_list + "," +
+                cross.words['vertical'].atomId+','+cross.words['horizontal'].atomId+','+
+                cross.charPos['vertical']+','+cross.charPos['horizontal']+','+
+                atomName(cross.x,cross.y,'vertical')+',' +atomName(cross.x,cross.y,'horizontal')+','+
+                cross.x+","+cross.y+","+new_cross_list+"),\n"
+            previous_cross_list = new_cross_list
+        }
+
+        output += "=(Crosses, "+previous_cross_list+"),\n"
+
+        output += "make_equal(),\n"
+    
+		//printing the table
+            output += printTable(coords_vertical, 'vertical')
+            output += printTable(coords_horizontal, 'horizontal')
+        
+            output = output.substr(0,output.length-2)+'.'
+
+            document.getElementById('output').innerHTML = output
+
+            output_raw = ""
+            for (let y = 0; y < height;y++) {
+                for (let x = 0; x < width; x++) {
+                 output_raw += crossword[x][y] ? '_' : 'X'
+                }
+                output_raw += "\n"
+            }
+            document.getElementById('output_raw').innerHTML = output_raw
+        }
+
+
+            width = 30
+            height = 30
+            crossword = [];
+
+            (function () {
+                
+                for (let y = 0; y < height; y++) {
+                    let crossword_line = []
+                    let tr = document.createElement('tr');
+                    for (let x = 0; x < width; x++) {
+                        crossword_line.push(false)
+                        let td = document.createElement('td');
+                        td.addEventListener('click', ( function(){toggle(x,y)} ) ) 
+                        td.id = elId(x,y)
+                        tr.appendChild(td)
+                    }
+                    document.getElementById('table').appendChild(tr)
+                    crossword.push(crossword_line)
+                }
+            })();
+        </script>
+
+
+</body>
+
+
+</html>
