@@ -1,5 +1,6 @@
 #!/usr/bin/env prolog
 :- initialization load_word_space_names, load_word_masks, load_word_space_fills, generate_cross, halt.
+%:-use_module(library(time)).
 
 load_word_space_names :-
  consult(word_space_names).
@@ -37,6 +38,6 @@ print_word_spaces([WordSpaceName|Rest1],[UsedWord|Rest2]) :-
 generate_cross :-
     write("..."),nl,
     bagof(WordSpaceName, word_space_name(WordSpaceName), WordSpaceNames),
-    solve_word_spaces(WordSpaceNames, [], UsedWords),
+    profile(call_with_time_limit(10, solve_word_spaces(WordSpaceNames, [], UsedWords))),
     write("Crossword filling:"),nl,
     print_word_spaces(WordSpaceNames, UsedWords).
