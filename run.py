@@ -324,8 +324,9 @@ with open("prolog_output/words.pl", "w") as words_prolog:
     for word in words:
             print(f"word({word.id},'{word}').", file=words_prolog)
 
+with open("prolog_output/words_usable.pl", "w") as words_usable_prolog:
     for word in words:
-            print(f"usable_word({word.id}, {word.use}).", file=words_prolog)
+            print(f"usable_word({word.id}, {word.use}).", file=words_usable_prolog)
 
 with open("prolog_output/word_masks.pl", "w") as word_masks_prolog:
     for mask in possible_masks:

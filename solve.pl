@@ -1,8 +1,11 @@
 #!/usr/bin/env prolog
-:- initialization load_words, load_word_space_names, load_word_masks, load_word_space_fills, generate_cross, halt.
+:- initialization load_words, load_words_usable, load_word_space_names, load_word_masks, load_word_space_fills, generate_cross, halt.
 
 % hash of used words
 :- dynamic usable_word/2.
+
+load_words_usable :-
+ consult(words_usable).
 
 load_words :-
  consult(words).
