@@ -27,21 +27,25 @@ find_and_output_word_space(WordSpaceName, WordId) :-
 solve_word_spaces([],X,X).
 solve_word_spaces([WordSpaceName | Rest], UsedWordsBefore, UsedWords) :-
     find_and_output_word_space(WordSpaceName, WordId),
-    word(WordId, WordString),
-    retract(usable_word(WordId,_)),
-    solve_word_spaces(Rest, [WordId|UsedWordsBefore], UsedWords).
+    retract(usable_word(WordId, WordUsability)),
+    solve_word_spaces(Rest, [[WordId, WordUsability]|UsedWordsBefore], UsedWords).
 
 print_word_spaces([],[]).
-print_word_spaces([WordSpaceName|Rest1],[UsedWordId|Rest2]) :-
+print_word_spaces([WordSpaceName|Rest1],[[UsedWordId|_]|Rest2]) :-
     word(UsedWordId, WordString),
-    print(WordSpaceName),write(":"),print(WordString),nl,
-    print_word_spaces(Rest1,Rest2).
+    print(WordSpaceName),write(":"), print(WordString),nl,
+    print_word_spaces(Rest1, Rest2).
 
+return_usable_words([]).
+return_usable_words([[UsedWordId|UsedWordUsability]|Rest]) :-
+    asserta(usable_word(UsedWordId, UsedWordUsability)),
+    return_usable_words(Rest).
 
 generate_cross :-
     write("..."),nl,
     bagof(WordSpaceName, word_space_name(WordSpaceName), WordSpaceNames),
-    solve_word_spaces(WordSpaceNames, [], UsedWords),
+    time(solve_word_spaces(WordSpaceNames, [], UsedWords)),
     %profile(call_with_time_limit(10,     ....   ))
     write("Crossword filling:"),nl,
-    print_word_spaces(WordSpaceNames, UsedWords).
+    print_word_spaces(WordSpaceNames, UsedWords),
+    return_usable_words(UsedWords).
