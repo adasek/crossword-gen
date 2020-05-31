@@ -1,5 +1,4 @@
-#!/usr/bin/env prolog
-:- initialization load_words, load_words_usable, load_word_space_names, load_word_masks, load_word_space_fills, generate_cross, halt.
+:- initialization load_words, load_words_usable, load_word_space_names, load_word_masks, load_word_space_fills, generate_cross.
 
 load_words_usable :-
  consult(words_usable).
@@ -11,10 +10,12 @@ load_word_space_names :-
  consult(word_space_names).
 
 load_word_masks :-
- time(consult(word_masks)).
+ consult(word_masks).
 
 load_word_space_fills :-
- consult(word_space_fills).
+ style_check(-singleton),
+ consult(word_space_fills),
+ style_check(+singleton).
 
 %! find_and_output_word_space(+WordSpaceName:string, -WordId:integer) is nondet
 %% For a WordSpace find a suitable Word and return its id.
@@ -57,7 +58,8 @@ generate_cross :-
     solve_word_spaces(WordSpaceNames, [], UsedWords),
     %profile(call_with_time_limit(10,     ....   ))
     write("Crossword filling:"),nl,
-    print_word_spaces(WordSpaceNames, UsedWords).
+    print_word_spaces(WordSpaceNames, UsedWords),
+    halt(0).
 
 generate_cross :-
-    true.
+    !, halt(1).
