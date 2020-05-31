@@ -1,6 +1,11 @@
 #!/usr/bin/env prolog
-:- initialization load_word_space_names, load_word_masks, load_word_space_fills, generate_cross, halt.
-%:-use_module(library(time)).
+:- initialization load_words, load_word_space_names, load_word_masks, load_word_space_fills, generate_cross, halt.
+
+% hash of used words
+:- dynamic usable_word/2.
+
+load_words :-
+ consult(words).
 
 load_word_space_names :-
  consult(word_space_names).
@@ -11,33 +16,29 @@ load_word_masks :-
 load_word_space_fills :-
  consult(word_space_fills).
 
-% https://stackoverflow.com/a/15865303
-not_used_word(_, []) :- !.
-
-not_used_word(X, [Head|Tail]) :-
-     X \= Head,
-    not_used_word(X, Tail).
-
-find_and_output_word_space(WordSpaceName, UsedWords, WordString) :-
+find_and_output_word_space(WordSpaceName, WordId) :-
     word_space_fill(Mask, Chars, WordSpaceName),
-    word_mask(Mask, Chars, WordString),
-    not_used_word(WordString, UsedWords).
-    %print(WordSpaceName),write("="),print(WordString),nl.
+    word_mask(Mask, Chars, WordId),
+    usable_word(WordId, 1).
 
 solve_word_spaces([],X,X).
 solve_word_spaces([WordSpaceName | Rest], UsedWordsBefore, UsedWords) :-
-    find_and_output_word_space(WordSpaceName, UsedWordsBefore, WordString),
-    solve_word_spaces(Rest, [WordString|UsedWordsBefore], UsedWords).
+    find_and_output_word_space(WordSpaceName, WordId),
+    word(WordId, WordString),
+    retract(usable_word(WordId,_)),
+    solve_word_spaces(Rest, [WordId|UsedWordsBefore], UsedWords).
 
 print_word_spaces([],[]).
-print_word_spaces([WordSpaceName|Rest1],[UsedWord|Rest2]) :-
-    print(WordSpaceName),write(":"),print(UsedWord),nl,
+print_word_spaces([WordSpaceName|Rest1],[UsedWordId|Rest2]) :-
+    word(UsedWordId, WordString),
+    print(WordSpaceName),write(":"),print(WordString),nl,
     print_word_spaces(Rest1,Rest2).
 
 
 generate_cross :-
     write("..."),nl,
     bagof(WordSpaceName, word_space_name(WordSpaceName), WordSpaceNames),
-    profile(call_with_time_limit(10, solve_word_spaces(WordSpaceNames, [], UsedWords))),
+    solve_word_spaces(WordSpaceNames, [], UsedWords),
+    %profile(call_with_time_limit(10,     ....   ))
     write("Crossword filling:"),nl,
     print_word_spaces(WordSpaceNames, UsedWords).

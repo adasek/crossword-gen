@@ -80,9 +80,14 @@ class CharList:
         return self.char_list == other.char_list
 
 class Word(CharList):
+    id = 1
+
     def __init__(self, word_string):
         word_as_list = list(word_string)
         CharList.__init__(self, word_as_list)
+        self.use = 1 # probability it will be used
+        self.id = Word.id
+        Word.id += 1
 
 
 class Mask(object):
@@ -315,14 +320,21 @@ for word in words:
 print("Data parsing complete.")
 
 # Prolog output
+with open("prolog_output/words.pl", "w") as words_prolog:
+    for word in words:
+            print(f"word({word.id},'{word}').", file=words_prolog)
+
+    for word in words:
+            print(f"usable_word({word.id}, {word.use}).", file=words_prolog)
+
 with open("prolog_output/word_masks.pl", "w") as word_masks_prolog:
     for mask in possible_masks:
         for chars in words_by_masks[mask]:
             # word_space('x...x', ['c','t'],'cukat')
             for word in words_by_masks[mask][chars]:
                 chars_string = "','".join(chars)
-                print(f"word_mask('{mask}', ['{chars_string}'], '{word}').", file=word_masks_prolog)
-            words_by_masks[mask][chars]
+                print(f"word_mask('{mask}', ['{chars_string}'], {word.id}).", file=word_masks_prolog)
+            #words_by_masks[mask][chars]
 
 with open("prolog_output/word_space_names.pl", "w") as word_space_names:
     for word_space in word_spaces:
