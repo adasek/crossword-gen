@@ -47,7 +47,7 @@ print_word_spaces([WordSpaceName|Rest1],[[UsedWordId|_]|Rest2]) :-
 %! return_usable_words(+UsedWords:list) is nondet
 %% Return words that were retracted during solve_word_spaces into database
 return_usable_words([]).
-return_usable_words([[UsedWordId|UsedWordUsability]|Rest]) :-
+return_usable_words([[UsedWordId|[UsedWordUsability]]|Rest]) :-
     asserta(usable_word(UsedWordId, UsedWordUsability)),
     return_usable_words(Rest).
 
