@@ -25,6 +25,7 @@ exporter = PrologExporter("dataset")
 exporter.export_all(words, word_spaces, possible_masks, words_by_masks)
 
 
+
 # Solve
 #solver = Solver(MASK_LENGTH_TRESHOLD)
 #solver.solve(word_spaces, words_by_length, words_by_masks)

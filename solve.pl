@@ -85,10 +85,19 @@ generate_cross :-
     get_time(TimeEnded),
     LoadTime is TimeLoaded - TimeStarted,
     ComputeTime is TimeEnded - TimeLoaded,
+    write("status:found"),nl,
     write("load_time:"),print(LoadTime),nl,
     write("compute_time:"),print(ComputeTime),nl,
     print_word_spaces(WordSpaceNames, UsedWords),
     halt(0).
 
 generate_cross :-
+    get_time_started(TimeStarted),
+    get_time(TimeLoaded),
+    get_time(TimeEnded),
+    LoadTime is TimeLoaded - TimeStarted,
+    ComputeTime is TimeEnded - TimeLoaded,
+    write("status:not_found"),nl,
+    write("load_time:"),print(LoadTime),nl,
+    write("compute_time:"),print(ComputeTime),nl,
     !, halt(1).
