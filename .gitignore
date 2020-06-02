@@ -1,3 +1,5 @@
+**/__pycache__
+
 
 # Created by https://www.gitignore.io/api/venv,pycharm
 # Edit at https://www.gitignore.io/?templates=venv,pycharm
@@ -105,3 +107,4 @@ venv.bak/
 pip-selfcheck.json
 
 # End of https://www.gitignore.io/api/venv,pycharm
+
