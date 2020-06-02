@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from crossword.parser import Parser
 from crossword.exporter import PrologExporter
+from crossword.runner import Runner
 from crossword.solver import Solver
 
 # For found mask, e.g. X..XX generate all its children:
@@ -25,6 +26,9 @@ exporter = PrologExporter("dataset")
 exporter.export_all(words, word_spaces, possible_masks, words_by_masks)
 
 
+runner = Runner('../solve.pl', "dataset")
+runner.run()
+print(runner.output(), flush=True)
 
 # Solve
 #solver = Solver(MASK_LENGTH_TRESHOLD)
