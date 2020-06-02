@@ -6,23 +6,35 @@ import itertools
 class Parser(object):
     def __init__(self, directory):
         self.directory = Path(directory)
+        self.words = []
+        self.words_by_len = {}
 
-    def parse_words(self, wordlist_file):
+    def parse_original_wordlist(self, original_wordlist_file):
+        with open(original_wordlist_file) as fp:
+            lines = fp.readlines()
+
+            self.words = [Word(line.split('/')[0].lower().strip()) for line in lines]
+        return self.words
+
+    def parse_words(self):
         # Load words
-        words = list()
+        self.words = []
         with open(Path(self.directory, wordlist_file), 'r') as fp:
             for word_string in fp.readlines():
-                words.append(Word(re.sub(r'[\r\n\t]*', '', word_string)))
+                self.words.append(Word(re.sub(r'[\r\n\t]*', '', word_string)))
 
+        return self.words
+
+    def words_by_length(self):
         # Structure words #1: do split by lengths:
-        words_by_length = {}
-        for word in words:
+        self.words_by_len = {}
+        for word in self.words:
             length = word.length
-            if length not in words_by_length:
-                words_by_length[length] = []
-            words_by_length[length].append(word)
+            if length not in self.words_by_len:
+                self.words_by_len[length] = []
+            self.words_by_len[length].append(word)
 
-        return words, words_by_length
+        return(self.words_by_len)
 
     def parse_crossword(self, crossword_file):
         # Load crossword as text

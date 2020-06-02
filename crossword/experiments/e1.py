@@ -8,16 +8,18 @@ import subprocess
 # generate_8grid ~ words of length=8
 class Experiment1:
   def __init__(self, dictionary_filename):
+
+    parser = Parser(".")
+
     # modify wordlist so that it contains only words of 8
-    with open(dictionary_filename) as fp:
-      lines = fp.readlines()
-      words_all = [line.split('/')[0].lower().strip() for line in lines]
-      in_words = [word for word in words_all if len(word) == 8]
+    words = parser.parse_original_wordlist(dictionary_filename)
+
+    in_words = [word for word in words_all if len(word) == 8]
     with open('wordlist.dat', 'w') as wordlist_fp:
       for word in in_words:
         print(word, file=wordlist_fp)
 
-    for number_of_words in range(8, 200):
+    for number_of_words in range(8, 400):
       with open('crossword.dat', 'w') as crossword_fp:
         for line_number in range(0, number_of_words):
           print("X"*line_number, sep="", end="", file=crossword_fp)
@@ -25,7 +27,6 @@ class Experiment1:
           print("X"*(number_of_words - line_number), sep="", end="\n", file=crossword_fp)
 
       # Run
-      parser = Parser(".")
       words, words_by_length = parser.parse_words("wordlist.dat")
       crossword = parser.parse_crossword("crossword.dat")
 
