@@ -4,6 +4,7 @@ import random
 import itertools
 import more_itertools
 import time
+from operator import attrgetter
 
 # Maximal length of mask to have all its children generated ( 2^x masks)!
 MASK_LENGTH_TRESHOLD = 8
@@ -144,7 +145,7 @@ class Mask(object):
                 mask_string += "."
         return mask_string
 
-    def all_derivations(self, bind_chars_num):
+    def all_derivations(self):
         my_indices = []
         for index, applied in enumerate(self.mask):
             my_indices.append(index)
@@ -224,7 +225,7 @@ class WordSpace:
     def masks_all(self):
         mask = self.mask()
         if mask.bind_count() <= MASK_LENGTH_TRESHOLD:
-            return mask.all_derivations(mask.bind_count())
+            return mask.all_derivations()
         else:
             return [mask]
 
@@ -271,6 +272,19 @@ class WordSpace:
         if self.occupied_by:
             describing_string += f" occupied by {self.occupied_by}"
         return describing_string
+
+def find_some_replacements(words_by_masks, word_space):
+    mask = word_space.good_mask()
+    if mask.bind_count() <= MASK_LENGTH_TRESHOLD:
+        submasks = mask.all_derivations()
+    else:
+        submasks = [mask]
+    submasks.sort(key=attrgetter('length'), reverse=True)
+    for submask in submasks:
+        subchars = submask.apply_word(word_space.occupied_by)
+        if submask in words_by_masks and subchars in words_by_masks[submask]:
+            return list(words_by_masks[submask][subchars])
+    raise KeyError
 
 
 # Load words
@@ -448,15 +462,13 @@ while True:
     for word_space in to_replace:
         # based on good property of its crosses
         # it tries to find such masks to keep good and change other
-        good_mask = word_space.good_mask()
-        good_chars = good_mask.apply_word(word_space.occupied_by)
         try:
-            candidates = list(words_by_masks[good_mask][good_chars])
+            candidates = find_some_replacements(words_by_masks, word_space)
             word_space.bind(random.choice(candidates))
         except KeyError:
             # no good-chars keeping candidate  => must reroll whole word
             word_space.bind(random.choice(words_by_length[word_space.length]))
-        # and remove the incompatible crossing words
+        # Remove the incompatible crossing words
         word_space.unbind_incompatible_crosswords()
 
     print(f"{iteration_counter} ... {len(not_fillable)}/{len(word_spaces_horizontal)} not fillable")
