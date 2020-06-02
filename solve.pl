@@ -19,13 +19,13 @@ load_word_space_fills :-
 
 %! find_and_output_word_space(+WordSpaceName:string, -WordId:integer) is nondet
 %% For a WordSpace find a suitable Word and return its id.
-find_and_output_word_space(WordSpaceName, WordId) :-
+find_word_space(WordSpaceName, WordId) :-
     word_space_fill(Mask, Chars, WordSpaceName),
     word_mask(Mask, Chars, WordId),
     usable_word(WordId, 1).
 
 % https://stackoverflow.com/a/15865303
-not_in_used_words(_, []) :- !.
+not_in_used_words(_, []).
 
 not_in_used_words(X, [[WordId|_]|Tail]) :-
      X \= WordId,
@@ -36,7 +36,7 @@ not_in_used_words(X, [[WordId|_]|Tail]) :-
 %% After match is made, remove the word from usable words
 solve_word_spaces([],X,X).
 solve_word_spaces([WordSpaceName | Rest], UsedWordsBefore, UsedWords) :-
-    find_and_output_word_space(WordSpaceName, WordId),
+    find_word_space(WordSpaceName, WordId),
     not_in_used_words(WordId, UsedWordsBefore),
     solve_word_spaces(Rest, [WordId|UsedWordsBefore], UsedWords).
 
