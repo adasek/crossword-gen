@@ -1,4 +1,8 @@
-:- initialization load_words, load_words_usable, load_word_space_names, load_word_masks, load_word_space_fills, generate_cross.
+:- initialization mark_start_time, load_words, load_words_usable, load_word_space_names, load_word_masks, load_word_space_fills, generate_cross.
+
+mark_start_time :-
+ get_time(TimeStarted),
+ assertz(get_time_started(TimeStarted)).
 
 load_words_usable :-
  consult(words_usable).
@@ -53,11 +57,16 @@ print_word_spaces([WordSpaceName|Rest1],[UsedWordId|Rest2]) :-
 %! generate_cross() is nondet
 %% Main function for Crossword generation
 generate_cross :-
-    write("..."),nl,
+    get_time_started(TimeStarted),
+    get_time(TimeLoaded),
     bagof(WordSpaceName, word_space_name(WordSpaceName), WordSpaceNames),
     solve_word_spaces(WordSpaceNames, [], UsedWords),
     %profile(call_with_time_limit(10,     ....   ))
-    write("Crossword filling:"),nl,
+    get_time(TimeEnded),
+    LoadTime is TimeLoaded - TimeStarted,
+    ComputeTime is TimeEnded - TimeLoaded,
+    write("load_time:"),print(LoadTime),nl,
+    write("compute_time:"),print(ComputeTime),nl,
     print_word_spaces(WordSpaceNames, UsedWords),
     halt(0).
 
