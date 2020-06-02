@@ -30,7 +30,7 @@ class Parser(object):
         with open(Path(self.directory, crossword_file), 'r') as fp:
             crossword = [re.sub(r'[^_X]', '', line) for line in fp.readlines()]
 
-        return crossword
+        return [x for x in crossword if len(x) > 0]
 
     def parse_word_spaces(self, crossword):
 
@@ -116,7 +116,7 @@ class Parser(object):
                     if chars not in words_by_masks[mask]:
                         words_by_masks[mask][chars] = set()
                     words_by_masks[mask][chars].add(word)
-            if index % 100 == 0:
-                print(f"{index}/{len(words)}")
+            #if index % 100 == 0:
+            #    print(f"{index}/{len(words)}")
 
         return words_by_masks
