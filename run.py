@@ -2,6 +2,13 @@
 import re
 import random
 import itertools
+import more_itertools
+import time
+
+# Maximal length of mask to have all its children generated ( 2^x masks)!
+MASK_LENGTH_TRESHOLD = 8
+# Do generate the prolog input files
+PROLOG_OUTPUT = False
 
 
 class Cross:
@@ -9,6 +16,7 @@ class Cross:
         self.word_space_horizontal = None
         self.word_space_vertical = None
         self.coordinates = None
+        self.good = True
 
         if word_space1.type == 'horizontal' and word_space2.type == 'vertical':
             self.word_space_horizontal = word_space1
@@ -94,22 +102,27 @@ class Mask(object):
     # Immutable, https://stackoverflow.com/a/4828108
     __slots__ = ["length", "mask"]
 
-    def __init__(self, spaces, crosses):
-        super(Mask, self).__setattr__("length", len(spaces))
-        # print(f"Creating mask of {len(spaces)} with {spaces} and:")
-        # for cross in crosses:
-        #    print(f"  {cross}")
+    def __init__(self, spaces, crosses=None):
+        if crosses:
+            super(Mask, self).__setattr__("length", len(spaces))
+            # print(f"Creating mask of {len(spaces)} with {spaces} and:")
+            # for cross in crosses:
+            #    print(f"  {cross}")
 
-        mask_list = []
-        for space in spaces:
-            space_cross = [cross for cross in crosses if cross.coordinates == space]
-            if len(space_cross) == 0:
-                mask_list.append(False)
-            elif len(space_cross) == 1:
-                mask_list.append(True)
-            elif len(space_cross) > 1:
-                raise Exception("Multiple crosses")
-        super(Mask, self).__setattr__("mask", mask_list)
+            mask_list = []
+            for space in spaces:
+                space_cross = [cross for cross in crosses if cross.coordinates == space]
+                if len(space_cross) == 0:
+                    mask_list.append(False)
+                elif len(space_cross) == 1:
+                    mask_list.append(True)
+                elif len(space_cross) > 1:
+                    raise Exception("Multiple crosses")
+            super(Mask, self).__setattr__("mask", mask_list)
+        else:
+            # First parameter = mask array
+            super(Mask, self).__setattr__("mask", spaces)
+            super(Mask, self).__setattr__("length", len(spaces))
 
     def __hash__(self):
         return hash(self.mask_string())
@@ -131,6 +144,16 @@ class Mask(object):
                 mask_string += "."
         return mask_string
 
+    def all_derivations(self, bind_chars_num):
+        my_indices = []
+        for index, applied in enumerate(self.mask):
+            my_indices.append(index)
+
+        return [self.from_indices(indices) for indices in more_itertools.powerset(my_indices)]
+
+    def bind_count(self):
+        return self.mask.count(True)
+
     # Returns relevant chars
     def apply_word(self, word):
         applied = []
@@ -140,6 +163,8 @@ class Mask(object):
                 applied.append(char)
         return CharList(applied)
 
+    def from_indices(self, indices):
+        return Mask([(index in indices) for index in range(0, self.length)])
 
 class WordSpace:
     counter = 1
@@ -156,12 +181,15 @@ class WordSpace:
     def id(self):
         return f"WS_{self.my_counter}"
 
-    def occupy(self, word):
+    def bind(self, word):
         if word.length != self.length:
             print(self)
             print(word)
             raise Exception("Length of word does not correspond with WordSpace")
         self.occupied_by = word
+
+    def unbind(self):
+        self.occupied_by = None
 
     # Returns set of tuples - positions that this words goes through
     def spaces(self):
@@ -191,6 +219,16 @@ class WordSpace:
     def mask(self):
         return Mask(self.spaces(), self.crosses)
 
+    # All possible combinations of masks derived from the main mask
+    # example: X..X. generates X.... and ...X.
+    def masks_all(self):
+        mask = self.mask()
+        if mask.bind_count() <= MASK_LENGTH_TRESHOLD:
+            return mask.all_derivations(mask.bind_count())
+        else:
+            return [mask]
+
+
     def my_char_on_cross(self, cross):
         return self.occupied_by[self.index_of_cross(cross)]
 
@@ -212,6 +250,21 @@ class WordSpace:
         if (x, y) not in self.spaces():
             return None
         return self.occupied_by[self.spaces().index((x, y))]
+
+    # Generates mask that covers good crosses
+    # and resets crosses good status
+    def good_mask(self):
+        mask = Mask(self.spaces(), [cross for cross in self.crosses if not cross.good])
+        for cross in self.crosses:
+            cross.good = True
+        return mask
+
+    def unbind_incompatible_crosswords(self):
+        for cross in self.crosses:
+            other = cross.other(self)
+            if other.occupied_by and other.char_at(cross.coordinates[0], cross.coordinates[1]) !=\
+                    self.char_at(cross.coordinates[0], cross.coordinates[1]):
+                other.unbind()
 
     def __str__(self):
         describing_string = f"{self.type.capitalize()} WordSpace starting at {self.start} of length {self.length}"
@@ -297,6 +350,7 @@ for word_space_pair in itertools.product(word_spaces, repeat=2):
 word_spaces_vertical = [w for w in word_spaces if w.type == 'vertical']
 word_spaces_horizontal = [w for w in word_spaces if w.type == 'horizontal']
 
+
 # for word_space in word_spaces:
 #    print(word_space)
 #    print(word_space.mask())
@@ -304,10 +358,21 @@ word_spaces_horizontal = [w for w in word_spaces if w.type == 'horizontal']
 # Structure words #2: split by all known masks
 # Currently only masks of word_spaces_horizontal are needed
 # Example usage: words_by_masks['..XX.']['ab'] =>
-words_by_masks = {}
-possible_masks = set([word_space.mask() for word_space in word_spaces])
 
-for word in words:
+checkpoints={}
+checkpoints['start'] = time.process_time()
+words_by_masks = {}
+possible_masks = set()
+print(f"{max([word_space.length for word_space in word_spaces])}")
+for word_space in word_spaces:
+    if word_space.mask() not in possible_masks:
+        possible_masks.update(word_space.masks_all())
+
+checkpoints['masks_generated'] = time.process_time()
+print(f"Masks generated ... {len(possible_masks)} in {checkpoints['masks_generated'] - checkpoints['start']}s")
+
+print(f"Words masking: {len(words)}*{len(possible_masks)}")
+for index, word in enumerate(words):
     for mask in possible_masks:
         if mask.length == word.length:
             chars = mask.apply_word(word)
@@ -316,35 +381,103 @@ for word in words:
             if chars not in words_by_masks[mask]:
                 words_by_masks[mask][chars] = set()
             words_by_masks[mask][chars].add(word)
+    if index % 100 == 0:
+        print(f"{index}/{len(words)}")
 
-print("Data parsing complete.")
+checkpoints['words_masked'] = time.process_time()
+print(f"Words masked ... {len(words)}*{len(possible_masks)} in {checkpoints['words_masked'] - checkpoints['masks_generated']}s")
 
 # Prolog output
-with open("prolog_output/words.pl", "w") as words_prolog:
-    for word in words:
-            print(f"word({word.id},'{word}').", file=words_prolog)
+if PROLOG_OUTPUT:
+    with open("prolog_output/words.pl", "w") as words_prolog:
+        for word in words:
+                print(f"word({word.id},'{word}').", file=words_prolog)
 
-with open("prolog_output/words_usable.pl", "w") as words_usable_prolog:
-    for word in words:
-            print(f"usable_word({word.id}, {word.use}).", file=words_usable_prolog)
+    with open("prolog_output/words_usable.pl", "w") as words_usable_prolog:
+        for word in words:
+                print(f"usable_word({word.id}, {word.use}).", file=words_usable_prolog)
 
-with open("prolog_output/word_masks.pl", "w") as word_masks_prolog:
-    for mask in possible_masks:
-        for chars in words_by_masks[mask]:
-            # word_space('x...x', ['c','t'],'cukat')
-            for word in words_by_masks[mask][chars]:
-                chars_string = "','".join(chars)
-                print(f"word_mask('{mask}', ['{chars_string}'], {word.id}).", file=word_masks_prolog)
-            #words_by_masks[mask][chars]
+    with open("prolog_output/word_masks.pl", "w") as word_masks_prolog:
+        for mask in possible_masks:
+            for chars in words_by_masks[mask]:
+                # word_space('x...x', ['c','t'],'cukat')
+                for word in words_by_masks[mask][chars]:
+                    chars_string = "','".join(chars)
+                    print(f"word_mask('{mask}', ['{chars_string}'], {word.id}).", file=word_masks_prolog)
+                #words_by_masks[mask][chars]
 
-with open("prolog_output/word_space_names.pl", "w") as word_space_names:
-    for word_space in word_spaces:
-        print(f"word_space_name('{word_space.id()}').", file=word_space_names)
+    with open("prolog_output/word_space_names.pl", "w") as word_space_names:
+        for word_space in word_spaces:
+            print(f"word_space_name('{word_space.id()}').", file=word_space_names)
 
-with open("prolog_output/word_space_fills.pl", "w") as word_space_fills:
-    for word_space in word_spaces:
-        print(f"{word_space.to_prolog()}", file=word_space_fills)
+    with open("prolog_output/word_space_fills.pl", "w") as word_space_fills:
+        for word_space in word_spaces:
+            print(f"{word_space.to_prolog()}", file=word_space_fills)
 
 
 print("--------")
 
+iteration_counter = 1
+
+# One half random fill (vertical for now)
+for word_space in word_spaces_vertical:
+    word_space.bind(random.choice(words_by_length[word_space.length]))
+while True:
+    not_fillable = []
+    for word_space in word_spaces_horizontal:
+        if word_space.occupied_by:
+            # Word already bound
+            continue
+
+        mask = word_space.mask()
+        required_chars = word_space.apply_other_words()
+        try:
+            candidates = list(words_by_masks[mask][required_chars])
+            word_space.bind(random.choice(candidates))
+        except KeyError:
+            not_fillable.append(word_space)
+    if len(not_fillable) == 0:
+        break
+    # Replace all random choices crossing not_fillable
+    to_replace = []
+    for word_space in not_fillable:
+        for cross in word_space.crosses:
+            cross.good = False
+            to_replace.append(cross.other(word_space))
+
+    for word_space in to_replace:
+        # based on good property of its crosses
+        # it tries to find such masks to keep good and change other
+        good_mask = word_space.good_mask()
+        good_chars = good_mask.apply_word(word_space.occupied_by)
+        try:
+            candidates = list(words_by_masks[good_mask][good_chars])
+            word_space.bind(random.choice(candidates))
+        except KeyError:
+            # no good-chars keeping candidate  => must reroll whole word
+            word_space.bind(random.choice(words_by_length[word_space.length]))
+        # and remove the incompatible crossing words
+        word_space.unbind_incompatible_crosswords()
+
+    print(f"{iteration_counter} ... {len(not_fillable)}/{len(word_spaces_horizontal)} not fillable")
+    iteration_counter += 1
+
+# Print crossword
+print(f"After {iteration_counter} steps")
+print("--------")
+for y, line in enumerate(crossword, start=1):
+    for x, char in enumerate(line, start=1):
+        char = None
+        for word_space in word_spaces:
+            # Check if all crossed word_spaces have equal char
+            word_space_char = word_space.char_at(x, y)
+            if not word_space_char:
+                continue
+            elif not char:
+                char = word_space_char
+            elif char != word_space_char:
+                raise Exception("Incoherent WordSpaces", char, word_space_char)
+        if not char:
+            char = ' '
+        print(char, end="")
+    print("")
