@@ -27,7 +27,7 @@ find_word_space(WordSpaceName, WordId) :-
 % https://stackoverflow.com/a/15865303
 not_in_used_words(_, []).
 
-not_in_used_words(X, [[WordId|_]|Tail]) :-
+not_in_used_words(X, [WordId|Tail]) :-
      X \= WordId,
     not_in_used_words(X, Tail).
 
