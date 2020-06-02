@@ -1,6 +1,5 @@
-from . import Cross
-from . import Mask
-from . import Word
+from crossword.objects import Cross
+from crossword.objects import Mask
 
 class WordSpace:
     counter = 1
@@ -42,7 +41,7 @@ class WordSpace:
 
     def to_prolog(self):
         crosses_string = ", ".join([c.id() for c in self.crosses])
-        return f"word_space_fill('{self.mask()}', [{crosses_string}], '{self.id()}')."
+        return f"word_space_fill(\"{self.mask()}\", [{crosses_string}], \"{self.id()}\")."
 
     def add_cross(self, other_word_space):
         new_cross = Cross(self, other_word_space)
@@ -80,7 +79,7 @@ class WordSpace:
 
         for cross in self.crosses:
             applied.append(cross.other(self).my_char_on_cross(cross))
-        return Word(applied)
+        return CharList(applied)
 
     def char_at(self, x, y):
         if (x, y) not in self.spaces():

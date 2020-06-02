@@ -14,18 +14,38 @@ load_word_space_names :-
  consult(word_space_names).
 
 load_word_masks :-
- consult(word_masks).
+ read_file_to_string("../dataset/word_masks.csv", DataFileString, []),
+ split_string(DataFileString, "\n", "", Lines),
+ maplist(parse_word_mask_line, Lines).
+
+parse_word_mask_line("").
+parse_word_mask_line(Line) :-
+ split_string(Line, ",", "", List),
+ assert_wordmask(List).
+
+
+assert_wordmask(List) :-
+  nth1(1, List, Mask),
+  nth1(2, List, WordIdStr),
+  nth1(3, List, CharString),
+  atom_number(WordIdStr, WordIdInt),
+  split_string(CharString, ";", "", CharList),
+  %  print(Mask),write(","),
+  % print(WordIdInt),write(","),
+  %  print(CharList),nl,
+  assertz(word_mask(Mask, WordIdInt, CharList)).
 
 load_word_space_fills :-
  style_check(-singleton),
  consult(word_space_fills),
  style_check(+singleton).
 
+
 %! find_and_output_word_space(+WordSpaceName:string, -WordId:integer) is nondet
 %% For a WordSpace find a suitable Word and return its id.
 find_word_space(WordSpaceName, WordId) :-
     word_space_fill(Mask, Chars, WordSpaceName),
-    word_mask(Mask, Chars, WordId),
+    word_mask(Mask, WordId, Chars),
     usable_word(WordId, 1).
 
 % https://stackoverflow.com/a/15865303

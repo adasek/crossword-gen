@@ -1,14 +1,14 @@
 from pathlib import Path
 
 
-class PrologExporter(object):
+class CSVExporter(object):
     def __init__(self, directory_name):
         self.directory_name = Path(directory_name)
         self.files = {
-            "words": "words.pl",
-            "words_usable": "words_usable.pl",
+            "words": "words.csv",
+            "words_usable": "words_usable.csv",
             "word_masks": "word_masks.csv",
-            "word_space_names": "word_space_names.pl",
+            "word_space_names": "word_space_names.csv",
             "word_space_fills": "word_space_fills.pl"
         }
         for file_key in self.files.keys():
@@ -30,7 +30,7 @@ class PrologExporter(object):
     def export_words(self, words):
         with open(self.path("words"), "a") as words_prolog:
             for word in words:
-                    print(f"word({word.id},\"{word}\").", file=words_prolog)
+                    print(f"word({word.id},'{word}').", file=words_prolog)
 
     def export_words_usable(self, words):
         with open(self.path("words_usable"), "a") as words_usable_prolog:
@@ -48,12 +48,12 @@ class PrologExporter(object):
     def export_word_space_names(self, word_spaces):
         with open(self.path("word_space_names"), "a") as word_space_names:
             for word_space in word_spaces:
-                print(f"word_space_name(\"{word_space.id()}\").", file=word_space_names)
+                print(f"word_space_name('{word_space.id()}').", file=word_space_names)
 
     def export_word_space_fills(self, word_spaces):
-        with open(self.path("word_space_fills"), "a") as word_space_fills:
+        with open(self.path("word_space_fills"), "a") as word_space_fills_prolog:
             for word_space in word_spaces:
-                print(f"{word_space.to_prolog()}", file=word_space_fills)
+                print(f"{word_space.to_prolog()}", file=word_space_fills_prolog)
 
     def chars_to_string(self, chars):
         return ";".join(chars)

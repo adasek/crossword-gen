@@ -55,5 +55,5 @@ class Experiment1:
 
       t1 = time.time()
 
-      print(f"{number_of_words},{t1-t0},{output_dict['load_time']},{output_dict['compute_time']},{process.returncode}")
+      print(f"{number_of_words},{t1-t0},{output_dict['load_time']},{output_dict['compute_time']},{process.returncode}", flush=True)
 
