@@ -1,8 +1,6 @@
 from crossword.parser import Parser
 from crossword.exporter import PrologExporter
-import os
-import time
-import subprocess
+from crossword.runner import Runner
 
 # Experiment 1:
 # generate_8grid ~ words of length=8
@@ -40,24 +38,6 @@ class Experiment1:
       exporter = PrologExporter("experiment")
       exporter.export_all(words, word_spaces, possible_masks, words_by_masks)
 
-      t0 = time.time()
-      process = subprocess.run(['prolog', '../solve.pl'], cwd='experiment', capture_output=True)
-      output = process.stdout
-      # Parse output: first two lines contain load_time and compute_time
-      # other lines contains values of WordSpaces
-      compute_time = 0
-      load_time = 0
-      try:
-        output_dict = {line.split(":")[0]: line.split(":")[1] for line in output.decode('utf-8').split("\n") if line.strip() != ''}
-        compute_time = output_dict['compute_time']
-        load_time = output_dict['load_time']
-      except (IndexError, KeyError):
-        print("--------")
-        print(output.decode('utf-8'))
-        print("--------")
-        raise Exception("Unexpected prolog program output format")
-
-      t1 = time.time()
-
-      print(f"{number_of_words},{t1-t0},{load_time},{compute_time},{process.returncode}", flush=True)
-
+      runner = Runner("../solve.pl", "experiment")
+      runner.run()
+      print(runner.output(), flush=True)
