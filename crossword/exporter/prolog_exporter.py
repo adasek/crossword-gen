@@ -12,10 +12,20 @@ class PrologExporter(object):
             "word_space_fills": "word_space_fills.pl"
         }
         for file_key in self.files.keys():
-            self.path(file_key).unlink()
+            try:
+                self.path(file_key).unlink()
+            except FileNotFoundError:
+                pass
 
     def path(self, file_key):
-        file = Path(self.directory_name, self.files[file_key])
+        return Path(self.directory_name, self.files[file_key])
+
+    def export_all(self, words, word_spaces, possible_masks, words_by_masks):
+        self.export_words(words)
+        self.export_words_usable(words)
+        self.export_word_masks(possible_masks, words_by_masks)
+        self.export_word_space_names(word_spaces)
+        self.export_word_space_fills(word_spaces)
 
     def export_words(self, words):
         with open(self.path("words"), "a") as words_prolog:

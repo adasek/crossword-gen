@@ -22,6 +22,8 @@ class Solver(object):
 
     def solve(self, word_spaces, words_by_length, words_by_masks):
         iteration_counter = 1
+
+        # Make two disjoint sets
         word_spaces_horizontal = [w for w in word_spaces if w.type == 'horizontal']
         word_spaces_vertical = [w for w in word_spaces if w.type == 'vertical']
 
