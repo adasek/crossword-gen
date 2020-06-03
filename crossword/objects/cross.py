@@ -41,5 +41,8 @@ class Cross:
             return NotImplemented
         return self.coordinates == other.coordinates
 
+    def __hash__(self):
+        return hash(self.coordinates)
+
     def __str__(self):
         return f"Cross at {self.coordinates} between {self.word_space_horizontal} and {self.word_space_vertical}"

@@ -41,7 +41,7 @@ class WordSpace:
 
     def to_prolog(self):
         crosses_string = ", ".join([c.id() for c in self.crosses])
-        return f"word_space_fill(\"{self.mask()}\", [{crosses_string}], \"{self.id()}\")."
+        return f"word_space_fill(\"{self.mask()}\", [{crosses_string}], \"{self.id()}\")"
 
     def add_cross(self, other_word_space):
         new_cross = Cross(self, other_word_space)
@@ -85,6 +85,14 @@ class WordSpace:
         if (x, y) not in self.spaces():
             return None
         return self.occupied_by[self.spaces().index((x, y))]
+
+    def check_crosses(self):
+        for cross in self.crosses:
+            a = self.char_at(cross.coordinates[0], cross.coordinates[1])
+            b = cross.other(self).char_at(cross.coordinates[0], cross.coordinates[1])
+            if a != b:
+                return False
+        return True
 
     # Generates mask that covers good crosses
     # and resets crosses good status

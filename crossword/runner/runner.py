@@ -1,6 +1,8 @@
 import os
 import time
 import subprocess
+from crossword.objects import Word
+
 
 class Runner(object):
     def __init__(self, prolog_program, cwd):
@@ -35,3 +37,13 @@ class Runner(object):
 
     def output(self):
         return f"{self.t1 - self.t0},{self.output_dict['load_time']},{self.output_dict['compute_time']},{self.return_code}"
+
+    def fetch_results(self, word_spaces):
+        print(self.output_dict)
+        for word_space in word_spaces:
+            word_string = self.output_dict[f"\"{word_space.id()}\""].strip("\" ")
+            word_space.bind(Word(word_string))
+
+        for word_space in word_spaces:
+            if not word_space.check_crosses():
+                raise Exception("Cross check failed")

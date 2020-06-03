@@ -1,4 +1,4 @@
-:- initialization mark_start_time, load_words, load_words_usable, load_word_space_names, load_word_masks, load_word_space_fills, generate_cross.
+:- initialization mark_start_time, load_words, load_words_usable, load_word_space_names, load_word_masks, load_crosses, load_word_space_fills, generate_cross.
 
 mark_start_time :-
  get_time(TimeStarted),
@@ -35,11 +35,11 @@ assert_wordmask(List) :-
   %  print(CharList),nl,
   assertz(word_mask(Mask, WordIdInt, CharList)).
 
-load_word_space_fills :-
- style_check(-singleton),
- consult(word_space_fills),
- style_check(+singleton).
+load_crosses :-
+ consult(crosses).
 
+load_word_space_fills :-
+ consult(word_space_fills).
 
 %! find_and_output_word_space(+WordSpaceName:string, -WordId:integer) is nondet
 %% For a WordSpace find a suitable Word and return its id.

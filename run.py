@@ -28,6 +28,7 @@ exporter.export_all(words, word_spaces, possible_masks, words_by_masks)
 
 runner = Runner('../solve.pl', "dataset")
 runner.run()
+runner.fetch_results(word_spaces)
 print(runner.output(), flush=True)
 
 # Solve

@@ -9,7 +9,8 @@ class PrologExporter(object):
             "words_usable": "words_usable.pl",
             "word_masks": "word_masks.csv",
             "word_space_names": "word_space_names.pl",
-            "word_space_fills": "word_space_fills.pl"
+            "word_space_fills": "word_space_fills.pl",
+            "crosses": "crosses.pl"
         }
         for file_key in self.files.keys():
             try:
@@ -25,6 +26,7 @@ class PrologExporter(object):
         self.export_words_usable(words)
         self.export_word_masks(possible_masks, words_by_masks)
         self.export_word_space_names(word_spaces)
+        self.export_crosses(word_spaces)
         self.export_word_space_fills(word_spaces)
 
     def export_words(self, words):
@@ -50,10 +52,20 @@ class PrologExporter(object):
             for word_space in word_spaces:
                 print(f"word_space_name(\"{word_space.id()}\").", file=word_space_names)
 
+    def export_crosses(self, word_spaces):
+        crosses_lists = [word_space.crosses for word_space in word_spaces]
+        crosses = list(set([item for sublist in crosses_lists for item in sublist]))
+
+        with open(self.path("crosses"), "a") as crosses_fp:
+            for cross in crosses:
+                print(f"cross(\"{cross.id()}\", _).", file=crosses_fp)
+
     def export_word_space_fills(self, word_spaces):
         with open(self.path("word_space_fills"), "a") as word_space_fills:
             for word_space in word_spaces:
-                print(f"{word_space.to_prolog()}", file=word_space_fills)
+                cross_conditions = [f"cross(\"{cross.id()}\",{cross.id()})" for cross in word_space.crosses]
+                print(f"{word_space.to_prolog()} :- {','.join(cross_conditions)}.", file=word_space_fills)
+
 
     def chars_to_string(self, chars):
         return ";".join(chars)
