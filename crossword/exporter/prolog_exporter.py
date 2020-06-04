@@ -58,7 +58,8 @@ class PrologExporter(object):
 
         with open(self.path("crosses"), "a") as crosses_fp:
             for cross in crosses:
-                print(f"cross(\"{cross.id()}\", _).", file=crosses_fp)
+                #  cross(WS1, MaskWS1, WS2, MaskWS2, CrossId),
+                print(f"cross(\"{cross.word_space_horizontal.id()}\",\"{cross.mask_one('horizontal')}\",\"{cross.word_space_vertical.id()}\",\"{cross.mask_one('vertical')}\",\"{cross.id()}\").", file=crosses_fp)
 
     def export_word_space_fills(self, word_spaces):
         with open(self.path("word_space_fills"), "a") as word_space_fills:
