@@ -63,6 +63,8 @@ class WordSpace:
         else:
             return [mask]
 
+    def masks_prefix(self):
+        return self.mask().prefix_derivations()
 
     def my_char_on_cross(self, cross):
         return self.occupied_by[self.index_of_cross(cross)]

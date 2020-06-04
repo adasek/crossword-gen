@@ -48,12 +48,21 @@ class Mask(object):
                 mask_string += "."
         return mask_string
 
+
+
     def all_derivations(self):
         my_indices = []
         for index, applied in enumerate(self.mask):
             my_indices.append(index)
 
         return [self.from_indices(indices) for indices in more_itertools.powerset(my_indices)]
+
+    def prefix_derivations(self):
+        return_list = []
+        for index, applied in enumerate(self.mask):
+            if applied:
+                return_list.append(Mask(self.mask[0:index+1] + [False]*(self.length-index - 1)))
+        return return_list
 
     def bind_count(self):
         return self.mask.count(True)

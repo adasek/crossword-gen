@@ -8,7 +8,7 @@ class PrologExporter(object):
             "words": "words.pl",
             "words_usable": "words_usable.pl",
             "word_masks": "word_masks.csv",
-            "word_space_names": "word_space_names.pl",
+            "word_spaces": "word_spaces.pl",
             "word_space_fills": "word_space_fills.pl",
             "crosses": "crosses.pl"
         }
@@ -48,9 +48,9 @@ class PrologExporter(object):
                         print(f"{mask},{word.id},{self.chars_to_string(chars)}", file=word_masks_csv)
 
     def export_word_space_names(self, word_spaces):
-        with open(self.path("word_space_names"), "a") as word_space_names:
+        with open(self.path("word_spaces"), "a") as word_space_names:
             for word_space in word_spaces:
-                print(f"word_space_name(\"{word_space.id()}\").", file=word_space_names)
+                print(f"word_space(\"{word_space.id()}\",{word_space.length}).", file=word_space_names)
 
     def export_crosses(self, word_spaces):
         crosses_lists = [word_space.crosses for word_space in word_spaces]

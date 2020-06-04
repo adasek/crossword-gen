@@ -8,18 +8,19 @@ from crossword.solver import Solver
 # {...XX,X...X,X..X.,....X,X....,...X.}
 # Maximal length of maparse_original_wordlistsk to have all its children generated ( 2^x masks)!
 # Zero means no children masks would be generated
-MASK_LENGTH_TRESHOLD = 0
+MASK_LENGTH_TRESHOLD = 9
 
 parser = Parser(".")
 
-words = parser.parse_original_wordlist("input/Czech.dic")
+dict_file = "input/Czech.dic"
+words = parser.parse_original_wordlist(dict_file)
 words_by_length = parser.words_by_length()
 crossword = parser.parse_crossword("crossword.dat")
 word_spaces = parser.parse_word_spaces(crossword)
 
 parser.add_crosses(word_spaces)
 
-possible_masks = parser.create_possible_masks(word_spaces, MASK_LENGTH_TRESHOLD)
+possible_masks = parser.create_possible_masks(word_spaces, MASK_LENGTH_TRESHOLD, True)
 words_by_masks = parser.create_words_by_masks(words, possible_masks)
 
 exporter = PrologExporter("dataset")
