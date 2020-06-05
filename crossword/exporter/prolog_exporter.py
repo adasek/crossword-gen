@@ -1,5 +1,6 @@
 from pathlib import Path
-
+import itertools
+from collections import Counter
 
 class PrologExporter(object):
     def __init__(self, directory_name):
@@ -31,6 +32,12 @@ class PrologExporter(object):
 
     def export_words(self, words):
         with open(self.path("words"), "a") as words_prolog:
+            # export alphabet
+            alphabet = set()
+            character_counter = Counter(itertools.chain(*words))
+
+            alphabet_list = "\",\"".join([tuple[0] for tuple in character_counter.most_common()])
+            print(f"alphabet([\"{alphabet_list}\"]).", file=words_prolog)
             for word in words:
                     print(f"word({word.id},\"{word}\").", file=words_prolog)
 
@@ -40,6 +47,7 @@ class PrologExporter(object):
                 print(f"usable_word({word.id}, {word.use}).", file=words_usable_prolog)
 
     def export_word_masks(self, possible_masks, words_by_masks):
+
         with open(self.path("word_masks"), "a") as word_masks_csv:
             for mask in possible_masks:
                 for chars in words_by_masks[mask]:
@@ -49,6 +57,7 @@ class PrologExporter(object):
 
     def export_word_space_names(self, word_spaces):
         with open(self.path("word_spaces"), "a") as word_space_names:
+
             for word_space in word_spaces:
                 crossings_list = ['']*word_space.length
                 for cross in word_space.crosses:

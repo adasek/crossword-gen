@@ -1,6 +1,7 @@
 :- initialization mark_start_time, load_words, load_words_usable, load_word_spaces  , load_word_masks, load_crosses, generate_cross.
 
 :- set_prolog_flag(double_quotes, atom).
+:- use_module(library(clpr/bv_r)).
 
 mark_start_time :-
  get_time(TimeStarted),
@@ -44,23 +45,23 @@ load_crosses :-
  consult(crosses).
 
 %%%%%
-solve_cross(DataIn, CrossId, Char, FoundWord1, FoundWord2, DataOutter) :-
+bind_cross(DataIn, CrossId, Char, DataOutter) :-
  cross(WS1, MaskWS1, WS2, MaskWS2, CrossId),
- %write("solve_cross/WS1:"),print(WS1),nl,
- %write("solve_cross/DataIn:"),print(DataIn),nl,
- word_space_fill_one(DataIn, MaskWS1, Char, WS1, FoundWord1, DataOut),
- %write("solve_cross/WS2:"),print(WS2),nl,
- %write("solve_cross/MaskWS2:"),print(MaskWS2),nl,
- %write("solve_cross/Char:"),print(Char),nl,
- %write("solve_cross/DataOut:"),print(DataOut),nl,
- word_space_fill_one(DataOut, MaskWS2, Char, WS2, FoundWord2, DataOutter).
-
-
-word_space_fill_one(DataIn, Mask, Char, WordSpaceId, WordId, DataOut) :-
+ alphabet(Alphabet),
+ member(CharAtom, Alphabet),
+ atom_string(CharAtom,Char),
+ %print(Char),print("A"),nl,
+ word_exists(DataIn, MaskWS1, Char, WS1, NumWords1,  DataOut),
+ word_exists(DataOut, MaskWS2, Char, WS2, NumWords2, DataOutter).
+ 
+word_exists(DataIn, Mask, Char, WordSpaceId, NumWords, DataOut) :-
  find_mask(DataIn, WordSpaceId, OldMask, OldChars),
  combine_masks(Mask, [Char], OldMask, OldChars, NewMask, NewChars),
- word_mask(NewMask, WordId, NewChars),
- bind_crosses(WordSpaceId, WordId),
+ %print("word_exists"),write(NewMask),print(":"),print(NewChars),nl,
+ findall(WordId, word_mask(NewMask, WordId, NewChars), WordIds),
+ length(WordIds, NumWords),
+ %print(NumWords),nl,
+ >(NumWords, 0),
  update_mask(DataIn, WordSpaceId, NewMask, NewChars, DataOut).
 
 find_mask(Data, WordSpaceId, Mask, Chars) :-
@@ -92,26 +93,6 @@ update_mask(DataIn, WordSpaceId, NewMask, NewChars, DataOut) :-
     put_dict(WordSpaceId, DataIn, _{mask: NewMask, chars: NewChars} , DataOut).
 
 
-bind_crosses(WordSpaceId, WordId) :-
-    word_space(WordSpaceId,_,CrossesList),
-    word(WordId,WordString),
-    split_string(WordString, "", "", CharList),
-    bind_crosses_list(WordSpaceId,CrossesList,CharList).
-
-bind_crosses_list(_, [],[]).
-bind_crosses_list(_, [CrossId|CrossListRest],[Char|CharListRest]):-
- string_length(CrossId,Len),
- =(Len, 0)
- bind_crosses_list(_, CrossListRest, CharListRest).
-
-bind_crosses_list(WordSpaceId, [CrossId|CrossListRest],[Char|CharListRest]) :-
- cross(WS1,Mask1,WS2,Mask2,CrossId),
- =(WS1, WordSpaceId),
- %WS 2 is the unbounded one
-
- cross("WS_3","..X.","WS_7","..X.","C_4_4").
-
-
 
 %%%%%%%%%%%
 
@@ -132,22 +113,12 @@ not_in_used_words(X, [WordId|Tail]) :-
 %! solve_crosses(+CrossNames:list, +UsedWordsBefore:list, -UsedWords:list) is nondet
 %% Recursively call search for suitable word for every WordSpace given in first parameter
 %% After match is made, remove the word from usable words
-solve_crosses(Data,[],X,X,Data).
-solve_crosses(DataIn, [CrossId | Rest], UsedWordsBefore, UsedWords, DataBack) :-
-    write("solve_crosses0:"),print(CrossId),nl,
-    write(DataIn),nl,
-    solve_cross(DataIn, CrossId, _, FoundWord1, FoundWord2, DataOut),
-    not_in_used_words(FoundWord1, UsedWordsBefore),
-    not_in_used_words(FoundWord2, [FoundWord1|UsedWordsBefore]),
-    sleep(0.1),
-    word(FoundWord1, FoundWord1String),
-    word(FoundWord2, FoundWord2String),
-    write(" FoundWord1:"),print(FoundWord1String),nl,
-    write(" FoundWord2:"),print(FoundWord2String),nl,
-    append(UsedWordsBefore, [FoundWord1], UsedWordsA),
-    append(UsedWordsA, [FoundWord2], UsedWordsB),
-    write("solve_crosses1:"),print(CrossId),nl,
-    solve_crosses(DataOut, Rest, UsedWordsB, UsedWords, DataBack).
+solve_crosses(Data,[],Data).
+solve_crosses(DataIn, [CrossId | Rest],  DataBack) :-
+    %write("solve_crosses0:"),print(CrossId),nl,
+    %write(DataIn),nl,
+    bind_cross(DataIn, CrossId, _,  DataOut),
+    solve_crosses(DataOut, Rest,  DataBack).
 
 
 initialize_word_masks(OutDict, [], OutDict).
@@ -182,8 +153,8 @@ generate_cross :-
     initialize_word_masks(_{}, WordSpaceIds ,WordMasks),
     findall(CrossId, cross(_, _, _, _, CrossId), CrossIds),
     print(CrossIds),nl,
-    solve_crosses(WordMasks, CrossIds, [], UsedWords, _),
-    print(UsedWords),nl,
+    solve_crosses(WordMasks, CrossIds,  WordMasksOut),
+    print(WordMasksOut),
     %profile(call_with_time_limit(10,     ....   ))
     get_time(TimeEnded),
     LoadTime is TimeLoaded - TimeStarted,
