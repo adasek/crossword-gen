@@ -1,25 +1,32 @@
 from crossword.objects import Cross
 from crossword.objects import Mask
 from crossword.objects import Word
+from crossword.objects import CharList
 
 import math
+from typing import List, Set, Dict, Tuple
+
 
 class WordSpace:
+    """Single line of characters in crossroad that will be filled with a word"""
     counter = 1
 
-    def __init__(self, start, length, type):
+    def __init__(self, start: Tuple[int, int], length: int, direction: str):
+        """Constuct WordSpace without any word"""
         self.start = start
         self.length = length
-        self.type = type
+        self.type = direction
         self.crosses = []
         self.occupied_by = None
         self.my_counter = WordSpace.counter
         WordSpace.counter += 1
 
-    def id(self):
+    def id(self) -> str:
+        """Prolog identifer of this object"""
         return f"WS_{self.my_counter}"
 
-    def bind(self, word):
+    def bind(self, word: Word):
+        """Add the word into WordSpace"""
         if word.length != self.length:
             print(self)
             print(word)
@@ -27,19 +34,25 @@ class WordSpace:
         self.occupied_by = word
 
     def unbind(self):
+        """Remove binded word from WordSpace"""
         self.occupied_by = None
 
-    def bindable(self, words_by_masks):
+    def bindable(self, words_by_masks: Dict[Mask, Dict[CharList, Set[Word]]]) -> Set[Word]:
+        """List all words that can be filled to WordSpace at this moment"""
         mask, chars = self.mask_current()
         if chars in words_by_masks[mask]:
             return words_by_masks[mask][chars]
         else:
             return set()
 
-    def get_unbounded_crosses(self):
+    def get_unbounded_crosses(self) -> List[Cross]:
+        """List crosses that don't have certain Char bound.
+        Will return empty list if word is bind to this WordSpace"""
         return [cross for cross in self.crosses if not cross.bound_value()]
 
-    def expectation_value(self, words_by_masks):
+    def expectation_value(self, words_by_masks: Dict[Mask, Dict[CharList, Set[Word]]]) -> int:
+        """Count how many words may be filled to the unbound WordSpace crossing this.
+        Will return +inf if no unbound WordSpace is crossing"""
         possible_words = self.bindable(words_by_masks)
         if len(possible_words) == 0:
             return 0
