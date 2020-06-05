@@ -137,10 +137,7 @@ class WordSpace:
 
     # Zero indexed!
     def index_of_cross(self, cross):
-        for index, space in enumerate(self.spaces(), start=0):
-            if cross.coordinates == space:
-                return index
-        raise Exception("Cross not found")
+        return cross.cross_index(self)
 
     def apply_other_words(self):
         applied = []

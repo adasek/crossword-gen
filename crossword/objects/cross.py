@@ -3,6 +3,8 @@ class Cross:
     def __init__(self, word_space1, word_space2):
         self.word_space_horizontal = None
         self.word_space_vertical = None
+        self.index_in_horizontal = 0
+        self.index_in_vertical = 0
         self.coordinates = None
         self.good = True
 
@@ -15,6 +17,7 @@ class Cross:
         else:
             raise Exception("Bad types")
 
+
         # Compute coordinates
         cross_coordinates = set(self.word_space_vertical.spaces()).intersection(
             set(self.word_space_horizontal.spaces()))
@@ -24,9 +27,19 @@ class Cross:
             raise Exception("Incoherent cross")
         else:
             self.coordinates = cross_coordinates.pop()
+            self.index_in_horizontal = self.word_space_horizontal.spaces().index(self.coordinates)
+            self.index_in_vertical = self.word_space_vertical.spaces().index(self.coordinates)
 
     def id(self):
         return f"C_{self.coordinates[0]}_{self.coordinates[1]}"
+
+    def cross_index(self, word_space):
+        if word_space == self.word_space_vertical:
+            return self.index_in_vertical
+        elif word_space == self.word_space_horizontal:
+            return self.index_in_horizontal
+        else:
+            raise Exception("Bad call of cross_index", self, word_space, self.word_space_horizontal, self.word_space_vertical)
 
     def other(self, word_space):
         if word_space == self.word_space_vertical:
