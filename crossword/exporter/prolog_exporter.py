@@ -50,7 +50,11 @@ class PrologExporter(object):
     def export_word_space_names(self, word_spaces):
         with open(self.path("word_spaces"), "a") as word_space_names:
             for word_space in word_spaces:
-                print(f"word_space(\"{word_space.id()}\",{word_space.length}).", file=word_space_names)
+                crossings_list = ['']*word_space.length
+                for cross in word_space.crosses:
+                    crossings_list[word_space.index_of_cross(cross)] = cross.id()
+                crossings_string = "\",\"".join(crossings_list)
+                print(f"word_space(\"{word_space.id()}\",{word_space.length},[\"{crossings_string}\"]).", file=word_space_names)
 
     def export_crosses(self, word_spaces):
         crosses_lists = [word_space.crosses for word_space in word_spaces]

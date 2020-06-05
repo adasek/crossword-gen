@@ -12,7 +12,8 @@ MASK_LENGTH_TRESHOLD = 9
 
 parser = Parser(".")
 
-dict_file = "input/Czech.dic"
+#dict_file = "input/Czech.dic"
+dict_file = "input/altered.dic"
 words = parser.parse_original_wordlist(dict_file)
 words_by_length = parser.words_by_length()
 crossword = parser.parse_crossword("crossword.dat")
