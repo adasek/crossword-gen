@@ -20,56 +20,44 @@ class Solver(object):
                 return list(words_by_masks[submask][subchars])
         raise KeyError
 
-    def solve(self, word_spaces, words_by_length, words_by_masks):
-        iteration_counter = 1
-
-        # Make two disjoint sets
-        word_spaces_horizontal = [w for w in word_spaces if w.type == 'horizontal']
-        word_spaces_vertical = [w for w in word_spaces if w.type == 'vertical']
+    def solve(self, all_word_spaces, words_by_masks):
+        word_spaces = [w for w in all_word_spaces]
 
         # One half random fill (vertical for now)
-        for word_space in word_spaces_vertical:
-            word_space.bind(random.choice(words_by_length[word_space.length]))
+        assigned = []
+        failed_pairs = set()
         while True:
-            not_fillable = []
-            for word_space in word_spaces_horizontal:
-                if word_space.occupied_by:
-                    # Word already bound
-                    continue
-
-                mask = word_space.mask()
-                required_chars = word_space.apply_other_words()
-                try:
-                    candidates = list(words_by_masks[mask][required_chars])
-                    word_space.bind(random.choice(candidates))
-                except KeyError:
-                    not_fillable.append(word_space)
-            if len(not_fillable) == 0:
+            # compute word_space potential
+            word_spaces_to_fill_next = sorted(word_spaces, key=lambda ws: ws.expectation_value(words_by_masks), reverse=True)
+            if len(word_spaces_to_fill_next) == 0:
                 break
-            # Replace all random choices crossing not_fillable
-            to_replace = []
-            for word_space in not_fillable:
-                for cross in word_space.crosses:
-                    cross.good = False
-                    to_replace.append(cross.other(word_space))
 
-            for word_space in to_replace:
-                # based on good property of its crosses
-                # it tries to find such masks to keep good and change other
-                try:
-                    candidates = self.find_some_replacements(words_by_masks, word_space)
-                    word_space.bind(random.choice(candidates))
-                except KeyError:
-                    # no good-chars keeping candidate  => must reroll whole word
-                    word_space.bind(random.choice(words_by_length[word_space.length]))
-                # Remove the incompatible crossing words
-                word_space.unbind_incompatible_crosswords()
+            ws = word_spaces_to_fill_next[0]
+            print(ws)
+            print(ws.expectation_value(words_by_masks))
+            best_option = None
+            option_number = 0
+            while not best_option or (ws, best_option) in failed_pairs:
+                best_option = ws.find_best_option(words_by_masks, option_number)
+                option_number += 1
+                if not best_option:
+                    break
 
-            print(f"{iteration_counter} ... {len(not_fillable)}/{len(word_spaces_horizontal)} not fillable")
-            iteration_counter += 1
+            if not best_option:
+                # backtrack
+                failed_pair = assigned.pop()
+                word_spaces.append(failed_pair[0])
+                failed_pairs.add(failed_pair)
+            else:
+                ws.bind(best_option)
+                print(f"Assigned {best_option} to {ws}")
+                assigned.append((ws, best_option))
+                word_spaces.remove(ws)
 
+        return all_word_spaces
+
+    def print(self, word_spaces, crossword):
         # Print crossword
-        print(f"After {iteration_counter} steps")
         print("--------")
         for y, line in enumerate(crossword, start=1):
             for x, char in enumerate(line, start=1):

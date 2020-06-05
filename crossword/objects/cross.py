@@ -48,6 +48,10 @@ class Cross:
         mask_list[ws.index_of_cross(self)] = 'X'
         return "".join(mask_list)
 
+    def bound_value(self):
+        char = self.word_space_horizontal.my_char_on_cross(self) or  self.word_space_vertical.my_char_on_cross(self)
+        return char
+
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return NotImplemented

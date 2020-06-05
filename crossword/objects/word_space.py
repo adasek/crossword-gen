@@ -2,6 +2,8 @@ from crossword.objects import Cross
 from crossword.objects import Mask
 from crossword.objects import Word
 
+import math
+
 class WordSpace:
     counter = 1
 
@@ -26,6 +28,53 @@ class WordSpace:
 
     def unbind(self):
         self.occupied_by = None
+
+    def bindable(self, words_by_masks):
+        mask, chars = self.mask_current()
+        if chars in words_by_masks[mask]:
+            return words_by_masks[mask][chars]
+        else:
+            return set()
+
+    def get_unbounded_crosses(self):
+        return [cross for cross in self.crosses if not cross.bound_value()]
+
+    def expectation_value(self, words_by_masks):
+        possible_words = self.bindable(words_by_masks)
+        if len(possible_words) == 0:
+            return 0
+        # For every bindable option compute the potential candidates
+        unbounded_crosses = self.get_unbounded_crosses()
+        if len(unbounded_crosses) == 0:
+            # This is a must have word!
+            return math.inf
+        # Try to fill in any word
+        return max([self.count_promising(words_by_masks, unbounded_crosses, word) for word in possible_words])
+
+    def count_promising(self, words_by_masks, unbounded_crosses, word):
+        promising = 0
+
+        for cross in unbounded_crosses:
+            char = word[self.index_of_cross(cross)]
+            mask, mask_chars = cross.other(self).mask_current(cross, char)
+            try:
+                possible_count = len(words_by_masks[mask][mask_chars])
+            except KeyError:
+                possible_count = 0
+            promising += possible_count
+            if possible_count == 0:
+                return 0
+        return promising
+
+    def find_best_option(self, words_by_masks, option_number=0):
+        unbounded_crosses = self.get_unbounded_crosses()
+        possible_words = sorted(self.bindable(words_by_masks),
+                                key=lambda word: self.count_promising(words_by_masks, unbounded_crosses, word),
+                                reverse=True)
+        if option_number >= len(possible_words):
+            return None
+        else:
+            return possible_words[option_number]
 
     # Returns set of tuples - positions that this words goes through
     def spaces(self):
@@ -55,6 +104,20 @@ class WordSpace:
     def mask(self):
         return Mask(self.spaces(), self.crosses)
 
+    # Returns currently binded mask, optionally with one more bounded char (at given cross)
+    def mask_current(self, add_cross=None, add_char=''):
+        mask_list = [False] * self.length
+        char_list = [None] * self.length
+        for cross in self.crosses:
+            if cross.bound_value():
+                mask_list[self.index_of_cross(cross)] = True
+                char_list[self.index_of_cross(cross)] = cross.bound_value()
+        if add_cross:
+            mask_list[self.index_of_cross(add_cross)] = True
+            char_list[self.index_of_cross(add_cross)] = add_char
+
+        return Mask(mask_list), Word([ch for ch in char_list if ch])
+
     # All possible combinations of masks derived from the main mask
     # example: X..X. generates X.... and ...X.
     def masks_all(self, treshold):
@@ -68,6 +131,8 @@ class WordSpace:
         return self.mask().prefix_derivations()
 
     def my_char_on_cross(self, cross):
+        if not self.occupied_by:
+            return None
         return self.occupied_by[self.index_of_cross(cross)]
 
     # Zero indexed!

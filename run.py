@@ -24,15 +24,16 @@ parser.add_crosses(word_spaces)
 possible_masks = parser.create_possible_masks(word_spaces, MASK_LENGTH_TRESHOLD, True)
 words_by_masks = parser.create_words_by_masks(words, possible_masks)
 
-exporter = PrologExporter("dataset")
-exporter.export_all(words, word_spaces, possible_masks, words_by_masks)
+#exporter = PrologExporter("dataset")
+#exporter.export_all(words, word_spaces, possible_masks, words_by_masks)
 
 
-runner = Runner('../solve.pl', "dataset")
-runner.run()
-runner.fetch_results(word_spaces)
-print(runner.output(), flush=True)
+#runner = Runner('../solve.pl', "dataset")
+#runner.run()
+#runner.fetch_results(word_spaces)
+#print(runner.output(), flush=True)
 
 # Solve
-#solver = Solver(MASK_LENGTH_TRESHOLD)
-#solver.solve(word_spaces, words_by_length, words_by_masks)
+solver = Solver(MASK_LENGTH_TRESHOLD)
+word_spaces = solver.solve(word_spaces, words_by_masks)
+solver.print(word_spaces, crossword)
