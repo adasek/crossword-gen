@@ -143,11 +143,16 @@ string_concat(".", InStr, OutStr).
 %! print_word_spaces(+WordSpaceNames:list, +UsedWords:list) is nondet
 %% Print words that were found for respective WordSpaces.
 %% Second parameter is list of word ids
-print_word_spaces([],[]).
-print_word_spaces([WordSpaceName|Rest1],[UsedWordId|Rest2]) :-
-    word(UsedWordId, WordString),
-    print(WordSpaceName),write(":"), print(WordString),nl,
-    print_word_spaces(Rest1, Rest2).
+print_words([],_).
+print_words([WordSpaceId|WordSpaces], WordMasksData) :-
+    get_dict(WordSpaceId, WordMasksData, Record),
+    get_dict(chars, Record, Chars),
+    get_dict(mask, Record, Mask),
+    chars_to_mask_fill(Chars, MaskFill),
+    word_mask(Mask,WordId, MaskFill),
+    word(WordId, WordString),
+    print(WordSpaceId),write(":"), print(WordString),nl,
+    print_words(WordSpaces, WordMasksData).
 
 %! generate_cross() is nondet
 %% Main function for Crossword generation
@@ -158,9 +163,10 @@ generate_cross :-
     initialize_word_masks(_{}, WordSpaceIds ,WordMasks),
     findall(CrossId, cross(_, _, _, _, CrossId), CrossIds),
     %print(CrossIds),nl,
-    profile(call_with_time_limit(240, solve_crosses(WordMasks, CrossIds,  WordMasksOut))),
-    show_profile(),
-    print(WordMasksOut),
+    solve_crosses(WordMasks, CrossIds,  WordMasksOut),
+    print_words(WordSpaceIds,WordMasksOut),
+    %show_profile(),
+    %print(WordMasksOut),
     %profile(call_with_time_limit(10,     ....   ))
     get_time(TimeEnded),
     LoadTime is TimeLoaded - TimeStarted,
