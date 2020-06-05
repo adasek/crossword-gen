@@ -1,5 +1,6 @@
 from crossword.objects import Cross
 from crossword.objects import Mask
+from crossword.objects import Word
 
 class WordSpace:
     counter = 1
@@ -81,7 +82,7 @@ class WordSpace:
 
         for cross in self.crosses:
             applied.append(cross.other(self).my_char_on_cross(cross))
-        return CharList(applied)
+        return Word(applied)
 
     def char_at(self, x, y):
         if (x, y) not in self.spaces():
