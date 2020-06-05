@@ -35,14 +35,17 @@ assert_wordmask(List) :-
   nth1(2, List, WordIdStr),
   nth1(3, List, CharString),
   atom_number(WordIdStr, WordIdInt),
-  split_string(CharString, ";", "", CharList),
-  %  print(Mask),write(","),
-  % print(WordIdInt),write(","),
-  %  print(CharList),nl,
-  assertz(word_mask(Mask, WordIdInt, CharList)).
+      split_string(CharString, ";", "", CharList),
+  chars_to_mask_fill(CharList, Hash),
+  assertz(word_mask(Mask, WordIdInt, Hash)).
 
 load_crosses :-
  consult(crosses).
+
+%%%%%
+chars_to_mask_fill(Chars, String) :-
+   atomics_to_string(Chars,";", String).
+   %crypto_data_hash(String, Hash, [algorithm(md5)]).
 
 %%%%%
 bind_cross(DataIn, CrossId, Char, DataOutter) :-
@@ -51,14 +54,16 @@ bind_cross(DataIn, CrossId, Char, DataOutter) :-
  member(CharAtom, Alphabet),
  atom_string(CharAtom,Char),
  %print(Char),print("A"),nl,
- word_exists(DataIn, MaskWS1, Char, WS1, NumWords1,  DataOut),
- word_exists(DataOut, MaskWS2, Char, WS2, NumWords2, DataOutter).
- 
+ word_exists(DataIn, MaskWS1, Char, WS1, _,  DataOut),
+ word_exists(DataOut, MaskWS2, Char, WS2, _, DataOutter).
+
 word_exists(DataIn, Mask, Char, WordSpaceId, NumWords, DataOut) :-
  find_mask(DataIn, WordSpaceId, OldMask, OldChars),
  combine_masks(Mask, [Char], OldMask, OldChars, NewMask, NewChars),
  %print("word_exists"),write(NewMask),print(":"),print(NewChars),nl,
- findall(WordId, word_mask(NewMask, WordId, NewChars), WordIds),
+ %word_mask(NewMask, WordId, NewChars),
+ chars_to_mask_fill(NewChars, MaskFill),
+ findall(WordId, word_mask(NewMask, WordId, MaskFill), WordIds),
  length(WordIds, NumWords),
  %print(NumWords),nl,
  >(NumWords, 0),
@@ -152,8 +157,9 @@ generate_cross :-
     findall(WordSpaceId, word_space(WordSpaceId, _, _), WordSpaceIds),
     initialize_word_masks(_{}, WordSpaceIds ,WordMasks),
     findall(CrossId, cross(_, _, _, _, CrossId), CrossIds),
-    print(CrossIds),nl,
-    solve_crosses(WordMasks, CrossIds,  WordMasksOut),
+    %print(CrossIds),nl,
+    profile(call_with_time_limit(240, solve_crosses(WordMasks, CrossIds,  WordMasksOut))),
+    show_profile(),
     print(WordMasksOut),
     %profile(call_with_time_limit(10,     ....   ))
     get_time(TimeEnded),
