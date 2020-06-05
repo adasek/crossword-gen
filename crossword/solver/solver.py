@@ -33,8 +33,6 @@ class Solver(object):
                 break
 
             ws = word_spaces_to_fill_next[0]
-            print(ws)
-            print(ws.expectation_value(words_by_masks))
             best_option = None
             option_number = 0
             while not best_option or (ws, best_option) in failed_pairs:
@@ -46,11 +44,12 @@ class Solver(object):
             if not best_option:
                 # backtrack
                 failed_pair = assigned.pop()
+                failed_pair[0].unbind()
                 word_spaces.append(failed_pair[0])
                 failed_pairs.add(failed_pair)
             else:
                 ws.bind(best_option)
-                print(f"Assigned {best_option} to {ws}")
+                #print(f"Assigned {best_option} to {ws}")
                 assigned.append((ws, best_option))
                 word_spaces.remove(ws)
 
