@@ -20,6 +20,7 @@ class Solver(object):
                 break
 
             ws = word_spaces_to_fill_next[0]
+            print(f"{ws.expectation_value(word_list)}")
             best_option = None
             option_number = 0
             while not best_option or (ws, best_option) in failed_pairs:

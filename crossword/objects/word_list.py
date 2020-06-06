@@ -1,4 +1,4 @@
-
+from crossword.objects import Mask, CharList, Word
 
 class WordList:
     """Data structure to effectively find suitable words"""
@@ -27,15 +27,23 @@ class WordList:
             for mask in possible_masks:
                 if mask.length == word.length:
                     chars = mask.apply_word(word)
-                    if mask not in words_by_masks:
+                    if mask not in words_by_masks.keys():
                         words_by_masks[mask] = {}
-                    if chars not in words_by_masks[mask]:
+                    if chars not in words_by_masks[mask].keys():
                         words_by_masks[mask][chars] = set()
                     words_by_masks[mask][chars].add(word)
 
         return words_by_masks
 
-    def words(self, mask, chars):
+    def words(self, mask: Mask, chars: CharList):
+        if isinstance(chars, Word):
+            chars = CharList(chars.char_list)
+
+        if not isinstance(chars, CharList):
+            raise Exception("words type mismatch")
+        if not isinstance(mask, Mask):
+            raise Exception("mask type mismatch")
+
         division_masks = mask.divide(chars)
         words = None
         if mask.bind_count() == 0:
@@ -48,10 +56,9 @@ class WordList:
             except KeyError:
                 division_words = set()
             if words:
-                words = words.intersect(division_words)
+                words = words.intersection(division_words)
             else:
                 words = division_words
-
         return words
 
     def word_count(self, mask, chars):

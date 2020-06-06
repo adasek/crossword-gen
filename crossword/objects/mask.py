@@ -85,7 +85,7 @@ class Mask(object):
             if applied:
                 mask_list = [False] * self.length
                 mask_list[index] = True
-                mask_char_tuples.append((Mask(mask_list), CharList(chars[applied_cnt])))
+                mask_char_tuples.append((Mask(mask_list), CharList([chars[applied_cnt]])))
                 applied_cnt += 1
 
         return mask_char_tuples

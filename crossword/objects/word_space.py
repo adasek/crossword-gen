@@ -64,11 +64,8 @@ class WordSpace:
     def count_promising(self, word_list: WordList, unbounded_crosses, word):
         promising = 0
         for cross in unbounded_crosses:
-            try:
-                char = word[self.index_of_cross(cross)]
-            except:
-                print(f"{word} ... {self.index_of_cross(cross)}")
-                raise Exception("wtf")
+            char = word[self.index_of_cross(cross)]
+
             mask, mask_chars = cross.other(self).mask_current(cross, char)
             try:
                 possible_count = word_list.word_count(mask, mask_chars)
