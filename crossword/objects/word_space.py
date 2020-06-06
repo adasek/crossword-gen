@@ -1,10 +1,11 @@
 from crossword.objects import Cross
 from crossword.objects import Mask
-from crossword.objects import Word
+from crossword.objects import Word, CharList
 from crossword.objects import WordList
 
 import math
 from typing import List, Set, Dict, Tuple
+import numpy as np
 
 
 class WordSpace:
@@ -19,7 +20,23 @@ class WordSpace:
         self.crosses = []
         self.occupied_by = None
         self.my_counter = WordSpace.counter
+        self.possibility_matrix = None
         WordSpace.counter += 1
+
+    def build_possibility_matrix (self, word_list: WordList):
+        # possible_words number of this length, matrix x this length
+        self.possibility_matrix = np.zeros(shape=(len(self.crosses), len(word_list.words_of_length(self.length))))
+        for cross_index, cross in enumerate(self.crosses):
+            other_ws = cross.other(self)
+            mask_list = [False] * other_ws.length
+            mask_list[other_ws.index_of_cross(cross)] = True
+            mask = Mask(mask_list)
+            for word_index, word in enumerate(word_list.words_of_length(self.length)):
+                # try to bind this word and check all crosses possibilities
+                self.bind(word)
+                char = self.my_char_on_cross(cross)
+                self.unbind()
+                self.possibility_matrix[cross_index, word_index] = word_list.word_count(mask, CharList([char]))
 
     def id(self) -> str:
         """Prolog identifer of this object"""
@@ -50,6 +67,7 @@ class WordSpace:
     def expectation_value(self, word_list: WordList) -> int:
         """Count how many words may be filled to the unbound WordSpace crossing this.
         Will return +inf if no unbound WordSpace is crossing"""
+
         possible_words = self.bindable(word_list)
         if len(possible_words) == 0:
             return 0
@@ -59,7 +77,14 @@ class WordSpace:
             # This is a must have word!
             return math.inf
         # Try to fill in any word
-        return max([self.count_promising(word_list, unbounded_crosses, word) for word in possible_words])
+        crosses_list = [1]*len(self.crosses)
+        crosses_list = [0 if cross.bound_value() else 1  for cross in self.crosses]
+        crosses_vector = np.matrix(crosses_list)
+        prod = np.matmul(crosses_vector, self.possibility_matrix)
+        res1 = max([self.count_promising(word_list, unbounded_crosses, word) for word in possible_words])
+        res2 = prod.max()
+        print(f"{res1} {res2}")
+        return prod.max()
 
     def count_promising(self, word_list: WordList, unbounded_crosses, word):
         promising = 0

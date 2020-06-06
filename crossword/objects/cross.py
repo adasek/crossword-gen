@@ -49,18 +49,6 @@ class Cross:
         else:
             raise Exception("Bad call of other", self, word_space, self.word_space_horizontal, self.word_space_vertical)
 
-    def mask_one(self, type):
-        if type == 'horizontal':
-            ws = self.word_space_horizontal
-        elif type == 'vertical':
-            ws = self.word_space_vertical
-        else:
-            raise Exception("Bad types")
-
-        mask_list = ["."] * ws.length
-        mask_list[ws.index_of_cross(self)] = 'X'
-        return "".join(mask_list)
-
     def bound_value(self):
         char = self.word_space_horizontal.my_char_on_cross(self) or  self.word_space_vertical.my_char_on_cross(self)
         return char

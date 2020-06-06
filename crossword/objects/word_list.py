@@ -7,12 +7,17 @@ class WordList:
     def __init__(self, words, word_spaces):
         self.word_list = {}
         self.words_by_lengths = {}
+        self.words_by_lengths_list = {}  # Used for index search to compatibility matrix
         lengths = set([word.length for word in words])
         for len in lengths:
             self.words_by_lengths[len] = set([word for word in words if word.length == len])
+            self.words_by_lengths_list[len] = set([word for word in words if word.length == len])
 
         self.one_masks = self.create_one_masks(word_spaces)
         self.words_by_masks = self.create_words_by_masks(words, self.one_masks)
+
+    def words_of_length(self, length):
+        return self.words_by_lengths_list[length]
 
     def create_one_masks(self, word_spaces):
         possible_masks = set()

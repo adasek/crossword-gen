@@ -88,6 +88,10 @@ class Parser(object):
 
         return word_spaces
 
+    def build_possibility_matrix(self, word_spaces, word_list):
+        for ws in word_spaces:
+            ws.build_possibility_matrix(word_list)
+
     # Compute all crosses between word_spaces - O(N^2) can be improved
     def add_crosses(self, word_spaces):
         for word_space_pair in itertools.product(word_spaces, repeat=2):
