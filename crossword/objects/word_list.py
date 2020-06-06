@@ -55,7 +55,7 @@ class WordList:
                 division_words = self.words_by_masks[mask][char]
             except KeyError:
                 division_words = set()
-            if words:
+            if words is not None:
                 words = words.intersection(division_words)
             else:
                 words = division_words
