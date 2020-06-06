@@ -51,13 +51,15 @@ class Solver(object):
                 char = None
                 for word_space in word_spaces:
                     # Check if all crossed word_spaces have equal char
+                    if not word_space.occupied_by:
+                        continue
                     word_space_char = word_space.char_at(x, y)
                     if not word_space_char:
                         continue
                     elif not char:
                         char = word_space_char
                     elif char != word_space_char:
-                        raise Exception("Incoherent WordSpaces", char, word_space_char)
+                        raise Exception("Incoherent WordSpaces", x, y, char, word_space_char)
                 if not char:
                     char = ' '
                 print(char, end="")
