@@ -1,7 +1,7 @@
 from crossword.objects import Cross
 from crossword.objects import Mask
 from crossword.objects import Word
-from crossword.objects import CharList
+from crossword.objects import WordList
 
 import math
 from typing import List, Set, Dict, Tuple
@@ -37,23 +37,20 @@ class WordSpace:
         """Remove binded word from WordSpace"""
         self.occupied_by = None
 
-    def bindable(self, words_by_masks: Dict[Mask, Dict[CharList, Set[Word]]]) -> Set[Word]:
+    def bindable(self, word_list: WordList) -> Set[Word]:
         """List all words that can be filled to WordSpace at this moment"""
         mask, chars = self.mask_current()
-        if chars in words_by_masks[mask]:
-            return words_by_masks[mask][chars]
-        else:
-            return set()
+        return word_list.words(mask, chars)
 
     def get_unbounded_crosses(self) -> List[Cross]:
         """List crosses that don't have certain Char bound.
         Will return empty list if word is bind to this WordSpace"""
         return [cross for cross in self.crosses if not cross.bound_value()]
 
-    def expectation_value(self, words_by_masks: Dict[Mask, Dict[CharList, Set[Word]]]) -> int:
+    def expectation_value(self, word_list: WordList) -> int:
         """Count how many words may be filled to the unbound WordSpace crossing this.
         Will return +inf if no unbound WordSpace is crossing"""
-        possible_words = self.bindable(words_by_masks)
+        possible_words = self.bindable(word_list)
         if len(possible_words) == 0:
             return 0
         # For every bindable option compute the potential candidates
@@ -62,16 +59,19 @@ class WordSpace:
             # This is a must have word!
             return math.inf
         # Try to fill in any word
-        return max([self.count_promising(words_by_masks, unbounded_crosses, word) for word in possible_words])
+        return max([self.count_promising(word_list, unbounded_crosses, word) for word in possible_words])
 
-    def count_promising(self, words_by_masks, unbounded_crosses, word):
+    def count_promising(self, word_list: WordList, unbounded_crosses, word):
         promising = 0
-
         for cross in unbounded_crosses:
-            char = word[self.index_of_cross(cross)]
+            try:
+                char = word[self.index_of_cross(cross)]
+            except:
+                print(f"{word} ... {self.index_of_cross(cross)}")
+                raise Exception("wtf")
             mask, mask_chars = cross.other(self).mask_current(cross, char)
             try:
-                possible_count = len(words_by_masks[mask][mask_chars])
+                possible_count = word_list.word_count(mask, mask_chars)
             except KeyError:
                 possible_count = 0
             promising += possible_count
@@ -79,10 +79,10 @@ class WordSpace:
                 return 0
         return promising
 
-    def find_best_option(self, words_by_masks, option_number=0):
+    def find_best_option(self, word_list: WordList, option_number=0):
         unbounded_crosses = self.get_unbounded_crosses()
-        possible_words = sorted(self.bindable(words_by_masks),
-                                key=lambda word: self.count_promising(words_by_masks, unbounded_crosses, word),
+        possible_words = sorted(self.bindable(word_list),
+                                key=lambda word: self.count_promising(word_list, unbounded_crosses, word),
                                 reverse=True)
         if option_number >= len(possible_words):
             return None
@@ -139,6 +139,15 @@ class WordSpace:
             return mask.all_derivations()
         else:
             return [mask]
+
+    # All masks with 1
+    def one_masks(self):
+        masks = []
+        for cross in self.crosses:
+            mask_list = [False] * self.length
+            mask_list[cross.cross_index(self)] = True
+            masks.append(Mask(mask_list))
+        return masks
 
     def masks_prefix(self):
         return self.mask().prefix_derivations()

@@ -1,0 +1,58 @@
+
+
+class WordList:
+    """Data structure to effectively find suitable words"""
+    counter = 1
+
+    def __init__(self, words, word_spaces):
+        self.word_list = {}
+        self.words_by_lengths = {}
+        lengths = set([word.length for word in words])
+        for len in lengths:
+            self.words_by_lengths[len] = set([word for word in words if word.length == len])
+
+        self.one_masks = self.create_one_masks(word_spaces)
+        self.words_by_masks = self.create_words_by_masks(words, self.one_masks)
+
+    def create_one_masks(self, word_spaces):
+        possible_masks = set()
+        for word_space in word_spaces:
+            possible_masks.update(word_space.one_masks())
+
+        return possible_masks
+
+    def create_words_by_masks(self, words, possible_masks):
+        words_by_masks = {}
+        for index, word in enumerate(words):
+            for mask in possible_masks:
+                if mask.length == word.length:
+                    chars = mask.apply_word(word)
+                    if mask not in words_by_masks:
+                        words_by_masks[mask] = {}
+                    if chars not in words_by_masks[mask]:
+                        words_by_masks[mask][chars] = set()
+                    words_by_masks[mask][chars].add(word)
+
+        return words_by_masks
+
+    def words(self, mask, chars):
+        division_masks = mask.divide(chars)
+        words = None
+        if mask.bind_count() == 0:
+            return self.words_by_lengths[mask.length]
+        for division_mask in division_masks:
+            mask = division_mask[0]
+            char = division_mask[1]
+            try:
+                division_words = self.words_by_masks[mask][char]
+            except KeyError:
+                division_words = set()
+            if words:
+                words = words.intersect(division_words)
+            else:
+                words = division_words
+
+        return words
+
+    def word_count(self, mask, chars):
+        return len(self.words(mask, chars))

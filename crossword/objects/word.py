@@ -1,6 +1,5 @@
 from .charlist import CharList
 
-
 class Word(CharList):
     id = 1
 

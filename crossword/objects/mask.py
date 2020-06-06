@@ -76,5 +76,19 @@ class Mask(object):
                 applied.append(char)
         return CharList(applied)
 
+    # Returns array of tuples (mask, char)
+    # according to this mask one_masks
+    def divide(self, chars):
+        mask_char_tuples = []
+        applied_cnt = 0
+        for index, applied in enumerate(self.mask):
+            if applied:
+                mask_list = [False] * self.length
+                mask_list[index] = True
+                mask_char_tuples.append((Mask(mask_list), CharList(chars[applied_cnt])))
+                applied_cnt += 1
+
+        return mask_char_tuples
+
     def from_indices(self, indices):
         return Mask([(index in indices) for index in range(0, self.length)])

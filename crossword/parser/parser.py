@@ -119,19 +119,3 @@ class Parser(object):
 
 
         return possible_masks
-
-    def create_words_by_masks(self, words, possible_masks):
-        words_by_masks = {}
-        for index, word in enumerate(words):
-            for mask in possible_masks:
-                if mask.length == word.length:
-                    chars = mask.apply_word(word)
-                    if mask not in words_by_masks:
-                        words_by_masks[mask] = {}
-                    if chars not in words_by_masks[mask]:
-                        words_by_masks[mask][chars] = set()
-                    words_by_masks[mask][chars].add(word)
-            #if index % 100 == 0:
-            #    print(f"{index}/{len(words)}")
-
-        return words_by_masks
