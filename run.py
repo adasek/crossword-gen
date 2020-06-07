@@ -6,12 +6,6 @@ from crossword.parser import Parser
 from crossword.solver import Solver
 import cProfile
 
-# For found mask, e.g. X..XX generate all its children:
-# {...XX,X...X,X..X.,....X,X....,...X.}
-# Maximal length of maparse_original_wordlistsk to have all its children generated ( 2^x masks)!
-# Zero means no children masks would be generated
-MASK_LENGTH_TRESHOLD = 9
-
 parser = Parser(".")
 
 #dict_file = "input/Czech.dic"
@@ -56,7 +50,10 @@ parser.build_possibility_matrix(word_spaces, word_list)
 
 # Solve
 print("Solving:")
-solver = Solver(MASK_LENGTH_TRESHOLD)
+solver = Solver()
 #cProfile.run('word_spaces = solver.solve(word_spaces, word_list)', 'restats')
-word_spaces = solver.solve(word_spaces, word_list)
-solver.print(word_spaces, crossword)
+word_spaces = solver.solve(word_spaces, word_list, crossword)
+if not word_spaces:
+    print(f"No solutions found")
+else:
+    solver.print(word_spaces, crossword)

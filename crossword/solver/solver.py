@@ -4,48 +4,76 @@ from operator import attrgetter
 
 class Solver(object):
 
-    def __init__(self, generate_children_threshold=0):
-        self.generate_children_threshold = generate_children_threshold
+    def __init__(self):
+        pass
 
-    def solve(self, all_word_spaces, word_list):
+    def solve(self, all_word_spaces, word_list, crossword):
         word_spaces = [w for w in all_word_spaces]
 
         # One half random fill (vertical for now)
         assigned = []
-        failed_pairs = set()
         assigned_counter = 0
+        ws = None
+        backtrack = False
+        option_number = 0
         while True:
             # compute word_space potential
-            word_spaces_to_fill_next = sorted(word_spaces, key=lambda ws: ws.expectation_value(word_list), reverse=True)
-            if len(word_spaces_to_fill_next) == 0:
+            if len(word_spaces) == 0:
                 break
 
-            ws = word_spaces_to_fill_next[0]
-            #print(f"expectation_value={ws.expectation_value(word_list)}")
-            best_option = None
-            option_number = 0
-            while not best_option:
-                best_option = ws.find_best_option(word_list, option_number, failed_pairs)
-                if (ws, best_option) in failed_pairs:
-                    raise Exception("find_best_option returned failed_pair")
-                option_number += 1
-                if not best_option:
-                    break
+            if ws is None:
+                word_spaces_to_fill_next = sorted(word_spaces, key=lambda ws: ws.expectation_value(word_list), reverse=True)
+                if len(word_spaces_to_fill_next) == 0:
+                    # No possible spaces => backtrack!
+                    raise Exception("backtrack or not?")
+                    backtrack = True
+                else:
+                    option_number = 0
+                    ws = word_spaces_to_fill_next[0]
+                    #print(f"Picking next ws: {ws}")
+                    ws.failed_words = set()
 
-            if not best_option:
+            best_option = None
+            while not backtrack and best_option is None:
+                best_option = ws.find_best_option(word_list)
+                option_number += 1
+                if best_option is None:
+                    # no possible option
+                    backtrack = True
+                    break
+                #print(f"best {best_option}")
+
+            #print(f"expectation_value={ws.expectation_value(word_list)}")
+            #print(f"best_option={best_option}")
+
+            if backtrack:
+                #print(f"~~~ backtrack ~~~")
                 # backtrack
+                if len(assigned) == 0:
+                    # All possibilites were tried
+                    return False
                 failed_pair = assigned.pop()
-                failed_pair[0].unbind()
+                failed_ws = failed_pair[0]
+                failed_word = failed_pair[1]
+                failed_ws.unbind()
                 word_spaces.append(failed_pair[0])
-                failed_pairs.add(failed_pair)
+                #print(f"Giving {failed_ws} back")
+                ws = failed_pair[0]
+                failed_ws.failed_words.add(failed_word)
+                #print(f"Solving {ws} again")
+                backtrack = False
             else:
                 ws.bind(best_option)
+                #print(f"Assigned {best_option} to {ws}")
                 assigned_counter += 1
                 if assigned_counter % 1000 == 0:
                     print(f"Assigned {assigned_counter}")
-                    print(f"Assigned {best_option} to {ws}")
                 assigned.append((ws, best_option))
                 word_spaces.remove(ws)
+                #print(f"word_spaces length: {len(word_spaces)}")
+                #self.print(all_word_spaces, crossword)
+                ws = None
+                backtrack = False
 
         return all_word_spaces
 

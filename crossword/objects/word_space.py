@@ -21,6 +21,7 @@ class WordSpace:
         self.occupied_by = None
         self.my_counter = WordSpace.counter
         self.possibility_matrix = None
+        self.failed_words = set()
         WordSpace.counter += 1
 
     def build_possibility_matrix (self, word_list: WordList):
@@ -77,7 +78,6 @@ class WordSpace:
             # This is a must have word!
             return math.inf
         # Try to fill in any word
-        crosses_list = [1]*len(self.crosses)
         crosses_list = [0 if cross.bound_value() else 1 for cross in self.crosses]
         crosses_vector = np.matrix(crosses_list)
         prod = np.matmul(crosses_vector, self.possibility_matrix)
@@ -98,8 +98,7 @@ class WordSpace:
                 return 0
         return promising
 
-    def find_best_option(self, word_list: WordList, option_number=0, failed_pairs=set()):
-        unbounded_crosses = self.get_unbounded_crosses()
+    def find_best_option(self, word_list: WordList):
         # Todo: update the possibility matrix
         crosses_list = [0 if cross.bound_value() else 1 for cross in self.crosses]
         crosses_vector = np.matrix(crosses_list)
@@ -112,18 +111,20 @@ class WordSpace:
             raise Exception('Error: Axis is not singleton.')
         max_arr = np.squeeze(np.asarray(max_matrix))
 
-        sorted_word_indices = np.argsort(max_arr, order=None)
+        sorted_word_indices = np.argsort(-max_arr)
 
         # Find first actually bindable one
         bindable_words = self.bindable(word_list)
+
+        mask, chars = self.mask_current()
+        #print(f"Bindable words length: {len(bindable_words)} , {mask}>{chars}")
         for index in sorted_word_indices:
             candidate_word = word_list.word_by_index(self.length, index)
-            if (self, candidate_word) in failed_pairs:
+            if candidate_word in self.failed_words:
                 continue
             if candidate_word in bindable_words:
-                option_number -= 1
-                if option_number < 0:
-                    return candidate_word
+                #print(f":{candidate_word}")
+                return candidate_word
         return None
 
     # Returns set of tuples - positions that this words goes through
