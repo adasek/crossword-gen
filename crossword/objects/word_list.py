@@ -11,7 +11,7 @@ class WordList:
         lengths = set([word.length for word in words])
         for len in lengths:
             self.words_by_lengths[len] = set([word for word in words if word.length == len])
-            self.words_by_lengths_list[len] = set([word for word in words if word.length == len])
+            self.words_by_lengths_list[len] = [word for word in words if word.length == len]
 
         self.one_masks = self.create_one_masks(word_spaces)
         self.words_by_masks = self.create_words_by_masks(words, self.one_masks)
@@ -39,6 +39,9 @@ class WordList:
                     words_by_masks[mask][chars].add(word)
 
         return words_by_masks
+
+    def word_by_index(self, length, index):
+        return self.words_by_lengths_list[length][index]
 
     def words(self, mask: Mask, chars: CharList):
         if isinstance(chars, Word):

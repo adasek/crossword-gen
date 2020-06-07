@@ -78,12 +78,9 @@ class WordSpace:
             return math.inf
         # Try to fill in any word
         crosses_list = [1]*len(self.crosses)
-        crosses_list = [0 if cross.bound_value() else 1  for cross in self.crosses]
+        crosses_list = [0 if cross.bound_value() else 1 for cross in self.crosses]
         crosses_vector = np.matrix(crosses_list)
         prod = np.matmul(crosses_vector, self.possibility_matrix)
-        res1 = max([self.count_promising(word_list, unbounded_crosses, word) for word in possible_words])
-        res2 = prod.max()
-        print(f"{res1} {res2}")
         return prod.max()
 
     def count_promising(self, word_list: WordList, unbounded_crosses, word):
@@ -101,15 +98,33 @@ class WordSpace:
                 return 0
         return promising
 
-    def find_best_option(self, word_list: WordList, option_number=0):
+    def find_best_option(self, word_list: WordList, option_number=0, failed_pairs=set()):
         unbounded_crosses = self.get_unbounded_crosses()
-        possible_words = sorted(self.bindable(word_list),
-                                key=lambda word: self.count_promising(word_list, unbounded_crosses, word),
-                                reverse=True)
-        if option_number >= len(possible_words):
-            return None
-        else:
-            return possible_words[option_number]
+        # Todo: update the possibility matrix
+        crosses_list = [0 if cross.bound_value() else 1 for cross in self.crosses]
+        crosses_vector = np.matrix(crosses_list)
+        prod = np.matmul(crosses_vector, self.possibility_matrix)
+        # Sort the possible words
+        max_matrix = np.max(prod, axis=0)
+
+        rem_axis = 0
+        if max_matrix.shape[rem_axis] != 1:
+            raise Exception('Error: Axis is not singleton.')
+        max_arr = np.squeeze(np.asarray(max_matrix))
+
+        sorted_word_indices = np.argsort(max_arr, order=None)
+
+        # Find first actually bindable one
+        bindable_words = self.bindable(word_list)
+        for index in sorted_word_indices:
+            candidate_word = word_list.word_by_index(self.length, index)
+            if (self, candidate_word) in failed_pairs:
+                continue
+            if candidate_word in bindable_words:
+                option_number -= 1
+                if option_number < 0:
+                    return candidate_word
+        return None
 
     # Returns set of tuples - positions that this words goes through
     def spaces(self):

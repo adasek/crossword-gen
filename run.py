@@ -23,6 +23,9 @@ word_spaces = parser.parse_word_spaces(crossword)
 
 parser.add_crosses(word_spaces)
 
+word_list = WordList(words, word_spaces)
+parser.build_possibility_matrix(word_spaces, word_list)
+
 # (start with 1-masks)
 # X..X.,'ab' = X....,'a' union ...X.,'b'
 #  WordList[mask][chars]
@@ -41,7 +44,6 @@ parser.add_crosses(word_spaces)
 # inverted_bind_vector = [true, false]^-1
 #
 # max[inverted_bind_vector] se cachuje
-word_list = WordList(words, word_spaces)
 
 #exporter = PrologExporter("dataset")
 #exporter.export_all(words, word_spaces, possible_masks, words_by_masks)

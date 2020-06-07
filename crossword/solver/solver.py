@@ -13,6 +13,7 @@ class Solver(object):
         # One half random fill (vertical for now)
         assigned = []
         failed_pairs = set()
+        assigned_counter = 0
         while True:
             # compute word_space potential
             word_spaces_to_fill_next = sorted(word_spaces, key=lambda ws: ws.expectation_value(word_list), reverse=True)
@@ -20,11 +21,13 @@ class Solver(object):
                 break
 
             ws = word_spaces_to_fill_next[0]
-            print(f"{ws.expectation_value(word_list)}")
+            #print(f"expectation_value={ws.expectation_value(word_list)}")
             best_option = None
             option_number = 0
-            while not best_option or (ws, best_option) in failed_pairs:
-                best_option = ws.find_best_option(word_list, option_number)
+            while not best_option:
+                best_option = ws.find_best_option(word_list, option_number, failed_pairs)
+                if (ws, best_option) in failed_pairs:
+                    raise Exception("find_best_option returned failed_pair")
                 option_number += 1
                 if not best_option:
                     break
@@ -37,7 +40,10 @@ class Solver(object):
                 failed_pairs.add(failed_pair)
             else:
                 ws.bind(best_option)
-                print(f"Assigned {best_option} to {ws}")
+                assigned_counter += 1
+                if assigned_counter % 1000 == 0:
+                    print(f"Assigned {assigned_counter}")
+                    print(f"Assigned {best_option} to {ws}")
                 assigned.append((ws, best_option))
                 word_spaces.remove(ws)
 
