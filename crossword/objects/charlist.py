@@ -28,3 +28,6 @@ class CharList:
 
     def __eq__(self, other):
         return self.char_list == other.char_list
+
+    def __add__(self, other):
+        return CharList(self.char_list + other.char_list)

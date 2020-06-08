@@ -76,6 +76,10 @@ class Mask(object):
                 applied.append(char)
         return CharList(applied)
 
+    def invert(self):
+        mask_list = [0 if b else 1 for b in self.mask]
+        return Mask(mask_list)
+
     # Returns array of tuples (mask, char)
     # according to this mask one_masks
     def divide(self, chars):

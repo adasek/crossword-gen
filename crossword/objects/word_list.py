@@ -8,6 +8,11 @@ class WordList:
         self.word_list = {}
         self.words_by_lengths = {}
         self.words_by_lengths_list = {}  # Used for index search to compatibility matrix
+
+        self.alphabet = set()
+        for word in words:
+            self.alphabet.update(word.char_list)
+
         lengths = set([word.length for word in words])
         for len in lengths:
             self.words_by_lengths[len] = set([word for word in words if word.length == len])

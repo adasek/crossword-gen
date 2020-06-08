@@ -16,6 +16,7 @@ class Solver(object):
         ws = None
         backtrack = False
         option_number = 0
+        best_remaining = len(all_word_spaces)
         while True:
             # compute word_space potential
             if len(word_spaces) == 0:
@@ -64,10 +65,12 @@ class Solver(object):
                 backtrack = False
             else:
                 ws.bind(best_option)
-                #print(f"Assigned {best_option} to {ws}")
+                print(f"Assigned {best_option} to {ws}")
                 assigned_counter += 1
-                if assigned_counter % 1000 == 0:
-                    print(f"Assigned {assigned_counter}")
+                best_remaining = min(best_remaining, len(word_spaces))
+                if assigned_counter % 100 == 0:
+                    print(f"Assigned {assigned_counter}, remaining: {len(word_spaces)}/{best_remaining}")
+                    self.print(all_word_spaces, crossword)
                 assigned.append((ws, best_option))
                 word_spaces.remove(ws)
                 #print(f"word_spaces length: {len(word_spaces)}")
@@ -75,6 +78,7 @@ class Solver(object):
                 ws = None
                 backtrack = False
 
+        print(f"Assigned {assigned_counter}")
         return all_word_spaces
 
     def print(self, word_spaces, crossword):
