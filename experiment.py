@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from crossword.experiments import Experiment1
+from crossword.experiments import Experiment2
 
 
-Experiment1("./input/Czech.dic")
+Experiment2("./input/Czech.dic")

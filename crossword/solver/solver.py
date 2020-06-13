@@ -1,18 +1,28 @@
 import random
 from operator import attrgetter
+import time
 
 
 class Solver(object):
 
     def __init__(self):
-        pass
+        self.MAX_FAILED_WORDS = 100000
+        self.failed_words_counter = 0
+        self.t0 = None
+        self.t1 = None
+        self.solved = False
+        self.solution_found = False
+        self.solution = None
+        self.counters = {'assign': 0, 'backtrack': 0}
 
     def solve(self, all_word_spaces, word_list, crossword):
+        self.t0 = time.time()
+        for key in self.counters.keys():
+            self.counters[key] = 0
         word_spaces = [w for w in all_word_spaces]
 
         # One half random fill (vertical for now)
         assigned = []
-        assigned_counter = 0
         ws = None
         backtrack = False
         option_number = 0
@@ -47,10 +57,14 @@ class Solver(object):
             #print(f"best_option={best_option}")
 
             if backtrack:
+                self.counters['backtrack'] += 1
                 # print(f"~~~ backtrack ~~~")
                 # backtrack
                 if len(assigned) == 0:
                     # All possibilites were tried
+                    self.t1 = time.time()
+                    self.solved = True
+                    self.solution_found = False
                     return False
                 failed_pair = assigned.pop()
                 failed_ws = failed_pair[0]
@@ -60,18 +74,26 @@ class Solver(object):
                 # print(f"Giving {failed_ws} back")
                 ws = failed_pair[0]
                 failed_ws.failed_words.add(failed_word)
+                self.failed_words_counter += 1
+                if self.failed_words_counter > self.MAX_FAILED_WORDS:
+                    # Too many retries on this slot
+                    self.t1 = time.time()
+                    self.solved = True
+                    self.solution_found = False
+                    return False
                 # print(f"Solving {ws} again")
                 backtrack = False
             else:
                 ws.bind(best_option)
                 # print(f"Assigned {best_option} to {ws}")
-                assigned_counter += 1
+                self.counters['assign'] += 1
                 best_remaining = min(best_remaining, len(word_spaces))
-                if assigned_counter % 100 == 0:
-                    print(f"Assigned {assigned_counter}, remaining: {len(word_spaces)}/{best_remaining}")
+                if self.counters['assign'] % 100 == 0:
+                    # print(f"Assigned {self.counters['assign']}, remaining: {len(word_spaces)}/{best_remaining}")
                     #for word_space in word_spaces:
                     #    print(word_space)
-                    self.print(all_word_spaces, crossword)
+                    # self.print(all_word_spaces, crossword)
+                    pass
                 assigned.append((ws, best_option))
                 word_spaces.remove(ws)
                 #print(f"word_spaces length: {len(word_spaces)}")
@@ -79,7 +101,10 @@ class Solver(object):
                 ws = None
                 backtrack = False
 
-        print(f"Assigned {assigned_counter}")
+        self.t1 = time.time()
+        self.solved = True
+        self.solution_found = True
+        self.solution = all_word_spaces
         return all_word_spaces
 
     def print(self, word_spaces, crossword):
@@ -103,3 +128,8 @@ class Solver(object):
                     char = ' '
                 print(char, end="")
             print("")
+
+    def time_elapsed(self):
+        if not self.solved:
+            raise Exception("Not solved")
+        return self.t1 - self.t0

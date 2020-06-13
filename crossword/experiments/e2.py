@@ -1,11 +1,12 @@
 from crossword.parser import Parser
 from crossword.exporter import PrologExporter
-from crossword.runner import Runner
+from crossword.solver import Solver
 from crossword.objects import WordList
 
-# Experiment 1:
+# Experiment 2:
 # generate_8grid ~ words of length=8
-class Experiment1:
+# and solve with python
+class Experiment2:
   def __init__(self, dictionary_filename):
 
     parser = Parser(".")
@@ -34,12 +35,8 @@ class Experiment1:
       word_list = WordList(words, word_spaces)
       parser.build_possibility_matrix(word_spaces, word_list)
 
-      possible_masks = parser.create_possible_masks(word_spaces, 5)
-      words_by_masks = parser.create_words_by_masks(words, possible_masks)
-
-      exporter = PrologExporter("experiment")
-      exporter.export_all(words, word_spaces, possible_masks, words_by_masks)
-
-      runner = Runner("../solve.pl", "experiment")
-      runner.run()
-      print(runner.output(), flush=True)
+      solver = Solver()
+      word_spaces = solver.solve(word_spaces, word_list, crossword)
+      print(f"{number_of_words},{solver.solution_found},{solver.time_elapsed()},{solver.counters['assign']},{solver.counters['backtrack']}")
+      #if solver.solution_found:
+      #  solver.print(word_spaces, crossword)
