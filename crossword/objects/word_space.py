@@ -71,7 +71,7 @@ class WordSpace:
     def bindable(self, word_list: WordList) -> Set[Word]:
         """List all words that can be filled to WordSpace at this moment"""
         mask, chars = self.mask_current()
-        words = word_list.words(mask, chars)
+        words = word_list.words(mask, chars).difference(self.failed_words)
         for word in words:
             if not isinstance(word, Word):
                 raise Exception("NOT a Word")
@@ -161,20 +161,14 @@ class WordSpace:
 
             candidate_chars = []
             for char in word_list.alphabet:
-                words_count = len(base_set.intersection(word_list.words(one_mask, CharList([char]))))
+                suitable_words = base_set.intersection(word_list.words(one_mask, CharList([char]))).difference(other_wordspace.failed_words)
+                words_count = len(suitable_words)
                 if words_count > 0:
                     candidate_chars.append({'char': char, 'count': words_count})
             if len(candidate_chars) == 0:
                 return None
             sorted_candidate_char_records = sorted(candidate_chars, key=lambda rec: rec['count'], reverse=True)
             candidate_char_dict_array.append({obj['char']: obj['count'] for obj in sorted_candidate_char_records})
-
-        # build candidate_mask
-        wordspace_mask, wordspace_chars = self.mask_current()
-        candidate_mask = Mask(self.spaces(), unbounded_crosses)
-        #original_word_candidates = word_list.words(wordspace_mask, wordspace_chars)
-        # Find the word which has the sum(candidate_chars_array[0:k].count) highest
-        # Generate indices sorted by the count
 
         max_score = 0
         best_words = []

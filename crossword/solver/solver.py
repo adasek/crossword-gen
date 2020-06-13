@@ -42,13 +42,12 @@ class Solver(object):
                     # no possible option
                     backtrack = True
                     break
-                #print(f"best {best_option}")
 
             #print(f"expectation_value={ws.expectation_value(word_list)}")
             #print(f"best_option={best_option}")
 
             if backtrack:
-                #print(f"~~~ backtrack ~~~")
+                # print(f"~~~ backtrack ~~~")
                 # backtrack
                 if len(assigned) == 0:
                     # All possibilites were tried
@@ -58,10 +57,10 @@ class Solver(object):
                 failed_word = failed_pair[1]
                 failed_ws.unbind()
                 word_spaces.append(failed_pair[0])
-                #print(f"Giving {failed_ws} back")
+                # print(f"Giving {failed_ws} back")
                 ws = failed_pair[0]
                 failed_ws.failed_words.add(failed_word)
-                #print(f"Solving {ws} again")
+                # print(f"Solving {ws} again")
                 backtrack = False
             else:
                 ws.bind(best_option)
@@ -70,6 +69,8 @@ class Solver(object):
                 best_remaining = min(best_remaining, len(word_spaces))
                 if assigned_counter % 100 == 0:
                     print(f"Assigned {assigned_counter}, remaining: {len(word_spaces)}/{best_remaining}")
+                    #for word_space in word_spaces:
+                    #    print(word_space)
                     self.print(all_word_spaces, crossword)
                 assigned.append((ws, best_option))
                 word_spaces.remove(ws)
