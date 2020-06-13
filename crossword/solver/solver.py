@@ -6,14 +6,13 @@ import time
 class Solver(object):
 
     def __init__(self):
-        self.MAX_FAILED_WORDS = 100000
-        self.failed_words_counter = 0
+        self.MAX_FAILED_WORDS = 100
         self.t0 = None
         self.t1 = None
         self.solved = False
         self.solution_found = False
         self.solution = None
-        self.counters = {'assign': 0, 'backtrack': 0}
+        self.counters = {'assign': 0, 'backtrack': 0, 'failed': 0}
 
     def solve(self, all_word_spaces, word_list, crossword):
         self.t0 = time.time()
@@ -74,8 +73,8 @@ class Solver(object):
                 # print(f"Giving {failed_ws} back")
                 ws = failed_pair[0]
                 failed_ws.failed_words.add(failed_word)
-                self.failed_words_counter += 1
-                if self.failed_words_counter > self.MAX_FAILED_WORDS:
+                self.counters['failed'] += 1
+                if self.counters['failed'] > self.MAX_FAILED_WORDS:
                     # Too many retries on this slot
                     self.t1 = time.time()
                     self.solved = True
@@ -84,7 +83,7 @@ class Solver(object):
                 # print(f"Solving {ws} again")
                 backtrack = False
             else:
-                ws.bind(best_option)
+                ws.bind(best_option) #, True, word_list
                 # print(f"Assigned {best_option} to {ws}")
                 self.counters['assign'] += 1
                 best_remaining = min(best_remaining, len(word_spaces))
