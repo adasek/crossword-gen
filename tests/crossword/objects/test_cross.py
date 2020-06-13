@@ -4,7 +4,8 @@ import pytest
 from crossword.objects import Cross
 from crossword.objects import WordSpace
 
-class CrossTest(unittest.TestCase):
+
+class TestCross(unittest.TestCase):
 
     def test_init(self):
         word_space1 = WordSpace((2, 1), 3, 'vertical')
