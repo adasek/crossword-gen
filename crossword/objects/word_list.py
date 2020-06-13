@@ -48,6 +48,12 @@ class WordList:
     def word_by_index(self, length, index):
         return self.words_by_lengths_list[length][index]
 
+    def char_index(self, char):
+        for index, ch in enumerate(self.alphabet):
+            if ch == char:
+                return index
+        return -1
+
     def words(self, mask: Mask, chars: CharList):
         if isinstance(chars, Word):
             chars = CharList(chars.char_list)

@@ -50,8 +50,19 @@ class Cross:
             raise Exception("Bad call of other", self, word_space, self.word_space_horizontal, self.word_space_vertical)
 
     def bound_value(self):
-        char = self.word_space_horizontal.my_char_on_cross(self) or  self.word_space_vertical.my_char_on_cross(self)
-        return char
+        return self.bound_value_left() or self.bound_value_right()
+
+    def bound_value_left(self):
+        return self.word_space_horizontal.my_char_on_cross(self)
+
+    def bound_value_right(self):
+        return self.word_space_vertical.my_char_on_cross(self)
+
+    def is_fully_bound(self):
+        return self.bound_value_left() and self.bound_value_right()
+
+    def is_half_bound(self):
+        return (not self.is_fully_bound()) and (self.bound_value_left() or self.bound_value_right())
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):

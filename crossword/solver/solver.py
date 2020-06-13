@@ -65,7 +65,7 @@ class Solver(object):
                 backtrack = False
             else:
                 ws.bind(best_option)
-                print(f"Assigned {best_option} to {ws}")
+                # print(f"Assigned {best_option} to {ws}")
                 assigned_counter += 1
                 best_remaining = min(best_remaining, len(word_spaces))
                 if assigned_counter % 100 == 0:

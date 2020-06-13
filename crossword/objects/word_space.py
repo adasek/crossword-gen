@@ -27,9 +27,9 @@ class WordSpace:
         self._best_options = None
         WordSpace.counter += 1
 
-    def build_possibility_matrix (self, word_list: WordList):
-        # possible_words number of this length, matrix x this length
-        self.possibility_matrix = np.zeros(shape=(len(self.crosses), len(word_list.words_of_length(self.length))))
+    def build_possibility_matrix(self, word_list: WordList):
+        # possible_words number for letter x cross
+        self.possibility_matrix = np.zeros(shape=(len(self.crosses), len(word_list.alphabet)))
         for cross_index, cross in enumerate(self.crosses):
             other_ws = cross.other(self)
             mask_list = [False] * other_ws.length
@@ -40,7 +40,7 @@ class WordSpace:
                 self.bind(word)
                 char = self.my_char_on_cross(cross)
                 self.unbind()
-                self.possibility_matrix[cross_index, word_index] = word_list.word_count(mask, CharList([char]))
+                self.possibility_matrix[cross_index, word_list.char_index(char)] = word_list.word_count(mask, CharList([char]))
 
     def id(self) -> str:
         """Prolog identifer of this object"""
@@ -71,12 +71,20 @@ class WordSpace:
     def bindable(self, word_list: WordList) -> Set[Word]:
         """List all words that can be filled to WordSpace at this moment"""
         mask, chars = self.mask_current()
-        return word_list.words(mask, chars)
+        words = word_list.words(mask, chars)
+        for word in words:
+            if not isinstance(word, Word):
+                raise Exception("NOT a Word")
+        return words
 
     def get_unbounded_crosses(self) -> List[Cross]:
         """List crosses that don't have certain Char bound.
         Will return empty list if word is bind to this WordSpace"""
         return [cross for cross in self.crosses if not cross.bound_value()]
+
+    def get_half_bound_crosses(self) -> List[Cross]:
+        """List crosses that do have at least one word bounded"""
+        return [cross for cross in self.crosses if cross.is_half_bound() or not cross.bound_value()]
 
     def expectation_value(self, word_list: WordList) -> int:
         """Count how many words may be filled to the unbound WordSpace crossing this.
@@ -119,24 +127,34 @@ class WordSpace:
                 return 0
         return promising
 
+    # rough count
     def count_promising_max(self, word_list):
-        return len(self.find_best_options2(word_list))
+        # Temp
+        best_opts = self.find_best_options2(word_list)
+        if best_opts is None:
+            return 0
+        else:
+            return len(best_opts)
+
+        crosses_list = [0 if cross.bound_value() else 1 for cross in self.crosses]
+        crosses_vector = np.matrix(crosses_list)
+        prod = np.matmul(crosses_vector, self.possibility_matrix)
+        # Sort the possible words
+        # print(f"prod shape={prod.shape}")
+        max_matrix = np.max(prod, axis=1)
+        # print(f"max_matrix shape={max_matrix.shape}")
+
+        return sum(max_matrix)
 
     def find_best_options2(self, word_list: WordList):
-        print(f"find_best_options2 for {self}")
-        if self._best_options:
-            return self._best_options
-        unbounded_crosses = self.get_unbounded_crosses()
+        unbounded_crosses = self.get_half_bound_crosses()
         # mask ...X.
-        candidate_chars_array = []
         candidate_char_dict_array = []
-        char_list_array = []
         for cross_index, cross in enumerate(unbounded_crosses):
             other_wordspace = cross.other(self)
             other_wordspace_mask, other_wordspace_chars = other_wordspace.mask_current()
-            original_wordspace_index = self.index_of_cross(cross)
-            other_wordspace_index = other_wordspace.index_of_cross(cross)
             base_set = word_list.words(other_wordspace_mask, other_wordspace_chars)
+            other_wordspace_index = other_wordspace.index_of_cross(cross)
             mask_list = [False] * other_wordspace.length
             mask_list[other_wordspace_index] = True
             one_mask = Mask(mask_list)
@@ -149,35 +167,53 @@ class WordSpace:
             if len(candidate_chars) == 0:
                 return None
             sorted_candidate_char_records = sorted(candidate_chars, key=lambda rec: rec['count'], reverse=True)
-            candidate_chars_array.append(sorted_candidate_char_records)
-            candidate_char_dict_array.append({obj['char']:obj['count'] for obj in sorted_candidate_char_records})
-            char_list_array.append(list(map(lambda rec: rec['char'], sorted_candidate_char_records)))
+            candidate_char_dict_array.append({obj['char']: obj['count'] for obj in sorted_candidate_char_records})
 
         # build candidate_mask
         wordspace_mask, wordspace_chars = self.mask_current()
         candidate_mask = Mask(self.spaces(), unbounded_crosses)
-        original_word_candidates = word_list.words(wordspace_mask, wordspace_chars)
+        #original_word_candidates = word_list.words(wordspace_mask, wordspace_chars)
         # Find the word which has the sum(candidate_chars_array[0:k].count) highest
         # Generate indices sorted by the count
 
-        print("combinations creating")
-        possible_char_combinations = itertools.product(*char_list_array)
-        sorted_possible_char_combinations = sorted(possible_char_combinations, key=lambda comb: sum([candidate_char_dict_array[i][char] for i, char in enumerate(comb)]), reverse=True)
-        print("combinations creating done")
-        for combination in sorted_possible_char_combinations:
-            chars = CharList(combination)
-            found_set = original_word_candidates.intersection(word_list.words(candidate_mask, chars))
-            if len(found_set) > 0:
-                # best word found
-                self._best_options = found_set
-                score = sum([candidate_char_dict_array[i][char] for i, char in enumerate(combination)])
-                print(f"Found set {len(found_set)} with score {score}")
-                return found_set
-        raise Exception("No candidate")
+        max_score = 0
+        best_words = []
+        #print("----:")
+        #print(self.bindable(word_list))
+        for word in self.bindable(word_list):
+            score = 0
+            for cross_index, cross in enumerate(unbounded_crosses):
+                word_char = word[cross.cross_index(self)]
+                try:
+                    char_score = candidate_char_dict_array[cross_index][word_char]
+                except (IndexError, KeyError):
+                    char_score = 0
 
+                if char_score == 0:
+                    score = 0
+                    break
+                score += char_score
+            if max_score < score:
+                max_score = score
+                best_words = [word]
+            elif max_score == score:
+                best_words.append(word)
+        if max_score == 0:
+            return None
+        else:
+            return best_words
 
     def find_best_option(self, word_list: WordList):
-        return random.choice(list(self.find_best_options2()))
+        best_options = self.find_best_options2(word_list)
+        if best_options != None and len(best_options) > 0:
+            #print(f"find_best_option: random choice from {best_options}")
+            rnd = random.choice(best_options)
+            if not isinstance(rnd, Word):
+                raise Exception("Not instance of Word")
+        else:
+            #print(f"find_best_option: None")
+            return None
+
         #return self.find_best_option_old(word_list)
         # Todo: update the possibility matrix
         crosses_list = [0 if cross.bound_value() else 1 for cross in self.crosses]
