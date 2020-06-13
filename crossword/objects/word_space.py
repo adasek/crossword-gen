@@ -130,7 +130,7 @@ class WordSpace:
     # rough count
     def count_promising_max(self, word_list):
         # Temp
-        best_opts = self.find_best_options2(word_list)
+        best_opts = self.find_best_options(word_list)
         if best_opts is None:
             return 0
         else:
@@ -146,7 +146,7 @@ class WordSpace:
 
         return sum(max_matrix)
 
-    def find_best_options2(self, word_list: WordList):
+    def find_best_options(self, word_list: WordList):
         unbounded_crosses = self.get_half_bound_crosses()
         # mask ...X.
         candidate_char_dict_array = []
@@ -204,55 +204,16 @@ class WordSpace:
             return best_words
 
     def find_best_option(self, word_list: WordList):
-        best_options = self.find_best_options2(word_list)
-        if best_options != None and len(best_options) > 0:
+        best_options = self.find_best_options(word_list)
+        if best_options is not None and len(best_options) > 0:
             #print(f"find_best_option: random choice from {best_options}")
             rnd = random.choice(best_options)
             if not isinstance(rnd, Word):
                 raise Exception("Not instance of Word")
+            return rnd
         else:
             #print(f"find_best_option: None")
             return None
-
-        #return self.find_best_option_old(word_list)
-        # Todo: update the possibility matrix
-        crosses_list = [0 if cross.bound_value() else 1 for cross in self.crosses]
-        crosses_vector = np.matrix(crosses_list)
-        prod = np.matmul(crosses_vector, self.possibility_matrix)
-        # Sort the possible words
-        max_matrix = np.max(prod, axis=0)
-
-        rem_axis = 0
-        if max_matrix.shape[rem_axis] != 1:
-            raise Exception('Error: Axis is not singleton.')
-        max_arr = np.squeeze(np.asarray(max_matrix))
-
-        sorted_word_indices = np.argsort(-max_arr)
-
-        # Find first actually bindable one
-        bindable_words = self.bindable(word_list)
-
-        mask, chars = self.mask_current()
-        #print(f"Bindable words length: {len(bindable_words)} , {mask}>{chars}")
-        for index in sorted_word_indices:
-            candidate_word = word_list.word_by_index(self.length, index)
-            if candidate_word in self.failed_words:
-                continue
-            if candidate_word in bindable_words:
-                #print(f":{candidate_word}")
-                return candidate_word
-        return None
-
-
-    def find_best_option_old(self, word_list: WordList):
-        unbounded_crosses = self.get_unbounded_crosses()
-        possible_words = sorted(self.bindable(word_list),
-                                key=lambda word: self.count_promising(word_list, unbounded_crosses, word),
-                                reverse=True)
-        for candidate_word in possible_words:
-            if candidate_word not in self.failed_words:
-                return candidate_word
-        return None
 
     # Returns set of tuples - positions that this words goes through
     def spaces(self):
