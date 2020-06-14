@@ -68,7 +68,10 @@ class Solver(object):
                 failed_pair = assigned.pop()
                 failed_ws = failed_pair[0]
                 failed_word = failed_pair[1]
-                failed_ws.unbind()
+                affected = failed_ws.unbind()
+                for affected_word_space in affected:
+                    affected_word_space.rebuild_possibility_matrix(word_list)
+                failed_ws.rebuild_possibility_matrix(word_list)
                 word_spaces.append(failed_pair[0])
                 # print(f"Giving {failed_ws} back")
                 ws = failed_pair[0]
@@ -83,7 +86,10 @@ class Solver(object):
                 # print(f"Solving {ws} again")
                 backtrack = False
             else:
-                ws.bind(best_option) #, True, word_list
+                affected = ws.bind(best_option)
+                for affected_word_space in affected:
+                    affected_word_space.rebuild_possibility_matrix(word_list)
+
                 # print(f"Assigned {best_option} to {ws}")
                 self.counters['assign'] += 1
                 best_remaining = min(best_remaining, len(word_spaces))

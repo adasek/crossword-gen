@@ -47,8 +47,9 @@ class WordSpace:
         """Prolog identifer of this object"""
         return f"WS_{self.my_counter}"
 
-    def bind(self, word: Word, rebuild_possibility_matrix=False, word_list=None):
+    def bind(self, word: Word):
         """Add the word into WordSpace"""
+        affected = []
         if word.length != self.length:
             print(self)
             print(word)
@@ -57,19 +58,33 @@ class WordSpace:
         for cross in self.crosses:
             if not cross.bound_value():
                 cross.other(self)._best_options = None
-                if rebuild_possibility_matrix:
-                    cross.other(self).build_possibility_matrix(word_list)
+                affected.append(cross.other(self))
 
         self.occupied_by = word
         self._best_options = None
 
+        return affected
+
+
     def unbind(self):
         """Remove binded word from WordSpace"""
+        affected = []
         self.occupied_by = None
         self._best_options = None
         for cross in self.crosses:
             if not cross.bound_value():
                 cross.other(self)._best_options = None
+                affected.append(cross.other(self))
+        return affected
+
+    def rebuild_possibility_matrix(self, word_list):
+        for cross_index, cross in enumerate(self.crosses):
+            if not cross.bound_value():
+                for char_index, char in word_list.alphabet_with_index():
+                    other_ws = cross.other(self)
+                    mask, mask_chars = other_ws.mask_with(cross, char)
+                    self.possibility_matrix[cross_index, char_index] = word_list.word_count(mask, mask_chars)
+
 
     def bindable(self, word_list: WordList) -> Set[Word]:
         """List all words that can be filled to WordSpace at this moment"""
@@ -274,6 +289,25 @@ class WordSpace:
             mask_list[cross.cross_index(self)] = True
             masks.append(Mask(mask_list))
         return masks
+
+    # Current mask with append given cross
+    def mask_with(self, cross, word_char):
+        mask, chars = self.mask_current()
+        new_index = self.index_of_cross(cross)
+        mask_list = mask.mask
+        char_list = []
+        char_counter = 0
+        for index, val in enumerate(mask_list):
+            if index == new_index:
+                if val:
+                    raise Exception("Assertion failed")
+                mask_list[index] = True
+                char_list.append(word_char)
+            else:
+                if val:
+                    char_list.append(chars[char_counter])
+                    char_counter += 1
+        return Mask(mask_list), CharList(char_list)
 
     def masks_prefix(self):
         return self.mask().prefix_derivations()

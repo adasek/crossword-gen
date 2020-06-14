@@ -48,6 +48,9 @@ class WordList:
     def word_by_index(self, length, index):
         return self.words_by_lengths_list[length][index]
 
+    def alphabet_with_index(self):
+        return enumerate(self.alphabet, start=0)
+
     def char_index(self, char):
         for index, ch in enumerate(self.alphabet):
             if ch == char:
