@@ -31,17 +31,15 @@ class WordSpace:
     def build_possibility_matrix(self, word_list: WordList):
         # possible_words number for letter x cross
         self.possibility_matrix = np.zeros(shape=(len(self.crosses), len(word_list.alphabet)))
+        self.rebuild_possibility_matrix(word_list)
+
+    def rebuild_possibility_matrix(self, word_list):
         for cross_index, cross in enumerate(self.crosses):
-            other_ws = cross.other(self)
-            mask_list = [False] * other_ws.length
-            mask_list[other_ws.index_of_cross(cross)] = True
-            mask = Mask(mask_list)
-            for word_index, word in enumerate(word_list.words_of_length(self.length)):
-                # try to bind this word and check all crosses possibilities
-                self.bind(word)
-                char = self.my_char_on_cross(cross)
-                self.unbind()
-                self.possibility_matrix[cross_index, word_list.char_index(char)] = word_list.word_count(mask, CharList([char]))
+            if not cross.bound_value():
+                for char_index, char in word_list.alphabet_with_index():
+                    other_ws = cross.other(self)
+                    mask, mask_chars = other_ws.mask_with(cross, char)
+                    self.possibility_matrix[cross_index, char_index] = word_list.word_count(mask, mask_chars)
 
     def id(self) -> str:
         """Prolog identifer of this object"""
@@ -76,15 +74,6 @@ class WordSpace:
                 cross.other(self)._best_options = None
                 affected.append(cross.other(self))
         return affected
-
-    def rebuild_possibility_matrix(self, word_list):
-        for cross_index, cross in enumerate(self.crosses):
-            if not cross.bound_value():
-                for char_index, char in word_list.alphabet_with_index():
-                    other_ws = cross.other(self)
-                    mask, mask_chars = other_ws.mask_with(cross, char)
-                    self.possibility_matrix[cross_index, char_index] = word_list.word_count(mask, mask_chars)
-
 
     def bindable(self, word_list: WordList) -> Set[Word]:
         """List all words that can be filled to WordSpace at this moment"""
