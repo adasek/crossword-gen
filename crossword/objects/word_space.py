@@ -24,8 +24,6 @@ class WordSpace:
         self.my_counter = WordSpace.counter
         self.possibility_matrix = None
         self.failed_words = set()
-        self._best_options = None
-        self._best_options_unbouded_crosses = None
         WordSpace.counter += 1
 
     def build_possibility_matrix(self, word_list: WordList):
@@ -55,11 +53,9 @@ class WordSpace:
 
         for cross in self.crosses:
             if not cross.bound_value():
-                cross.other(self)._best_options = None
                 affected.append(cross.other(self))
 
         self.occupied_by = word
-        self._best_options = None
 
         return affected
 
@@ -68,10 +64,8 @@ class WordSpace:
         """Remove binded word from WordSpace"""
         affected = []
         self.occupied_by = None
-        self._best_options = None
         for cross in self.crosses:
             if not cross.bound_value():
-                cross.other(self)._best_options = None
                 affected.append(cross.other(self))
         return affected
 
@@ -136,12 +130,6 @@ class WordSpace:
 
     # rough count
     def count_promising_max(self, word_list):
-        # Temp
-        #best_opts = self.find_best_options(word_list)
-        #if best_opts is None:
-        #    return 0
-        #else:
-        #   return len(best_opts)
 
         crosses_list = [0 if cross.bound_value() else 1 for cross in self.crosses]
         crosses_vector = np.matrix(crosses_list)
@@ -154,8 +142,8 @@ class WordSpace:
 
     def find_best_options(self, word_list: WordList):
         unbounded_crosses = self.get_half_bound_crosses()
-        if self._best_options is not None and self._best_options_unbouded_crosses == unbounded_crosses and self._best_options_unbouded_crosses:
-            return self._best_options
+        #if self._best_options is not None and self._best_options_unbouded_crosses == unbounded_crosses and self._best_options_unbouded_crosses:
+        #    return self._best_options
         # mask ...X.
         candidate_char_dict_array = []
         for cross_index, cross in enumerate(unbounded_crosses):
@@ -203,8 +191,6 @@ class WordSpace:
         if max_score == 0:
             return None
         else:
-            self._best_options = best_words
-            self._best_options_unbouded_crosses = unbounded_crosses
             return best_words
 
     def find_best_option(self, word_list: WordList):

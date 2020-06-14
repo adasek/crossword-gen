@@ -6,7 +6,7 @@ import time
 class Solver(object):
 
     def __init__(self):
-        self.MAX_FAILED_WORDS = 100
+        self.MAX_FAILED_WORDS = 500
         self.t0 = None
         self.t1 = None
         self.solved = False
