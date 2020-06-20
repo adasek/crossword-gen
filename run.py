@@ -51,9 +51,11 @@ parser.build_possibility_matrix(word_spaces, word_list)
 # Solve
 print("Solving:")
 solver = Solver()
-#cProfile.run('word_spaces = solver.solve(word_spaces, word_list)', 'restats')
-word_spaces = solver.solve(word_spaces, word_list, crossword)
+original_word_spaces = word_spaces
+cProfile.run('word_spaces = solver.solve(word_spaces, word_list, crossword)', 'restats')
+#word_spaces = solver.solve(word_spaces, word_list, crossword)
 if not word_spaces:
+    solver.print(original_word_spaces, crossword)
     print(f"No solutions found")
 else:
     solver.print(word_spaces, crossword)

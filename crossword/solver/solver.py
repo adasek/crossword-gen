@@ -78,7 +78,7 @@ class Solver(object):
                 failed_ws.failed_words.add(failed_word)
                 self.counters['failed'] += 1
                 if self.counters['failed'] > self.MAX_FAILED_WORDS:
-                    # Too many retries on this slot
+                    # Too many retries
                     self.t1 = time.time()
                     self.solved = True
                     self.solution_found = False
@@ -118,19 +118,40 @@ class Solver(object):
         for y, line in enumerate(crossword, start=1):
             for x, char in enumerate(line, start=1):
                 char = None
+
+                # find relevant wordspaces (2 or 1)
+                associated_word_spaces = []
                 for word_space in word_spaces:
-                    # Check if all crossed word_spaces have equal char
-                    if not word_space.occupied_by:
-                        continue
-                    word_space_char = word_space.char_at(x, y)
-                    if not word_space_char:
-                        continue
-                    elif not char:
-                        char = word_space_char
-                    elif char != word_space_char:
-                        raise Exception("Incoherent WordSpaces", x, y, char, word_space_char)
-                if not char:
-                    char = ' '
+                    if (x, y) in word_space.spaces():
+                        associated_word_spaces.append(word_space)
+
+                if len(associated_word_spaces) > 2:
+                    raise Exception("Char with >2 Wordspaces", x, y)
+                elif len(associated_word_spaces) == 0:
+                    char = ':'
+                else:
+                    # Check both crossed wordspaces have equal char
+                    char = None
+                    not_bound_count = 0
+                    ws_retries = 0
+                    for ws in associated_word_spaces:
+                        if ws.occupied_by is not None and char is not None and char != ws.char_at(x, y):
+                            print(f"{ws.char_at(x,y)}")
+                            raise Exception("Incoherent WordSpaces", x, y)
+                        if ws.occupied_by is not None:
+                            char = ws.char_at(x, y)
+                        else:
+                            not_bound_count += 1
+                        ws_retries += len(ws.failed_words)
+
+                    if not char:
+                        # both unbounded
+                       char = ' '
+                    if ws_retries > 0 and char:
+                        char = char.upper()
+                    if ws_retries > 0 and not char:
+                        char = '?'
+
                 print(char, end="")
             print("")
 
