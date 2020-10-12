@@ -1,3 +1,4 @@
+import json
 
 class CharList:
     def __init__(self, char_list):
@@ -31,3 +32,6 @@ class CharList:
 
     def __add__(self, other):
         return CharList(self.char_list + other.char_list)
+
+    def to_json(self):
+        return self.char_list

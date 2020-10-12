@@ -6,6 +6,7 @@ from crossword.parser import Parser
 from crossword.solver import Solver
 from crossword.objects import Crossword
 from pathlib import Path
+import json
 import cProfile
 
 DIRECTORY = "."
@@ -14,7 +15,7 @@ parser = Parser(DIRECTORY)
 #dict_file = "input/Czech.dic"
 #words = parser.parse_original_wordlist(dict_file)
 
-words = parser.parse_csv_wordlist("../crossword/word-gen/meanings.txt", delimiter=':')
+words = parser.parse_csv_wordlist("../crossword/word-gen/meanings_filtered.txt", delimiter=':')
 words_by_length = parser.words_by_length()
 crossword = Crossword.from_grid(Path(DIRECTORY, "crossword.dat"))
 
@@ -60,3 +61,5 @@ if not word_spaces:
     print(f"No solutions found")
 else:
     print(crossword)
+    with open('out_crossword.json', 'w') as json_out:
+        json_out.write(json.dumps(json.loads(crossword.to_json()), sort_keys=True, indent=4))

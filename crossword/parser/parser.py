@@ -22,7 +22,7 @@ class Parser(object):
             csv_reader = csv.reader(csvfile, delimiter=delimiter)
             self.words = []
             for row in csv_reader:
-                self.words.append(Word(row[0].lower().strip()))
+                self.words.append(Word(row[0].lower().strip(), description=row[1].strip()))
         return self.words
 
     def parse_words(self):

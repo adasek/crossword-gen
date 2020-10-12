@@ -2,9 +2,10 @@ import re
 from pathlib import Path
 import itertools
 from . import WordSpace
+import json
 
 
-class Crossword:
+class Crossword():
     def __init__(self, word_spaces):
         self.word_spaces = word_spaces
         self.width = None
@@ -54,6 +55,13 @@ class Crossword:
                 string += char
             string += "\n"
         return string
+
+    def to_json(self, export_occupied_by=False):
+        return json.dumps({
+            'width': self.width,
+            'height': self.height,
+            'word_spaces': list(map(lambda ws: ws.to_json(export_occupied_by=export_occupied_by), self.word_spaces))
+        })
 
     @staticmethod
     def from_grid(crossword_grid_file):

@@ -8,6 +8,7 @@ from typing import List, Set, Dict, Tuple
 import numpy as np
 import itertools
 import random
+import json
 
 
 class WordSpace:
@@ -336,3 +337,12 @@ class WordSpace:
         if self.occupied_by:
             describing_string += f" occupied by {self.occupied_by}"
         return describing_string
+
+    def to_json(self, export_occupied_by=False):
+        return {
+            'start': self.start,
+            'length': self.length,
+            'type': self.type,
+            'occupied_by': self.occupied_by.to_json() if self.occupied_by is not None and export_occupied_by else None,
+            'meaning': self.occupied_by.description if self.occupied_by is not None else None
+        }
