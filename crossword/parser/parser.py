@@ -2,6 +2,7 @@ from pathlib import Path
 from crossword.objects import Word, WordSpace
 import re
 import itertools
+import csv
 
 class Parser(object):
     def __init__(self, directory):
@@ -14,6 +15,14 @@ class Parser(object):
             lines = fp.readlines()
 
             self.words = [Word(line.split('/')[0].lower().strip()) for line in lines]
+        return self.words
+
+    def parse_csv_wordlist(self, wordlist_file, delimiter=','):
+        with open(wordlist_file) as csvfile:
+            csv_reader = csv.reader(csvfile, delimiter=delimiter)
+            self.words = []
+            for row in csv_reader:
+                self.words.append(Word(row[0].lower().strip()))
         return self.words
 
     def parse_words(self):

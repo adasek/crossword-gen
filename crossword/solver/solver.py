@@ -20,7 +20,6 @@ class Solver(object):
             self.counters[key] = 0
         word_spaces = [w for w in all_word_spaces]
 
-        # One half random fill (vertical for now)
         assigned = []
         ws = None
         backtrack = False
@@ -87,6 +86,9 @@ class Solver(object):
                 backtrack = False
             else:
                 affected = ws.bind(best_option)
+
+                #print(crossword)
+                #self.print(word_spaces, crossword)
                 for affected_word_space in affected:
                     affected_word_space.rebuild_possibility_matrix(word_list)
 
