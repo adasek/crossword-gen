@@ -4,21 +4,22 @@ from crossword.runner import Runner
 from crossword.objects import WordList
 from crossword.parser import Parser
 from crossword.solver import Solver
+from crossword.objects import Crossword
+from pathlib import Path
 import cProfile
 
-parser = Parser(".")
+DIRECTORY = "."
+parser = Parser(DIRECTORY)
 
 #dict_file = "input/Czech.dic"
-dict_file = "input/altered.dic"
-words = parser.parse_original_wordlist(dict_file)
+#words = parser.parse_original_wordlist(dict_file)
+
+words = parser.parse_csv_wordlist("../crossword/word-gen/meanings.txt", delimiter=':')
 words_by_length = parser.words_by_length()
-crossword = parser.parse_crossword("crossword.dat")
-word_spaces = parser.parse_word_spaces(crossword)
+crossword = Crossword.from_grid(Path(DIRECTORY, "crossword.dat"))
 
-parser.add_crosses(word_spaces)
-
-word_list = WordList(words, word_spaces)
-parser.build_possibility_matrix(word_spaces, word_list)
+word_list = WordList(words, crossword.word_spaces)
+parser.build_possibility_matrix(crossword.word_spaces, word_list)
 
 # (start with 1-masks)
 # X..X.,'ab' = X....,'a' union ...X.,'b'
@@ -51,11 +52,11 @@ parser.build_possibility_matrix(word_spaces, word_list)
 # Solve
 print("Solving:")
 solver = Solver()
-original_word_spaces = word_spaces
-cProfile.run('word_spaces = solver.solve(word_spaces, word_list, crossword)', 'restats')
-#word_spaces = solver.solve(word_spaces, word_list, crossword)
+original_word_spaces = crossword.word_spaces
+#cProfile.run('word_spaces = solver.solve(word_spaces, word_list, crossword)', 'restats')
+word_spaces = solver.solve(crossword, word_list)
 if not word_spaces:
-    solver.print(original_word_spaces, crossword)
+    print(crossword)
     print(f"No solutions found")
 else:
-    solver.print(word_spaces, crossword)
+    print(crossword)
