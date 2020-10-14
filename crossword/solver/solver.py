@@ -67,7 +67,9 @@ class Solver(object):
                 failed_pair = assigned.pop()
                 failed_ws = failed_pair[0]
                 failed_word = failed_pair[1]
+                word_list.mark_as_unused(failed_word)
                 affected = failed_ws.unbind()
+
                 for affected_word_space in affected:
                     affected_word_space.rebuild_possibility_matrix(word_list)
                 failed_ws.rebuild_possibility_matrix(word_list)
@@ -86,6 +88,8 @@ class Solver(object):
                 backtrack = False
             else:
                 affected = ws.bind(best_option)
+                word_list.mark_as_used(best_option)
+                print([str(word) for word in word_list.used_words])
 
                 #print(crossword)
                 #self.print(word_spaces, crossword)

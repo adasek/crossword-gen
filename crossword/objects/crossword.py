@@ -91,29 +91,23 @@ class Crossword():
         # horizontal: parse lines
         word_spaces = []
         for y, line in enumerate(crossword_grid, start=1):
-            in_word = -1
-            for x, char in enumerate(line, start=1):
-                word_length = x - in_word
-                if char == '_' and in_word < 0:
+            in_word = None
+            for x, char in enumerate(line + "X", start=1):
+                if char == '_' and in_word is None:
+                    # word start
                     in_word = x
-                elif char != '_' and in_word >= 0:
+                elif char != '_' and in_word is not None:
+                    word_length = x - in_word
                     if word_length > 1:
                         # flush word
                         word_spaces.append(WordSpace((in_word, y), word_length, 'horizontal'))
-                    in_word = -1
-            # flush last word
-            word_length = len(line) - in_word + 1
-            if in_word >= 0 and word_length > 1:
-                word_spaces.append(WordSpace((in_word, y), word_length, 'horizontal'))
+                    in_word = None
+
 
         for x in range(1, 1 + max([len(line) for line in crossword_grid])):
             in_word = -1
             for y, line in enumerate(crossword_grid, start=1):
-                char = 'X'
-                try:
-                    char = line[x - 1]
-                except IndexError:
-                    char = 'X'
+                char = line[x - 1]
                 word_length = y - in_word
                 if char == '_' and in_word < 0:
                     in_word = y

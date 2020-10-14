@@ -15,9 +15,10 @@ parser = Parser(DIRECTORY)
 #dict_file = "input/Czech.dic"
 #words = parser.parse_original_wordlist(dict_file)
 
-words = parser.parse_csv_wordlist("../crossword/word-gen/meanings_filtered.txt", delimiter=':')
+words = parser.parse_csv_wordlist("../word-gen/meanings_filtered.txt", delimiter=':')
 words_by_length = parser.words_by_length()
 crossword = Crossword.from_grid(Path(DIRECTORY, "crossword.dat"))
+
 
 word_list = WordList(words, crossword.word_spaces)
 parser.build_possibility_matrix(crossword.word_spaces, word_list)

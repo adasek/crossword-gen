@@ -20,9 +20,7 @@ class WordList:
 
         self.one_masks = self.create_one_masks(word_spaces)
         self.words_by_masks = self.create_words_by_masks(words, self.one_masks)
-
-    def words_of_length(self, length):
-        return self.words_by_lengths_list[length]
+        self.used_words = set()
 
     def create_one_masks(self, word_spaces):
         possible_masks = set()
@@ -44,9 +42,6 @@ class WordList:
                     words_by_masks[mask][chars].add(word)
 
         return words_by_masks
-
-    def word_by_index(self, length, index):
-        return self.words_by_lengths_list[length][index]
 
     def alphabet_with_index(self):
         return enumerate(self.alphabet, start=0)
@@ -81,7 +76,13 @@ class WordList:
                 words = words.intersection(division_words)
             else:
                 words = division_words
-        return words
+        return words.difference(self.used_words)
+
+    def mark_as_used(self, word: Word):
+        self.used_words.add(word)
+
+    def mark_as_unused(self, word: Word):
+        self.used_words.remove(word)
 
     def word_count(self, mask, chars):
         return len(self.words(mask, chars))
