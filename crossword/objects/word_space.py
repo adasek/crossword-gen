@@ -151,6 +151,9 @@ class WordSpace:
             other_wordspace = cross.other(self)
             other_wordspace_mask, other_wordspace_chars = other_wordspace.mask_current()
             base_set = word_list.words(other_wordspace_mask, other_wordspace_chars)
+            if other_wordspace_mask.is_fully_bound():
+                candidate_char_dict_array.append({cross.bound_value(): 1})
+                continue
             other_wordspace_index = other_wordspace.index_of_cross(cross)
             mask_list = [False] * other_wordspace.length
             mask_list[other_wordspace_index] = True

@@ -48,7 +48,8 @@ class Mask(object):
                 mask_string += "."
         return mask_string
 
-
+    def is_fully_bound(self):
+        return False not in self.mask
 
     def all_derivations(self):
         my_indices = []

@@ -6,7 +6,7 @@ import time
 class Solver(object):
 
     def __init__(self):
-        self.MAX_FAILED_WORDS = 500
+        self.MAX_FAILED_WORDS = 50000
         self.t0 = None
         self.t1 = None
         self.solved = False
@@ -89,7 +89,6 @@ class Solver(object):
             else:
                 affected = ws.bind(best_option)
                 word_list.mark_as_used(best_option)
-                print([str(word) for word in word_list.used_words])
 
                 #print(crossword)
                 #self.print(word_spaces, crossword)
