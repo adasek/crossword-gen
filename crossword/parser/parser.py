@@ -3,36 +3,18 @@ from crossword.objects import Word, WordSpace
 import re
 import itertools
 import csv
+import pandas as pd
 
 class Parser(object):
     def __init__(self, directory):
         self.directory = Path(directory)
-        self.words = []
-        self.words_by_len = {}
+        self.words_df = None
 
-    def parse_original_wordlist(self, original_wordlist_file):
-        with open(original_wordlist_file) as fp:
-            lines = fp.readlines()
+    def load_dataframe(self, dataframe_file_path):
+        self.words_df = pd.read_pickle(dataframe_file_path, compression='gzip')
+        # ?? parse into Words objects ??
 
-            self.words = [Word(line.split('/')[0].lower().strip()) for line in lines]
-        return self.words
-
-    def parse_csv_wordlist(self, wordlist_file, delimiter=','):
-        with open(wordlist_file) as csvfile:
-            csv_reader = csv.reader(csvfile, delimiter=delimiter)
-            self.words = []
-            for row in csv_reader:
-                self.words.append(Word(row[0].lower().strip(), description=row[1].strip()))
-        return self.words
-
-    def parse_words(self):
-        # Load words
-        self.words = []
-        with open(Path(self.directory, wordlist_file), 'r') as fp:
-            for word_string in fp.readlines():
-                self.words.append(Word(re.sub(r'[\r\n\t]*', '', word_string)))
-
-        return self.words
+        return self.words_df
 
     def words_by_length(self):
         # Structure words #1: do split by lengths:

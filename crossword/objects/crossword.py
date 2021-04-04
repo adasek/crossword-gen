@@ -33,7 +33,6 @@ class Crossword():
                     # Check both crossed wordspaces have equal char
                     char = None
                     not_bound_count = 0
-                    ws_retries = 0
                     for ws in associated_word_spaces:
                         if ws.occupied_by is not None and char is not None and char != ws.char_at(x, y):
                             string += f"{ws.char_at(x, y)}"
@@ -42,15 +41,10 @@ class Crossword():
                             char = ws.char_at(x, y)
                         else:
                             not_bound_count += 1
-                        ws_retries += len(ws.failed_words)
 
                     if not char:
                         # both unbounded
                         char = ' '
-                    if ws_retries > 0 and char:
-                        char = char.upper()
-                    if ws_retries > 0 and not char:
-                        char = '?'
 
                 string += char
             string += "\n"

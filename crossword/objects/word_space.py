@@ -6,10 +6,10 @@ from crossword.objects import WordList
 import math
 from typing import List, Set, Dict, Tuple
 import numpy as np
+import pandas as pd
 import itertools
 import random
 import json
-
 
 class WordSpace:
     """Single line of characters in crossroad that will be filled with a word"""
@@ -24,7 +24,7 @@ class WordSpace:
         self.occupied_by = None
         self.my_counter = WordSpace.counter
         self.possibility_matrix = None
-        self.failed_words = set()
+        self.failed_words_index_set = set()
         WordSpace.counter += 1
 
     def build_possibility_matrix(self, word_list: WordList):
@@ -70,14 +70,11 @@ class WordSpace:
                 affected.append(cross.other(self))
         return affected
 
-    def bindable(self, word_list: WordList) -> Set[Word]:
+    def bindable(self, word_list: WordList) -> pd.DataFrame:
         """List all words that can be filled to WordSpace at this moment"""
         mask, chars = self.mask_current()
-        words = word_list.words(mask, chars).difference(self.failed_words)
-        for word in words:
-            if not isinstance(word, Word):
-                raise Exception("NOT a Word")
-        return words
+        word_indices = word_list.words(mask, chars, failed_index=self.failed_words_index_set)
+        return word_indices
 
     def get_unbounded_crosses(self) -> List[Cross]:
         """List crosses that don't have certain Char bound.
@@ -92,25 +89,15 @@ class WordSpace:
         """Count how many words may be filled to the unbound WordSpace crossing this.
         Will return +inf if no unbound WordSpace is crossing"""
 
-        possible_words = self.bindable(word_list)
-        if len(possible_words) == 0:
-            return 0
+        # possible_words = self.bindable(word_list)
+        # if possible_words.size == 0:
+        #    return 0
         # For every bindable option compute the potential candidates
         unbounded_crosses = self.get_unbounded_crosses()
         if len(unbounded_crosses) == 0:
             # This is a must have word!
             return math.inf
-        # Try to fill in any word
-        # Old version
-        # return max([self.count_promising(word_list, unbounded_crosses, word) for word in possible_words])
 
-        # Version 2
-        #crosses_list = [0 if cross.bound_value() else 1 for cross in self.crosses]
-        #crosses_vector = np.matrix(crosses_list)
-        #prod = np.matmul(crosses_vector, self.possibility_matrix)
-        #return prod.max()
-
-        # Version 3:
         return self.count_promising_max(word_list)
 
 
@@ -141,7 +128,7 @@ class WordSpace:
 
         return sum(max_matrix)
 
-    def find_best_options(self, word_list: WordList):
+    def find_best_options(self, word_list: WordList, language='cs'):
         unbounded_crosses = self.get_half_bound_crosses()
         #if self._best_options is not None and self._best_options_unbouded_crosses == unbounded_crosses and self._best_options_unbouded_crosses:
         #    return self._best_options
@@ -161,8 +148,8 @@ class WordSpace:
 
             candidate_chars = []
             for char in word_list.alphabet:
-                suitable_words = base_set.intersection(word_list.words(one_mask, CharList([char]))).difference(other_wordspace.failed_words)
-                words_count = len(suitable_words)
+                suitable_words_index = base_set.intersection(word_list.words(one_mask, CharList([char]))).difference(other_wordspace.failed_words_index_set)
+                words_count = len(suitable_words_index)
                 if words_count > 0:
                     candidate_chars.append({'char': char, 'count': words_count})
             if len(candidate_chars) == 0:
@@ -173,8 +160,13 @@ class WordSpace:
         max_score = 0
         best_words = []
         #print("----:")
-        #print(self.bindable(word_list))
-        for word in self.bindable(word_list):
+        # Pandas dataframe
+        # self.bindable(word_list)
+
+        # todo: rewrite into pure DataFrame use
+        # todo: use score of the word
+        for word_index in self.bindable(word_list):
+            word = word_list.get_word_by_index(word_index)
             score = 0
             for cross_index, cross in enumerate(unbounded_crosses):
                 word_char = word[cross.cross_index(self)]
@@ -197,8 +189,8 @@ class WordSpace:
         else:
             return best_words
 
-    def find_best_option(self, word_list: WordList):
-        best_options = self.find_best_options(word_list)
+    def find_best_option(self, word_list: WordList, language='cs'):
+        best_options = self.find_best_options(word_list, language=language)
         if best_options is not None and len(best_options) > 0:
             #print(f"find_best_option: random choice from {best_options}")
             rnd = random.choice(best_options)
