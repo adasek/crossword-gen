@@ -3,6 +3,7 @@ from pathlib import Path
 import itertools
 from . import WordSpace
 import json
+import numpy as np
 
 
 class Crossword():
@@ -139,3 +140,14 @@ class Crossword():
                 word_space_pair[0].add_cross(word_space_pair[1])
                 word_space_pair[1].add_cross(word_space_pair[0])
         return
+
+    def evaluate_score(self):
+        score = 0
+        for ws in self.word_spaces:
+            if not np.isnan(ws.occupied_by.score):
+                score += ws.occupied_by.score
+        return score
+
+    def reset(self):
+        for word_space in self.word_spaces:
+            word_space.unbind()

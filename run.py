@@ -9,6 +9,7 @@ from pathlib import Path
 import json
 import cProfile
 import time
+import copy
 
 DIRECTORY = "."
 parser = Parser(DIRECTORY)
@@ -18,7 +19,7 @@ parser = Parser(DIRECTORY)
 
 start = time.perf_counter()
 #words = parser.parse_csv_wordlist("../word-gen/meanings_filtered.txt", delimiter=':')
-words_df = parser.load_dataframe('individual_words.pickle.gzip') #.sample(200000, random_state=1)
+words_df = parser.load_dataframe('individual_words.pickle.gzip').sample(200000, random_state=1) #.sample(200000, random_state=1)
 # words = parser.parse_csv_wordlist("../word-gen/words_2020_11_02_useful.txt", delimiter=',')
 print(f"  words_df loaded in {round(-start + (time.perf_counter()), 2)}s")
 
@@ -73,15 +74,23 @@ original_word_spaces = crossword.word_spaces
 # profile memory: run
 # /usr/bin/time -f "KB:%K user: %U" -- python run.py
 
-# cProfile.run('word_spaces = solver.solve(crossword, word_list)', 'restats')
-word_spaces = solver.solve(crossword, word_list)
 
-if not word_spaces:
+max_score = -99999
+max_crossword = None
+for i in range(50):
+    # cProfile.run('word_spaces = solver.solve(crossword, word_list)', 'restats')
+    word_spaces = solver.solve(crossword, word_list)
+    print(f"Score: {solver.score}")
+    if word_spaces is not None and solver.score > max_score:
+        max_score = solver.score
+        max_crossword = copy.deepcopy(crossword)
+    crossword.reset()
+
+if max_crossword is None:
     print(crossword)
     print(f"No solutions found")
 else:
-    print(crossword)
+    print(f"Score: {max_crossword.evaluate_score()}")
+    print(max_crossword)
     with open('out_crossword.json', 'w') as json_out:
         json_out.write(json.dumps(json.loads(crossword.to_json()), sort_keys=True, indent=4))
-
-

@@ -192,13 +192,12 @@ class WordSpace:
     def find_best_option(self, word_list: WordList, language='cs'):
         best_options = self.find_best_options(word_list, language=language)
         if best_options is not None and len(best_options) > 0:
-            #print(f"find_best_option: random choice from {best_options}")
-            rnd = random.choice(best_options)
-            if not isinstance(rnd, Word):
-                raise Exception("Not instance of Word")
-            return rnd
+            # print(f"find_best_option: random choice from {best_options}")
+            best_options = sorted(best_options, key=lambda word: 0 if np.isnan(word.score) else word.score, reverse=True)
+            # rnd = random.choice(best_options)
+            return best_options[0]
         else:
-            #print(f"find_best_option: None")
+            # print(f"find_best_option: None")
             return None
 
     # Returns set of tuples - positions that this words goes through

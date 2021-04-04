@@ -37,8 +37,7 @@ class WordList:
             for char_index, char in enumerate(word):
                 self.words_structure[word_len][char_index][char].add(word_index)
 
-            self.words_by_index[word_index] = Word(row['word_label_text'], row['word_description_text'], index=word_index, language=language)
-
+            self.words_by_index[word_index] = Word(row['word_label_text'], row['word_description_text'], index=word_index, language=language, score=row['score'])
 
     def create_one_masks(self, word_spaces):
         possible_masks = set()
