@@ -67,14 +67,14 @@ words_all_df = parser.load_dataframe('individual_words.pickle.gzip')
 words_all_df.loc[:, 'word_label_text_lower'] = words_all_df.loc[:, 'word_label_text'].map(lambda word: word.lower().strip())
 words_all_df = words_all_df.drop_duplicates(subset=['word_label_text_lower'])
 
-for crossword_file in ["crossword.dat"]:
+for crossword_file in ["crossword.dat", "crossword_blesk17mod.dat", "crossword_vkk174.dat", "crossword_vkk175.dat"]:
 
     with open(crossword_file+'.csv', 'w', newline='') as out_file:
         writer = csv.writer(out_file)
         writer.writerow(["crossword_file", "sample_size", "success", "fail", "success_rate", "timing1", "timing2", "timing3"])
         crossword = Crossword.from_grid(Path(DIRECTORY, crossword_file))
-        with Pool(processes=12, initializer=init_worker, initargs=(worker_do_one, words_all_df)) as pool:
-            for i, result in enumerate(pool.imap(worker_do_one, range(10000, words_all_df.shape[0], 500), chunksize=1)):
+        with Pool(processes=8, initializer=init_worker, initargs=(worker_do_one, words_all_df)) as pool:
+            for i, result in enumerate(pool.imap(worker_do_one, range(20000, words_all_df.shape[0], 500), chunksize=1)):
                 writer.writerow([result['crossword_file'], result['sample_size'],
                                  result['counter_ok'], result['counter_fail'],
                                  (result['counter_ok']/(result['counter_ok']+result['counter_fail'])),
