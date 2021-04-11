@@ -19,7 +19,7 @@ parser = Parser(DIRECTORY)
 
 start = time.perf_counter()
 #words = parser.parse_csv_wordlist("../word-gen/meanings_filtered.txt", delimiter=':')
-words_df = parser.load_dataframe('individual_words.pickle.gzip').sample(200000, random_state=1) #.sample(200000, random_state=1)
+words_df = parser.load_dataframe('individual_words.pickle.gzip') #.sample(200000, random_state=1) #.sample(200000, random_state=1)w
 # words = parser.parse_csv_wordlist("../word-gen/words_2020_11_02_useful.txt", delimiter=',')
 print(f"  words_df loaded in {round(-start + (time.perf_counter()), 2)}s")
 
@@ -77,7 +77,7 @@ original_word_spaces = crossword.word_spaces
 
 max_score = -99999
 max_crossword = None
-for i in range(50):
+for i in range(300):
     # cProfile.run('word_spaces = solver.solve(crossword, word_list)', 'restats')
     word_spaces = solver.solve(crossword, word_list)
     print(f"Score: {solver.score}")

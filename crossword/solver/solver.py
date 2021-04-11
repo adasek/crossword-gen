@@ -18,11 +18,17 @@ class Solver(object):
         self.solution = None
         self.counters = {'assign': 0, 'backtrack': 0, 'failed': 0}
 
-    def solve(self, crossword, word_list):
+    def solve(self, crossword, word_list, max_failed_words=2000):
+        self.MAX_FAILED_WORDS = max_failed_words
         self.t0 = time.time()
         for key in self.counters.keys():
             self.counters[key] = 0
         word_spaces = [w for w in crossword.word_spaces]
+
+        # assign first word_space randomly
+        ws = random.choice(word_spaces)
+        word = ws.find_best_option(word_list)
+        ws.bind(word)
 
         assigned = []
         ws = None
