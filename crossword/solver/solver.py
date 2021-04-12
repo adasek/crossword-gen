@@ -20,7 +20,7 @@ class Solver(object):
         self.randomize = True
         self.assign_first_word = True
 
-    def solve(self, crossword, word_list, max_failed_words=2000, randomize=True, assign_first_word=True):
+    def solve(self, crossword, word_list, max_failed_words=2000, randomize=0.5, assign_first_word=True):
         self.assign_first_word = assign_first_word
         self.randomize = randomize
         self.max_failed_words = max_failed_words
@@ -47,7 +47,7 @@ class Solver(object):
 
             if ws is None:
                 word_spaces_to_fill_next = sorted(word_spaces, key=lambda ws: ws.expectation_value(word_list), reverse=True)
-                if self.randomize and random.randint(0, 10) < 5 and len(word_spaces_to_fill_next) > 1:
+                if self.randomize > 0 and random.random() < self.randomize and len(word_spaces_to_fill_next) > 1:
                     tmp = word_spaces_to_fill_next[0]
                     word_spaces_to_fill_next[0] = word_spaces_to_fill_next[1]
                     word_spaces_to_fill_next[1] = tmp
