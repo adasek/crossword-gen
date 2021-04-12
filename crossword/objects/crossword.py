@@ -73,7 +73,7 @@ class Crossword():
         # Load crossword as text
         grid = [['X_'], ['X_']]
         with open(crossword_file, 'r') as fp:
-            crossword = [re.sub(r'[^_X]', '', line) for line in fp.readlines()]
+            crossword = [re.sub(r'[^ _X]', '', line) for line in fp.readlines()]
 
         self.width = max([len(line) for line in crossword])
         self.height = len(crossword)
@@ -88,10 +88,10 @@ class Crossword():
         for y, line in enumerate(crossword_grid, start=1):
             in_word = None
             for x, char in enumerate(line + "X", start=1):
-                if char == '_' and in_word is None:
+                if char in ['_', ' '] and in_word is None:
                     # word start
                     in_word = x
-                elif char != '_' and in_word is not None:
+                elif char not in ['_', ' '] and in_word is not None:
                     word_length = x - in_word
                     if word_length > 1:
                         # flush word
@@ -104,9 +104,9 @@ class Crossword():
             for y, line in enumerate(crossword_grid, start=1):
                 char = line[x - 1]
                 word_length = y - in_word
-                if char == '_' and in_word < 0:
+                if char in ['_', ' '] and in_word < 0:
                     in_word = y
-                elif char != '_' and in_word >= 0:
+                elif char not in ['_', ' '] and in_word >= 0:
                     if word_length > 1:
                         # flush word
                         word_spaces.append(WordSpace((x, in_word), word_length, 'vertical'))
