@@ -79,7 +79,7 @@ max_score = -99999
 max_crossword = None
 for i in range(300):
     # cProfile.run('word_spaces = solver.solve(crossword, word_list)', 'restats')
-    word_spaces = solver.solve(crossword, word_list)
+    word_spaces = solver.solve(crossword, word_list, randomize=False, assign_first_word=True)
     print(f"Score: {solver.score}")
     if word_spaces is not None and solver.score > max_score:
         max_score = solver.score

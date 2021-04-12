@@ -9,7 +9,7 @@ from random import gauss
 class Solver(object):
 
     def __init__(self):
-        self.MAX_FAILED_WORDS = 2000
+        self.max_failed_words = 2000
         self.t0 = None
         self.t1 = None
         self.score = 0
@@ -17,9 +17,14 @@ class Solver(object):
         self.solution_found = False
         self.solution = None
         self.counters = {'assign': 0, 'backtrack': 0, 'failed': 0}
+        self.randomize = True
+        self.assign_first_word = True
 
-    def solve(self, crossword, word_list, max_failed_words=2000):
-        self.MAX_FAILED_WORDS = max_failed_words
+    def solve(self, crossword, word_list, max_failed_words=2000, randomize=True, assign_first_word=True):
+        self.assign_first_word = assign_first_word
+        self.randomize = randomize
+        self.max_failed_words = max_failed_words
+
         self.t0 = time.time()
         for key in self.counters.keys():
             self.counters[key] = 0
@@ -42,7 +47,7 @@ class Solver(object):
 
             if ws is None:
                 word_spaces_to_fill_next = sorted(word_spaces, key=lambda ws: ws.expectation_value(word_list), reverse=True)
-                if random.randint(0, 10) < 5 and len(word_spaces_to_fill_next) > 1:
+                if self.randomize and random.randint(0, 10) < 5 and len(word_spaces_to_fill_next) > 1:
                     tmp = word_spaces_to_fill_next[0]
                     word_spaces_to_fill_next[0] = word_spaces_to_fill_next[1]
                     word_spaces_to_fill_next[1] = tmp
@@ -93,7 +98,7 @@ class Solver(object):
                 ws = failed_pair[0]
                 failed_ws.failed_words_index_set.add(failed_word.index)
                 self.counters['failed'] += 1
-                if self.counters['failed'] > self.MAX_FAILED_WORDS:
+                if self.counters['failed'] > self.max_failed_words:
                     # Too many retries
                     self.t1 = time.time()
                     self.solved = True
