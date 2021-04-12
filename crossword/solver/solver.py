@@ -12,15 +12,12 @@ class Solver(object):
         self.max_failed_words = 2000
         self.t0 = None
         self.t1 = None
-        self.score = 0
-        self.solved = False
-        self.solution_found = False
-        self.solution = None
-        self.counters = {'assign': 0, 'backtrack': 0, 'failed': 0}
+        self.reset()
         self.randomize = True
         self.assign_first_word = True
 
     def solve(self, crossword, word_list, max_failed_words=2000, randomize=0.5, assign_first_word=True):
+        self.reset()
         self.assign_first_word = assign_first_word
         self.randomize = randomize
         self.max_failed_words = max_failed_words
@@ -141,3 +138,10 @@ class Solver(object):
         if not self.solved:
             raise Exception("Not solved")
         return self.t1 - self.t0
+
+    def reset(self):
+        self.score = 0
+        self.solved = False
+        self.solution_found = False
+        self.solution = None
+        self.counters = {'assign': 0, 'backtrack': 0, 'failed': 0}
