@@ -4,6 +4,7 @@ import itertools
 from . import WordSpace
 import json
 import numpy as np
+import copy
 
 
 class Crossword():
@@ -58,6 +59,11 @@ class Crossword():
             'word_spaces': list(map(lambda ws: ws.to_json(export_occupied_by=export_occupied_by), self.word_spaces))
         })
 
+    def get_copy(self):
+        for ws in self.word_spaces:
+            ws.occupied_by.set_score_in_stone()
+        return copy.deepcopy(self)
+
     @staticmethod
     def from_grid(crossword_grid_file):
         crossword = Crossword([])
@@ -79,6 +85,19 @@ class Crossword():
         self.height = len(crossword)
 
         return [x for x in crossword if len(x) > 0]
+
+    @staticmethod
+    def from_grid_object(grid_object):
+        crossword = Crossword([])
+        grid = crossword.parse_grid_object(grid_object)
+        crossword.load_word_spaces_from_grid(grid)
+        crossword.add_crosses()
+        return crossword
+
+    def parse_grid_object(self, grid_object):
+        self.width = grid_object['width']
+        self.height = grid_object['height']
+        return ["".join([grid_object['bitmap'][self.width*y+x] for x in range(self.width)]) for y in range(self.height)]
 
     def load_word_spaces_from_grid(self, crossword_grid):
 
@@ -144,8 +163,8 @@ class Crossword():
     def evaluate_score(self):
         score = 0
         for ws in self.word_spaces:
-            if not np.isnan(ws.occupied_by.score):
-                score += ws.occupied_by.score
+            if not np.isnan(ws.occupied_by.get_score()):
+                score += ws.occupied_by.get_score()
         return score
 
     def reset(self):

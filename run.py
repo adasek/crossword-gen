@@ -9,7 +9,6 @@ from pathlib import Path
 import json
 import cProfile
 import time
-import copy
 
 DIRECTORY = "."
 parser = Parser(DIRECTORY)
@@ -20,6 +19,7 @@ parser = Parser(DIRECTORY)
 start = time.perf_counter()
 #words = parser.parse_csv_wordlist("../word-gen/meanings_filtered.txt", delimiter=':')
 words_df = parser.load_dataframe('individual_words.pickle.gzip') #.sample(200000, random_state=1) #.sample(200000, random_state=1)w
+words = words_df.sample(70000, random_state=i)
 # words = parser.parse_csv_wordlist("../word-gen/words_2020_11_02_useful.txt", delimiter=',')
 print(f"  words_df loaded in {round(-start + (time.perf_counter()), 2)}s")
 
@@ -29,7 +29,7 @@ crossword = Crossword.from_grid(Path(DIRECTORY, "crossword.dat"))
 print(f"  crossword loaded in {round(-start + (time.perf_counter()), 2)}s")
 start = time.perf_counter()
 # Todo: Build WordList from Dataframe
-word_list = WordList(words_df=words_df, language='cs', word_spaces=crossword.word_spaces)
+word_list = WordList(words_df=words_df, language='cs')
 
 print(f"  WordList in {round(-start + (time.perf_counter()), 2)}s")
 start = time.perf_counter()
@@ -79,11 +79,13 @@ max_score = -99999
 max_crossword = None
 for i in range(300):
     # cProfile.run('word_spaces = solver.solve(crossword, word_list)', 'restats')
-    word_spaces = solver.solve(crossword, word_list, randomize=False, assign_first_word=True)
+    word_spaces = solver.solve(crossword, word_list, randomize=0.05, assign_first_word=True)
     print(f"Score: {solver.score}")
+    # if not solver.solution_found:
+    #    print(crossword)
     if word_spaces is not None and solver.score > max_score:
         max_score = solver.score
-        max_crossword = copy.deepcopy(crossword)
+        max_crossword = crossword.get_copy()
     crossword.reset()
 
 if max_crossword is None:

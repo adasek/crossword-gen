@@ -8,7 +8,7 @@ class WordList:
     """Data structure to effectively find suitable words"""
     counter = 1
 
-    def __init__(self, words_df: pd.DataFrame, language: str, word_spaces):
+    def __init__(self, words_df: pd.DataFrame, language: str):
         self.words_df = words_df
         self.alphabet = alphabet_set(language)
 
@@ -37,14 +37,22 @@ class WordList:
             for char_index, char in enumerate(word):
                 self.words_structure[word_len][char_index][char].add(word_index)
 
-            self.words_by_index[word_index] = Word(row['word_label_text'], row['word_description_text'], index=word_index, language=language, score=row['score'])
+            if 'score' in row:
+                word_score = row['score']
+            else:
+                word_score = None
+            self.words_by_index[word_index] = Word(row['word_label_text'], row['word_description_text'],
+                                                   index=word_index,
+                                                   language=language,
+                                                   score=word_score,
+                                                   word_list=self,
+                                                   word_concept_id=row['word_concept_id'])
 
-    def create_one_masks(self, word_spaces):
-        possible_masks = set()
-        for word_space in word_spaces:
-            possible_masks.update(word_space.one_masks())
-
-        return possible_masks
+    def use_score_vector(self, score_vector):
+        self.words_df.drop([x for x in ['score'] if x in self.words_df.columns], axis=1, inplace=True)
+        self.words_df = self.words_df.join(score_vector, on='word_concept_id', how='left', rsuffix='_right')
+        # for word_index, row in self.words_df.iterrows():
+        #    self.words_by_index[word_index].score = row['score']
 
     def create_words_by_masks(self, words, possible_masks):
         words_by_masks = {}

@@ -7,6 +7,8 @@ name = "pypi"
 more-itertools = "*"
 pandas = "*"
 PyICU = "*"
+faktory = "*"
+python-dotenv = "*"
 
 [dev-packages]
 

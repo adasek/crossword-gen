@@ -193,7 +193,7 @@ class WordSpace:
         best_options = self.find_best_options(word_list, language=language)
         if best_options is not None and len(best_options) > 0:
             # print(f"find_best_option: random choice from {best_options}")
-            best_options = sorted(best_options, key=lambda word: 0 if np.isnan(word.score) else word.score, reverse=True)
+            best_options = sorted(best_options, key=lambda word: 0 if np.isnan(word.get_score()) else word.get_score(), reverse=True)
             # rnd = random.choice(best_options)
             return best_options[0]
         else:
