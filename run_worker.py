@@ -21,17 +21,19 @@ def shorten_description(description_text, label_text):
     # text = re.compile('\([^)]*\)', re.IGNORECASE).sub('', text)
     return text.strip()
 
+def shorten_description_row(row):
+    previous_description = row['word_description_text']
+    new_description = shorten_description(previous_description, row['word_label_text'])
+    row['word_description_text'] = new_description
+    return row
+
 # Load the general words matrix
 lang = 'cs'
 # general_words_matrix: word_id, word, description, meta...
 general_words_matrix_path = Path('words', lang, 'general_words_matrix.pickle.gzip')
 general_words_matrix = pd.read_pickle(general_words_matrix_path, compression='gzip')
-for index, row in general_words_matrix.iterrows():
-    previous_description = row['word_description_text']
-    new_description = shorten_description(previous_description, row['word_label_text'])
-    if previous_description != new_description:
-        # print(f"{previous_description} -> {new_description}")
-        row['word_description_text'] = new_description
+
+general_words_matrix = general_words_matrix.apply(shorten_description_row, axis=1)
 general_words_matrix = general_words_matrix[general_words_matrix['word_description_text'] != ""]
 
 # general_categorization_matrix: word_id, categorization
