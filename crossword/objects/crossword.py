@@ -52,16 +52,20 @@ class Crossword():
             string += "\n"
         return string
 
-    def to_json(self, export_occupied_by=False):
-        return json.dumps({
+    def as_json(self, export_occupied_by=False):
+        return {
             'width': self.width,
             'height': self.height,
             'word_spaces': list(map(lambda ws: ws.to_json(export_occupied_by=export_occupied_by), self.word_spaces))
-        })
+        }
+
+    def to_json(self, export_occupied_by=False):
+        return json.dumps(self.as_json(export_occupied_by))
 
     def get_copy(self):
         for ws in self.word_spaces:
-            ws.occupied_by.set_score_in_stone()
+            if ws.occupied_by is not None:
+                ws.occupied_by.set_score_in_stone()
         return copy.deepcopy(self)
 
     @staticmethod

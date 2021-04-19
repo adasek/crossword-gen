@@ -13,6 +13,8 @@ class Word(CharList):
         CharList.__init__(self, word_as_list)
         self.use = 1  # probability it will be used
         self.id = Word.id
+        if description is None:
+            print(f"Description none {word_string}")
         self.description = description
         self.score = score
         self.word_list = word_list
@@ -27,8 +29,10 @@ class Word(CharList):
             return 0
         word_row = self.word_list.words_df.loc[self.word_list.words_df['word_concept_id'] == self.word_concept_id]
         if 'score' in word_row.columns and not np.isnan(word_row.iloc[0]['score']):
+            self.score = word_row.iloc[0]['score']
             return word_row.iloc[0]['score']
         else:
+            self.score = 0
             return 0
 
     def set_score_in_stone(self):
