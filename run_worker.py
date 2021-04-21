@@ -110,4 +110,11 @@ def generate_crossword(crossword_task):
 
 w = Worker(queues=['default'], concurrency=1, faktory=ENV['FAKTORY_URL'])
 w.register('CrosswordTask', generate_crossword)
-w.run()
+
+while True:
+    try:
+        w.run()
+    except json.decoder.JSONDecodeError:
+        # todo: log this
+        print(f"JSONDecodeError, probably server heartbeat missed")
+        time.sleep(30)
