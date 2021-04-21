@@ -9,6 +9,7 @@ pandas = "*"
 PyICU = "*"
 faktory = "*"
 python-dotenv = "*"
+requests = "*"
 
 [dev-packages]
 
