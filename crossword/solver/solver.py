@@ -17,7 +17,9 @@ class Solver(object):
         self.randomize = True
         self.assign_first_word = True
 
-    def solve(self, crossword, word_list, max_failed_words=2000, randomize=0.5, assign_first_word=True):
+    def solve(self, crossword, word_list, max_failed_words=2000, randomize=0.5, assign_first_word=True,
+              priority_crossing_aggregate: str = 'sum', priority_letter_aggregate: str = 'max', priority_unbound: int = math.inf,
+              priority_reverse: bool = True):
         self.reset()
         self.assign_first_word = assign_first_word
         self.randomize = randomize
@@ -44,11 +46,11 @@ class Solver(object):
                 break
 
             if ws is None:
-                word_spaces_to_fill_next = sorted(word_spaces, key=lambda ws: ws.solving_priority(word_list=word_list,
-                                                                                                  crossing_aggregate='sum',
-                                                                                                  letter_aggregate='max',
-                                                                                                  unbound=math.inf),
-                                                  reverse=True)
+                word_spaces_to_fill_next = sorted(word_spaces, key=lambda ws: ws.solving_priority(word_list=priority_word_list,
+                                                                                                  crossing_aggregate=priority_crossing_aggregate,
+                                                                                                  letter_aggregate=priority_letter_aggregate,
+                                                                                                  unbound=priority_unbound),
+                                                  reverse=priority_reverse)
 
                 if self.randomize > 0 and random.random() < self.randomize and len(word_spaces_to_fill_next) > 1:
                     tmp = word_spaces_to_fill_next[0]
