@@ -46,7 +46,7 @@ class Solver(object):
                 break
 
             if ws is None:
-                word_spaces_to_fill_next = sorted(word_spaces, key=lambda ws: ws.solving_priority(word_list=priority_word_list,
+                word_spaces_to_fill_next = sorted(word_spaces, key=lambda ws: ws.solving_priority(word_list=word_list,
                                                                                                   crossing_aggregate=priority_crossing_aggregate,
                                                                                                   letter_aggregate=priority_letter_aggregate,
                                                                                                   unbound=priority_unbound),
