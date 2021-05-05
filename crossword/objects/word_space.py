@@ -85,48 +85,40 @@ class WordSpace:
         """List crosses that do have at least one word bounded"""
         return [cross for cross in self.crosses if cross.is_half_bound() or not cross.bound_value()]
 
-    def expectation_value(self, word_list: WordList) -> int:
-        """Count how many words may be filled to the unbound WordSpace crossing this.
-        Will return +inf if no unbound WordSpace is crossing"""
-
-        # possible_words = self.bindable(word_list)
-        # if possible_words.size == 0:
-        #    return 0
-        # For every bindable option compute the potential candidates
+    def solving_priority(self, word_list: WordList, crossing_aggregate: str, letter_aggregate: str, unbound: int = 0) -> int:
         unbounded_crosses = self.get_unbounded_crosses()
         if len(unbounded_crosses) == 0:
             # This is a must have word!
-            return math.inf
+            return unbound
 
-        return self.count_promising_max(word_list)
+        data = self.count_candidate_crossings(word_list, letter_aggregate=letter_aggregate)
+        if crossing_aggregate == 'sum':
+            return np.sum(data)
+        elif crossing_aggregate == 'max':
+            return np.max(data)
+        elif crossing_aggregate == 'min':
+            return np.min(data)
+        elif crossing_aggregate == 'mean':
+            return np.mean(data)
+        else:
+            raise "Unknown crossing_aggregate"
 
+    def count_candidate_crossings(self, word_list: WordList, letter_aggregate: str):
+        crosses_list = [False if cross.bound_value() else True for cross in self.crosses]
 
-    def count_promising(self, word_list: WordList, unbounded_crosses, word):
-        promising = 0
-        for cross in unbounded_crosses:
-            char = word[self.index_of_cross(cross)]
+        if letter_aggregate == 'sum':
+            transform = self.possibility_matrix.sum(axis=1)
+        elif letter_aggregate == 'max':
+            transform = self.possibility_matrix.max(axis=1)
+        elif letter_aggregate == 'min':
+            transform = self.possibility_matrix.min(axis=1)
+        elif letter_aggregate == 'mean':
+            transform = self.possibility_matrix.mean(axis=1)
+        else:
+            raise "Unknown letter_aggregate"
 
-            mask, mask_chars = cross.other(self).mask_current(cross, char)
-            try:
-                possible_count = word_list.word_count(mask, mask_chars)
-            except KeyError:
-                possible_count = 0
-            promising += possible_count
-            if possible_count == 0:
-                return 0
-        return promising
+        return [val[1] for val in zip(crosses_list, transform.transpose().tolist()) if val[0] is True]
 
-    # rough count
-    def count_promising_max(self, word_list):
-
-        crosses_list = [0 if cross.bound_value() else 1 for cross in self.crosses]
-        crosses_vector = np.matrix(crosses_list)
-        prod = np.matmul(crosses_vector, self.possibility_matrix)
-        # Sort the possible words
-        # print(f"prod shape={prod.shape}")
-        max_matrix = np.max(prod, axis=1)
-
-        return sum(max_matrix)
 
     def find_best_options(self, word_list: WordList, language='cs'):
         unbounded_crosses = self.get_half_bound_crosses()

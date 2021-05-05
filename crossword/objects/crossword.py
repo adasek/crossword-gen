@@ -164,6 +164,12 @@ class Crossword():
                 word_space_pair[1].add_cross(word_space_pair[0])
         return
 
+    def is_success(self):
+        for ws in self.word_spaces:
+            if ws.occupied_by is None:
+                return False
+        return True
+
     def evaluate_score(self):
         score = 0
         for ws in self.word_spaces:

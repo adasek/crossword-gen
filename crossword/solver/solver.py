@@ -4,6 +4,7 @@ import time
 import pandas as pd
 import random
 from random import gauss
+import math
 
 
 class Solver(object):
@@ -43,7 +44,12 @@ class Solver(object):
                 break
 
             if ws is None:
-                word_spaces_to_fill_next = sorted(word_spaces, key=lambda ws: ws.expectation_value(word_list), reverse=True)
+                word_spaces_to_fill_next = sorted(word_spaces, key=lambda ws: ws.solving_priority(word_list=word_list,
+                                                                                                  crossing_aggregate='sum',
+                                                                                                  letter_aggregate='max',
+                                                                                                  unbound=math.inf),
+                                                  reverse=True)
+
                 if self.randomize > 0 and random.random() < self.randomize and len(word_spaces_to_fill_next) > 1:
                     tmp = word_spaces_to_fill_next[0]
                     word_spaces_to_fill_next[0] = word_spaces_to_fill_next[1]

@@ -27,7 +27,6 @@ class Parser(object):
 
         return(self.words_by_len)
 
-
     def build_possibility_matrix(self, word_spaces, word_list):
         for ws in word_spaces:
             ws.build_possibility_matrix(word_list)
