@@ -17,9 +17,12 @@ class Solver(object):
         self.randomize = True
         self.assign_first_word = True
 
+    # best strategies identified:
+    # priority_crossing_aggregate = 'min', priority_letter_aggregate='max', priority_unbound=0, priority_reverse=False
+    # priority_crossing_aggregate = 'min', priority_letter_aggregate='mean', priority_unbound=0, priority_reverse=False
     def solve(self, crossword, word_list, max_failed_words=2000, randomize=0.5, assign_first_word=True,
-              priority_crossing_aggregate: str = 'sum', priority_letter_aggregate: str = 'max', priority_unbound: int = math.inf,
-              priority_reverse: bool = True):
+              priority_crossing_aggregate: str = 'min', priority_letter_aggregate: str = 'max', priority_unbound: int = 0,
+              priority_reverse: bool = False):
         self.reset()
         self.assign_first_word = assign_first_word
         self.randomize = randomize
