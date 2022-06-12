@@ -1,11 +1,18 @@
-FROM python:3.8-slim-buster
+FROM python:alpine3.16
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y libicu-dev pkg-config build-essential
+RUN apk add --update --no-cache libffi libffi-dev icu icu-dev icu-data-full curl g++ make
 
-RUN pip install pipenv
-COPY Pipfile .
-COPY Pipfile.lock .
-RUN pipenv install --system --deploy --ignore-pipfile
+ENV POETRY_VERSION=1.1.12
+
+# System deps:
+RUN pip install "poetry==$POETRY_VERSION"
+
+#RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+#RUN source $HOME/.poetry/env
+
+COPY pyproject.toml .
+COPY poetry.lock .
+RUN poetry install --no-dev
 COPY . .
 CMD [ "python", "run_worker.py" ]
