@@ -15,4 +15,4 @@ COPY pyproject.toml .
 COPY poetry.lock .
 RUN poetry install --no-dev
 COPY . .
-CMD [ "python", "run_worker.py" ]
+CMD [ "poetry", "run", "/app/run_worker.py" ]
