@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from config import ENV
 import faktory
 from faktory import Worker
