@@ -7,4 +7,7 @@ Please refer to the [Poetry Installation docs](https://python-poetry.org/docs/#i
 curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python -
 ```
 
-####
+#### Experiments - memory usage
+Branch `ab/experiment-memory-usage`
+ * EMPTY data structure, english, 540k words: 3.3MiB
+ * FILLED data structure, english, 540k words: 273.63MiB ~= 530B per word
