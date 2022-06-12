@@ -2,6 +2,7 @@ import unittest
 import pytest
 from crossword.objects import WordSpace, Word, WordList
 import types
+import pandas as pd
 
 
 class TestWordSpace(unittest.TestCase):
@@ -12,8 +13,14 @@ class TestWordSpace(unittest.TestCase):
         word_space1.add_cross(word_space2)
         word_space2.add_cross(word_space1)
 
-        words1 = [Word("abc"), Word("bcd")]
-        word_list1 = WordList(words1, [word_space1, word_space2])
+        # [Word("abc"), Word("bcd")]
+        words1 = pd.DataFrame([
+            ('abc', 'Test abc', 1),
+            ('bcd', 'Test bcd', 2)
+            ], columns=['word_label_text', 'word_description_text', 'word_concept_id'])
+
+
+        word_list1 = WordList(words1, language="en")
         word_space1.bind(Word("abc"))
         assert len(word_space1.get_half_bound_crosses()) == 1
         result = word_space1.find_best_options(word_list1)
