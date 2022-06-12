@@ -3,7 +3,7 @@ WORKDIR /app
 
 RUN apk add --update --no-cache libffi libffi-dev icu icu-dev icu-data-full curl g++ make
 
-ENV POETRY_VERSION=1.1.12
+ENV POETRY_VERSION=1.1.13
 
 # System deps:
 RUN pip install "poetry==$POETRY_VERSION"
