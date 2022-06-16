@@ -10,7 +10,6 @@ import pandas as pd
 import json
 import requests
 import re
-import sys
 from crossword.objects import WordList
 from crossword.objects import Crossword
 from crossword.solver import Solver
@@ -32,10 +31,15 @@ def shorten_description_row(row):
     return row
 
 
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger()
-stream_handler = logging.StreamHandler(sys.stdout)
-logger.addHandler(stream_handler)
+logger = logging.getLogger('run_worker')
+
+stdout_handler = logging.StreamHandler()
+stdout_handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+stdout_handler.setFormatter(formatter)
+
+logger.addHandler(stdout_handler)
+
 
 # Load the general words matrix
 lang = 'cs'
@@ -62,7 +66,7 @@ logging.debug(f"  General wordlist loaded in {round(-start + (time.perf_counter(
 logging.info("Server ready")
 
 def generate_crossword(crossword_task):
-    logging.info(f"starting generate_crossword for task #{crossword_task.id}")
+    logging.info(f"starting generate_crossword for task #{crossword_task['id']}")
     logging.debug(crossword_task)
     solver = Solver()
     # load a crossword from request:
