@@ -10,6 +10,7 @@ import pandas as pd
 import json
 import requests
 import re
+import sys
 from crossword.objects import WordList
 from crossword.objects import Crossword
 from crossword.solver import Solver
@@ -33,7 +34,7 @@ def shorten_description_row(row):
 
 logger = logging.getLogger('run_worker')
 
-stdout_handler = logging.StreamHandler()
+stdout_handler = logging.StreamHandler(stream=sys.stdout)
 stdout_handler.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 stdout_handler.setFormatter(formatter)
