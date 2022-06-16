@@ -83,9 +83,14 @@ def generate_crossword(crossword_task):
 
     max_score = -99999
     max_crossword = None
-    for i in range(int(ENV['CROSSWORD_REGENERATE_COUNT')) or 10):
+    for i in range(int(ENV['CROSSWORD_REGENERATE_COUNT']) or 10):
         start = time.perf_counter()
-        word_spaces = solver.solve(crossword, word_list, randomize=0.05, assign_first_word=True, max_failed_words=int(ENV['CROSSWORD_MAX_FAILED_WORDS']) or 50)
+        word_spaces = solver.solve(crossword,
+                                   word_list,
+                                   randomize=0.05,
+                                   assign_first_word=True,
+                                   max_failed_words=int(ENV['CROSSWORD_MAX_FAILED_WORDS']) or 50
+                                   )
         print(f"Score: {solver.score} in {round(-start + (time.perf_counter()), 2)}s")
         # if not solver.solution_found:
         #    print(crossword)
