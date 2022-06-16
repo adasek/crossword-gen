@@ -40,7 +40,7 @@ stdout_handler.setFormatter(formatter)
 
 logger.addHandler(stdout_handler)
 
-
+logging.info("Server starting: loading general_words_matrix")
 # Load the general words matrix
 lang = 'cs'
 # general_words_matrix: word_id, word, description, meta...
@@ -49,18 +49,23 @@ general_words_matrix = pd.read_pickle(general_words_matrix_path, compression='gz
 
 general_words_matrix = general_words_matrix.apply(shorten_description_row, axis=1)
 general_words_matrix = general_words_matrix[general_words_matrix['word_description_text'] != ""]
+logging.info("Server starting: general_words_matrix loaded")
 
+logging.info("Server starting: loading general_categorization_matrix")
 # general_categorization_matrix: word_id, categorization
 general_categorization_matrix_path = Path('words', lang, 'general_categorization_matrix_1.pickle.gzip')
 general_categorization_matrix = pd.read_pickle(general_categorization_matrix_path, compression='gzip')
 
+logging.info("Server starting: general_categorization_matrix loaded")
 # todo: let all words
 # general_words_matrix = general_words_matrix.sample(10000, random_state=1)
 # general_categorization_matrix = general_categorization_matrix.sample(10000, random_state=1)
 
+logging.info("Server starting: parsing General wordlist")
 start = time.perf_counter()
 word_list = WordList(words_df=general_words_matrix, language='cs')
 logging.debug(f"  General wordlist loaded in {round(-start + (time.perf_counter()), 2)}s")
+logging.info("Server starting: General wordlist ready")
 
 ##############################
 logging.info("Server ready")
