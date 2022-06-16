@@ -10,6 +10,7 @@ import pandas as pd
 import json
 import requests
 import re
+import sys
 from crossword.objects import WordList
 from crossword.objects import Crossword
 from crossword.solver import Solver
@@ -32,6 +33,9 @@ def shorten_description_row(row):
 
 
 logging.basicConfig(level=logging.DEBUG)
+stream_handler = logging.StreamHandler(sys.stdout)
+logger.addHandler(stream_handler)
+
 # Load the general words matrix
 lang = 'cs'
 # general_words_matrix: word_id, word, description, meta...
