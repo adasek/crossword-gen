@@ -60,6 +60,8 @@ def generate_crossword(crossword_task):
     crossword = Crossword.from_grid_object(crossword_task['Grid'])
 
     # load a user vector from the request
+    if 'value' not in crossword_task['CategorizationPreference']:
+        raise Exception("Empty CategorizationPreference")
     user_vector = pd.Series(crossword_task['CategorizationPreference']['value']).astype('float64')
 
     start = time.perf_counter()
@@ -81,9 +83,9 @@ def generate_crossword(crossword_task):
 
     max_score = -99999
     max_crossword = None
-    for i in range(100):
+    for i in range(ENV['CROSSWORD_REGENERATE_COUNT'] or 10):
         start = time.perf_counter()
-        word_spaces = solver.solve(crossword, word_list, randomize=0.05, assign_first_word=True, max_failed_words=1000)
+        word_spaces = solver.solve(crossword, word_list, randomize=0.05, assign_first_word=True, max_failed_words=ENV['CROSSWORD_MAX_FAILED_WORDS'] or 50)
         print(f"Score: {solver.score} in {round(-start + (time.perf_counter()), 2)}s")
         # if not solver.solution_found:
         #    print(crossword)
@@ -105,7 +107,8 @@ def generate_crossword(crossword_task):
             solved_task['status'] = 'unfeasible'
         response = requests.post(url, json=solved_task)
         print(response.status_code)
-        print(response.json())
+        if response.status_code < 300:
+            print(response.json())
 
 # input_json = json.loads('{"CategorizationPreference":{"categorization_type":1,"createdAt":"2021-04-18T11:49:33.605Z","id":5,"updatedAt":"2021-04-18T11:49:33.605Z","user_id":1,"value":{"ART":"1"}},"Grid":{"bitmap":"XXXXXXXXX     X     XX      X   X  X  X   X X    ","createdAt":"2021-04-18T07:01:40.937Z","height":7,"id":3,"image":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAcAAAAHCAIAAABLMMCEAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAHklEQVQImWNgwAP+owIcQpii6GrhbIQomjSIg2YOAGxxXKTq2R7/AAAAAElFTkSuQmCC","updatedAt":"2021-04-18T07:01:40.937Z","user_id":1,"width":7},"categorization_preference_id":5,"createdAt":"2021-04-18T11:49:33.625Z","crossword":null,"grid_id":3,"id":5,"score":null,"status":"created","updatedAt":"2021-04-18T11:49:33.625Z","user_id":1}')
 # input_json = json.loads('{"id":9,"user_id":1,"grid_id":8,"categorization_preference_id":9,"status":"created","createdAt":"2021-04-19T16:01:41.845Z","updatedAt":"2021-04-19T16:31:55.864Z","Grid":{"image":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAMCAIAAADUCbv3AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAANElEQVQYlWNgIAj+YwMMYHHs0gwwQSzSDEgiOA2HyqFZj4WLZiB2u3Gpw66PLGksjscjDQA4WgEOOngFMQAAAABJRU5ErkJggg==","id":8,"user_id":1,"width":10,"height":12,"bitmap":"XXXXXXXXXXX       X X      X  X     X   X        XXX   XX   X X    X  X  X X    X    X    X    X    X         X         ","createdAt":"2021-04-18T11:15:56.871Z","updatedAt":"2021-04-18T11:15:56.871Z"},"CategorizationPreference":{"id":9,"user_id":1,"categorization_type":1,"value":{"BIO":"-1","CHE":"1","ECO":"1","EDU":"-1","GEO":"0.3","HIS":"-1","ICT":"1","INF":"0","LAN":"-1","LAW":"-1","LIF":"-1","MAT":"1","MED":"-1","MIX":"-1","PHI":"-1","PHY":"1","POL":"-1","PSY":"-1","REC":"-1","SCT":"-1","SOC":"-1","SPO":"-1","TEC":"1","THE":"-1"},"createdAt":"2021-04-19T16:01:41.829Z","updatedAt":"2021-04-19T16:01:41.829Z"}}')
