@@ -33,6 +33,7 @@ def shorten_description_row(row):
 
 
 logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger()
 stream_handler = logging.StreamHandler(sys.stdout)
 logger.addHandler(stream_handler)
 
