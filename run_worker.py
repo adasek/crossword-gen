@@ -30,6 +30,8 @@ def shorten_description_row(row):
     row['word_description_text'] = new_description
     return row
 
+
+logging.basicConfig(level=logging.DEBUG)
 # Load the general words matrix
 lang = 'cs'
 # general_words_matrix: word_id, word, description, meta...
@@ -49,12 +51,14 @@ general_categorization_matrix = pd.read_pickle(general_categorization_matrix_pat
 
 start = time.perf_counter()
 word_list = WordList(words_df=general_words_matrix, language='cs')
-print(f"  General wordlist loaded in {round(-start + (time.perf_counter()), 2)}s")
+logging.debug(f"  General wordlist loaded in {round(-start + (time.perf_counter()), 2)}s")
 
 ##############################
-print("Server ready")
+logging.info("Server ready")
 
 def generate_crossword(crossword_task):
+    logging.info(f"starting generate_crossword for task #{crossword_task.id}")
+    logging.debug(crossword_task)
     solver = Solver()
     # load a crossword from request:
     crossword = Crossword.from_grid_object(crossword_task['Grid'])
@@ -62,7 +66,7 @@ def generate_crossword(crossword_task):
     # load a user vector from the request
     if 'value' not in crossword_task['CategorizationPreference']:
         raise Exception("Empty CategorizationPreference")
-    user_vector = pd.Series(crossword_task['CategorizationPreference']['value']).astype('float64')
+    user_vector = pd.Series(data=crossword_task['CategorizationPreference']['value'], dtype='float64')
 
     start = time.perf_counter()
     # individual score (vector of wordScore)
@@ -70,16 +74,16 @@ def generate_crossword(crossword_task):
     # individual score with word id (vector of wordId,wordScore)
     individual_score_df = pd.concat([general_categorization_matrix.loc[:, 'word_concept_id'], individual_score],
                                     axis=1).set_index('word_concept_id')
-    print(f"  individual_score_df in {round(-start + (time.perf_counter()), 2)}s")
+    logging.debug(f"  individual_score_df in {round(-start + (time.perf_counter()), 2)}s")
 
     start = time.perf_counter()
     word_list.use_score_vector(individual_score_df)
-    print(f"word_list.use_score_vector in {round(-start + (time.perf_counter()), 2)}s")
+    logging.debug(f"word_list.use_score_vector in {round(-start + (time.perf_counter()), 2)}s")
 
     start = time.perf_counter()
     for ws in crossword.word_spaces:
         ws.build_possibility_matrix(word_list)
-    print(f"build_possibility_matrix in {round(-start + (time.perf_counter()), 2)}s")
+    logging.debug(f"build_possibility_matrix in {round(-start + (time.perf_counter()), 2)}s")
 
     max_score = -99999
     max_crossword = None
@@ -91,9 +95,9 @@ def generate_crossword(crossword_task):
                                    assign_first_word=True,
                                    max_failed_words=int(ENV['CROSSWORD_MAX_FAILED_WORDS']) or 50
                                    )
-        print(f"Score: {solver.score} in {round(-start + (time.perf_counter()), 2)}s")
+        logging.debug(f"Score: {solver.score} in {round(-start + (time.perf_counter()), 2)}s")
         # if not solver.solution_found:
-        #    print(crossword)
+        #    logging.debug(crossword)
         if crossword.is_success() and crossword.evaluate_score() > max_score:
             max_score = crossword.evaluate_score()
             max_crossword = crossword.get_copy()
@@ -111,9 +115,9 @@ def generate_crossword(crossword_task):
         else:
             solved_task['status'] = 'unfeasible'
         response = requests.post(url, json=solved_task)
-        print(response.status_code)
+        logging.debug(response.status_code)
         if response.status_code < 300:
-            print(response.json())
+            logging.debug(response.json())
 
 # input_json = json.loads('{"CategorizationPreference":{"categorization_type":1,"createdAt":"2021-04-18T11:49:33.605Z","id":5,"updatedAt":"2021-04-18T11:49:33.605Z","user_id":1,"value":{"ART":"1"}},"Grid":{"bitmap":"XXXXXXXXX     X     XX      X   X  X  X   X X    ","createdAt":"2021-04-18T07:01:40.937Z","height":7,"id":3,"image":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAcAAAAHCAIAAABLMMCEAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAHklEQVQImWNgwAP+owIcQpii6GrhbIQomjSIg2YOAGxxXKTq2R7/AAAAAElFTkSuQmCC","updatedAt":"2021-04-18T07:01:40.937Z","user_id":1,"width":7},"categorization_preference_id":5,"createdAt":"2021-04-18T11:49:33.625Z","crossword":null,"grid_id":3,"id":5,"score":null,"status":"created","updatedAt":"2021-04-18T11:49:33.625Z","user_id":1}')
 # input_json = json.loads('{"id":9,"user_id":1,"grid_id":8,"categorization_preference_id":9,"status":"created","createdAt":"2021-04-19T16:01:41.845Z","updatedAt":"2021-04-19T16:31:55.864Z","Grid":{"image":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAMCAIAAADUCbv3AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAANElEQVQYlWNgIAj+YwMMYHHs0gwwQSzSDEgiOA2HyqFZj4WLZiB2u3Gpw66PLGksjscjDQA4WgEOOngFMQAAAABJRU5ErkJggg==","id":8,"user_id":1,"width":10,"height":12,"bitmap":"XXXXXXXXXXX       X X      X  X     X   X        XXX   XX   X X    X  X  X X    X    X    X    X    X         X         ","createdAt":"2021-04-18T11:15:56.871Z","updatedAt":"2021-04-18T11:15:56.871Z"},"CategorizationPreference":{"id":9,"user_id":1,"categorization_type":1,"value":{"BIO":"-1","CHE":"1","ECO":"1","EDU":"-1","GEO":"0.3","HIS":"-1","ICT":"1","INF":"0","LAN":"-1","LAW":"-1","LIF":"-1","MAT":"1","MED":"-1","MIX":"-1","PHI":"-1","PHY":"1","POL":"-1","PSY":"-1","REC":"-1","SCT":"-1","SOC":"-1","SPO":"-1","TEC":"1","THE":"-1"},"createdAt":"2021-04-19T16:01:41.829Z","updatedAt":"2021-04-19T16:01:41.829Z"}}')
