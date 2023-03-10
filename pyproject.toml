@@ -1,22 +1,22 @@
 [tool.poetry]
-name = "crossword-gen"
+name = "crossword-generator"
 version = "0.1.0"
-description = "Crossword generator written in Python"
+description = "Swedish Crossword Generator with vector weighting (preference) of words"
 authors = ["Adam Benda <adam@adasek.cz>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-more-itertools = "=8.13.0"
-pandas = "=1.4.2"
-PyICU = "=2.9"
+more-itertools = "=9.1.0"
+pandas = "=1.5.3"
+PyICU = "=2.10.2"
 faktory = "=1.0.0"
-python-dotenv = "=0.20.0"
-requests = "=2.28.0"
+python-dotenv = "=1.0.0"
+requests = "=2.28.2"
 
 
 [tool.poetry.dev-dependencies]
-pytest = "^7.1.2"
+pytest = "^7.2.2"
 
 [tool.pytest.ini_options]
 pythonpath = [
