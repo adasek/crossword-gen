@@ -62,7 +62,6 @@ start = time.perf_counter()
 # [5 0 10]
 # inverted_bind_vector = [true, false]^-1
 #
-# max[inverted_bind_vector] se cachuje
 
 #exporter = PrologExporter("dataset")
 #exporter.export_all(words, word_spaces, possible_masks, words_by_masks)
