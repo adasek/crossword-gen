@@ -89,7 +89,7 @@ for i in range(30):
     # cProfile.run('word_spaces = solver.solve(crossword, word_list)', 'restats')
     start = time.perf_counter()
     word_spaces = solver.solve(crossword, word_list, randomize=0, assign_first_word=True, max_failed_words=200)
-    time_to_solve = (-start + (time.perf_counter()), 2)
+    time_to_solve = -start + (time.perf_counter())
     times_to_solve.append(time_to_solve)
     if crossword.is_success():
         success_counter += 1
