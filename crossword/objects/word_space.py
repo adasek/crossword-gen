@@ -120,7 +120,7 @@ class WordSpace:
         return [val[1] for val in zip(crosses_list, transform.transpose().tolist()) if val[0] is True]
 
 
-    def find_best_options(self, word_list: WordList, language='cs'):
+    def find_best_options(self, word_list: WordList):
         unbounded_crosses = self.get_half_bound_crosses()
         #if self._best_options is not None and self._best_options_unbouded_crosses == unbounded_crosses and self._best_options_unbouded_crosses:
         #    return self._best_options
@@ -178,8 +178,8 @@ class WordSpace:
                 best_words.append(word)
         return best_words
 
-    def find_best_option(self, word_list: WordList, language='cs'):
-        best_options = self.find_best_options(word_list, language=language)
+    def find_best_option(self, word_list: WordList):
+        best_options = self.find_best_options(word_list)
         if best_options is not None and len(best_options) > 0:
             #if len(best_options) > 10:
             #    print(f"find_best_option {len(best_options)}")

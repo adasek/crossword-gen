@@ -72,7 +72,7 @@ class Solver(object):
 
             best_option = None
             while not backtrack and best_option is None:
-                best_option = ws.find_best_option(word_list, 'cs')
+                best_option = ws.find_best_option(word_list)
                 # print(best_option)
                 option_number += 1
                 if best_option is None:
