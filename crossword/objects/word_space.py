@@ -17,22 +17,17 @@ class WordSpace:
 
     def __init__(self, start: Tuple[int, int], length: int, direction: str):
         """Constuct WordSpace without any word"""
-        self.failed_words_index_set = None
-        self.possibility_matrix = None
-        self.my_counter = None
-        self.occupied_by = None
-        self.crosses = None
-        self.start = start
-        self.length = length
-        self.type = direction
-        self.reset()
-        WordSpace.counter += 1
-
-    def reset(self):
+        self.failed_words_index_set = set()
         self.crosses = []
         self.occupied_by = None
         self.my_counter = WordSpace.counter
         self.possibility_matrix = None
+        self.start = start
+        self.length = length
+        self.type = direction
+        WordSpace.counter += 1
+
+    def reset_failed_words(self):
         self.failed_words_index_set = set()
 
     def build_possibility_matrix(self, word_list: WordList):
