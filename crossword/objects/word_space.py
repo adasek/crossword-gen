@@ -176,10 +176,7 @@ class WordSpace:
                 best_words = [word]
             elif max_score == score:
                 best_words.append(word)
-        if max_score == 0:
-            return None
-        else:
-            return best_words
+        return best_words
 
     def find_best_option(self, word_list: WordList, language='cs'):
         best_options = self.find_best_options(word_list, language=language)
@@ -333,3 +330,4 @@ class WordSpace:
             'occupied_by': self.occupied_by.to_json() if self.occupied_by is not None and export_occupied_by else None,
             'meaning': self.occupied_by.description if self.occupied_by is not None else None
         }
+
