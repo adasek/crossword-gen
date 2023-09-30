@@ -180,3 +180,4 @@ class Crossword():
     def reset(self):
         for word_space in self.word_spaces:
             word_space.unbind()
+            word_space.reset()

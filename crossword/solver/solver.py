@@ -24,6 +24,7 @@ class Solver(object):
               priority_crossing_aggregate: str = 'min', priority_letter_aggregate: str = 'max', priority_unbound: int = 0,
               priority_reverse: bool = False):
         self.reset()
+        crossword.reset()
         self.assign_first_word = assign_first_word
         self.randomize = randomize
         self.max_failed_words = max_failed_words
