@@ -14,7 +14,7 @@ class Word(CharList):
         self.use = 1  # probability it will be used
         self.id = Word.id
         if description is None:
-            print(f"Description none {word_string}")
+            raise ValueError(f"Description cannot be None for word {word_string}")
         self.description = description
         self.score = score
         self.word_list = word_list

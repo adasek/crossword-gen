@@ -7,6 +7,7 @@ from pathlib import Path
 import json
 import numpy as np
 import time
+import pickle
 
 DIRECTORY = "."
 parser = Parser(DIRECTORY)
@@ -18,16 +19,40 @@ start = time.perf_counter()
 #words = parser.parse_csv_wordlist("../word-gen/meanings_filtered.txt", delimiter=':')
 #words_df = parser.load_dataframe('individual_words.pickle.gzip')
 # words_df = parser.load_dataframe('../wordlist.pickle.gzip')  # 'cs'
-words_df = parser.load_dataframe('./words/cs/general_words_matrix.pickle.gzip')  # 'cs'
-# words_df = parser.load_dataframe('./words/jafjdev.pickle.gzip')  # 'en'
-print(f"words_df loaded {words_df.shape}")
-words_df = words_df.sample(100000, random_state=1)
 
-#print(words_df.query('word_label_text.str.len() == 4'))
-#words_df = words_df.query('word_label_text.str.len() == 4').sample(20000, random_state=1)
-#words_df = words_df.sample(20000, random_state=1)
-# words = parser.parse_csv_wordlist("../word-gen/words_2020_11_02_useful.txt", delimiter=',')
-print(f"  words_df loaded in {round(-start + (time.perf_counter()), 2)}s")
+
+Path("cache").mkdir(parents=True, exist_ok=True)
+
+start = time.perf_counter()
+wordlist_filename = Path('individual_words.pickle.gzip')
+word_list_cache = Path("cache",f"wordlist_{wordlist_filename.stem}.pkl")
+if word_list_cache.exists() and word_list_cache.is_file():
+    print(f"Loading WordList from cache {word_list_cache}")
+    with word_list_cache.open('rb') as f:
+        word_list = pickle.load(f)
+else:
+    words_df = parser.load_dataframe(wordlist_filename)
+    # words_df = parser.load_dataframe('./words/cs/general_words_matrix.pickle.gzip')  # 'cs'
+    # words_df = parser.load_dataframe('./words/jafjdev.pickle.gzip')  # 'en'
+    # words_df = words_df.sample(100000, random_state=1)
+
+    #print(words_df.query('word_label_text.str.len() == 4'))
+    #words_df = words_df.query('word_label_text.str.len() == 4').sample(20000, random_state=1)
+    #words_df = words_df.sample(20000, random_state=1)
+    # words = parser.parse_csv_wordlist("../word-gen/words_2020_11_02_useful.txt", delimiter=',')
+    print(f"words_df loaded {words_df.shape}")
+    print(f"  words_df loaded in {round(-start + (time.perf_counter()), 2)}s")
+
+
+    start = time.perf_counter()
+    word_list_cache = Path("cache",f"wordlist_{wordlist_filename.stem}.pkl")
+    # Build WordList from Dataframe
+    word_list = WordList(words_df=words_df, language='cs')
+
+    with word_list_cache.open('wb') as f:
+        pickle.dump(word_list, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+print(f"  WordList in {round(-start + (time.perf_counter()), 2)}s")
 
 start = time.perf_counter()
 # crossword = Crossword.from_grid(Path(DIRECTORY, "crossword4.dat"))
@@ -37,11 +62,7 @@ crossword = Crossword.from_grid(Path(DIRECTORY, "crossword.dat"))
 
 print(f"  crossword loaded in {round(-start + (time.perf_counter()), 2)}s")
 start = time.perf_counter()
-# Todo: Build WordList from Dataframe
-word_list = WordList(words_df=words_df, language='cs')
 
-print(f"  WordList in {round(-start + (time.perf_counter()), 2)}s")
-start = time.perf_counter()
 
 parser.build_possibility_matrix(crossword.word_spaces, word_list)
 
