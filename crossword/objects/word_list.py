@@ -18,6 +18,8 @@ class WordList:
                              value=self.words_df.loc[:, 'word_label_text'].map(
                                  lambda word: len(split(word.lower(),
                                                         locale_code=language))))
+        self.words_df['word_split'] = None
+
         self.words_structure = {}
         self.word_indices_by_length_set = {}
         self.words_by_index = {}
@@ -41,12 +43,14 @@ class WordList:
                 word_score = row['score']
             else:
                 word_score = None
-            self.words_by_index[word_index] = Word(row['word_label_text'], row['word_description_text'],
+            word = Word(row['word_label_text'], row['word_description_text'],
                                                    index=word_index,
                                                    language=language,
                                                    score=word_score,
                                                    word_list=self,
                                                    word_concept_id=row['word_concept_id'])
+            self.words_by_index[word_index] = word
+            self.words_df.at[word_index, 'word_split'] = word
 
     def use_score_vector(self, score_vector):
         self.words_df.drop([x for x in ['score'] if x in self.words_df.columns], axis=1, inplace=True)
@@ -78,9 +82,12 @@ class WordList:
         return -1
 
     def word_count(self, mask, chars):
-        return len(self.words(mask, chars))
+        return len(self.words_indices(mask, chars))
 
     def words(self, mask, chars, failed_index=None):
+        return self.words_df.loc[self.words_df.index.intersection(self.words_indices(mask, chars, failed_index))]
+
+    def words_indices(self, mask, chars, failed_index=None):
         if mask.length not in self.words_structure:
             raise Exception('No word suitable for the given space')
 
@@ -105,7 +112,9 @@ class WordList:
         if failed_index is not None:
             word_index_set = word_index_set.difference(failed_index)
         return word_index_set
-        #return self.words_df.loc[word_index_set]
 
     def get_word_by_index(self, word_index: int):
         return self.words_by_index[word_index]
+
+    def get_words_by_indices(self, word_indices: list):
+        return [self.words_by_index[index] for index in word_indices if index in self.words_by_index]

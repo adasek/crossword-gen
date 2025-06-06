@@ -44,14 +44,14 @@ class WordCombinator:
             other_wordspace_mask, other_wordspace_chars = other_wordspace.mask_current()
             original_wordspace_index = self.index_of_cross(cross)
             other_wordspace_index = other_wordspace.index_of_cross(cross)
-            base_set = word_list.words(other_wordspace_mask, other_wordspace_chars)
+            base_set = word_list.words_indices(other_wordspace_mask, other_wordspace_chars)
             mask_list = [False] * other_wordspace.length
             mask_list[other_wordspace_index] = True
             one_mask = Mask(mask_list)
 
             candidate_chars = []
             for char in word_list.alphabet:
-                words_count = len(base_set.intersection(word_list.words(one_mask, CharList([char]))))
+                words_count = len(base_set.intersection(word_list.words_indices(one_mask, CharList([char]))))
                 if words_count > 0:
                     candidate_chars.append({'char': char, 'count': words_count})
             if len(candidate_chars) == 0:

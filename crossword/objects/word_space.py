@@ -53,7 +53,7 @@ class WordSpace:
         if word.length != self.length:
             print(self)
             print(word)
-            raise Exception("Length of word does not correspond with WordSpace")
+            raise Exception(f"Length of word does not correspond with WordSpace {word} {word.length} != {self.length}")
 
         for cross in self.crosses:
             if not cross.bound_value():
@@ -76,8 +76,7 @@ class WordSpace:
     def bindable(self, word_list: WordList) -> pd.DataFrame:
         """List all words that can be filled to WordSpace at this moment"""
         mask, chars = self.mask_current()
-        word_indices = word_list.words(mask, chars, failed_index=self.failed_words_index_set)
-        return word_indices
+        return word_list.words(mask, chars, failed_index=self.failed_words_index_set)
 
     def get_unbounded_crosses(self) -> List[Cross]:
         """List crosses that don't have certain Char bound.
@@ -132,7 +131,7 @@ class WordSpace:
         for cross_index, cross in enumerate(unbounded_crosses):
             other_wordspace = cross.other(self)
             other_wordspace_mask, other_wordspace_chars = other_wordspace.mask_current()
-            base_set = word_list.words(other_wordspace_mask, other_wordspace_chars)
+            base_set = word_list.words_indices(other_wordspace_mask, other_wordspace_chars)
             if other_wordspace_mask.is_fully_bound():
                 candidate_char_dict_array.append({cross.bound_value(): 1})
                 continue
@@ -143,7 +142,7 @@ class WordSpace:
 
             candidate_chars = []
             for char in word_list.alphabet:
-                suitable_words_index = base_set.intersection(word_list.words(one_mask, CharList([char]))).difference(other_wordspace.failed_words_index_set)
+                suitable_words_index = base_set.intersection(word_list.words_indices(one_mask, CharList([char]))).difference(other_wordspace.failed_words_index_set)
                 words_count = len(suitable_words_index)
                 if words_count > 0:
                     candidate_chars.append({'char': char, 'count': words_count})
@@ -152,33 +151,41 @@ class WordSpace:
             sorted_candidate_char_records = sorted(candidate_chars, key=lambda rec: rec['count'], reverse=True)
             candidate_char_dict_array.append({obj['char']: obj['count'] for obj in sorted_candidate_char_records})
 
-        max_score = 0
-        best_words = []
-        #print("----:")
-        # Pandas dataframe
-        # self.bindable(word_list)
+        words_dataframe = self.bindable(word_list)
 
-        # todo: rewrite into pure DataFrame use
-        # todo: use score of the word
-        for word_index in self.bindable(word_list):
-            word = word_list.get_word_by_index(word_index)
-            score = 0
-            for cross_index, cross in enumerate(unbounded_crosses):
-                word_char = word[cross.cross_index(self)]
-                try:
-                    char_score = candidate_char_dict_array[cross_index][word_char]
-                except (IndexError, KeyError):
-                    char_score = 0
+        #with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.max_colwidth', None):
+        #    print(words_dataframe)
 
-                if char_score == 0:
-                    score = 0
-                    break
-                score += char_score
-            if max_score < score:
-                max_score = score
-                best_words = [word]
-            elif max_score == score:
-                best_words.append(word)
+        cross_chars = []
+        for cross in unbounded_crosses:
+            index = cross.cross_index(self)
+            char_col = words_dataframe['word_split'].apply(lambda x: x[index] if len(x) > index else None)
+            cross_chars.append(char_col.values)
+
+            char_matrix = np.column_stack(cross_chars)
+
+        # Create score matrix by mapping characters to scores
+        score_matrix = np.zeros_like(char_matrix, dtype=float)
+        for cross_idx, char_dict in enumerate(candidate_char_dict_array):
+            # Vectorized character-to-score mapping
+            char_col = char_matrix[:, cross_idx]
+            scores = np.array([char_dict.get(char, 0) for char in char_col])
+            score_matrix[:, cross_idx] = scores
+
+        # Zero out entire rows where any character has score 0
+        zero_mask = (score_matrix == 0).any(axis=1)
+        score_matrix[zero_mask] = 0
+
+        # Calculate total scores (sum across crosses for each word)
+        total_scores = score_matrix.sum(axis=1)
+
+        # Find maximum score and best words
+        max_score = total_scores.max()
+        if max_score > 0:
+            best_indices = np.where(total_scores == max_score)[0]
+            best_words = words_dataframe.iloc[best_indices]['word_split'].tolist()
+        else:
+            best_words = []
         return best_words
 
     def find_best_option(self, word_list: WordList):

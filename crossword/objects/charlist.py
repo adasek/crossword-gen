@@ -33,5 +33,8 @@ class CharList:
     def __add__(self, other):
         return CharList(self.char_list + other.char_list)
 
+    def __len__(self):
+        return self.length
+
     def to_json(self):
         return self.char_list
