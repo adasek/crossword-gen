@@ -90,10 +90,11 @@ class Solver(object):
         """
         Main backtracking algorithm template for solving the crossword.
 
-        This implements a general backtracking search with:
+        This implements intelligent backtracking search with:
         - Priority-based variable ordering (word space selection)
         - Constraint propagation after each assignment
-        - Intelligent backtracking with failed word tracking
+        - Multi-step backtracking to escape unpromising branches
+        - Branch jumping to avoid getting stuck in bad search paths
 
         Returns:
             Solution (list of word spaces) if found, False otherwise
@@ -101,6 +102,7 @@ class Solver(object):
         assigned_stack = []  # Stack for backtracking: [(word_space, word), ...]
         current_word_space = None
         best_remaining = len(word_spaces)
+        consecutive_backtracks = 0  # Track consecutive backtracking to detect stuck situations
 
         while word_spaces or current_word_space:
             # Check termination conditions
@@ -119,16 +121,24 @@ class Solver(object):
                 )
 
                 if current_word_space is None:
-                    # No valid word spaces available - backtrack
+                    # No valid word spaces available - backtrack (potentially multiple steps)
                     current_word_space = self._backtrack(assigned_stack, word_spaces, word_list)
+                    consecutive_backtracks += 1
                     continue
 
             # Try to assign a word to the current word space
             best_word = current_word_space.find_best_option(word_list)
 
             if best_word is None:
-                # No valid word found - backtrack
+                # No valid word found - backtrack (potentially multiple steps)
                 current_word_space = self._backtrack(assigned_stack, word_spaces, word_list)
+                consecutive_backtracks += 1
+
+                # If we're backtracking too much, try more aggressive multi-step backtracking
+                if consecutive_backtracks > 10:
+                    current_word_space = self._backtrack(assigned_stack, word_spaces, word_list,
+                                                         max_backtrack_steps=min(5, len(assigned_stack)))
+                    consecutive_backtracks = 0  # Reset counter after aggressive backtrack
             else:
                 # Assign word and propagate constraints
                 current_word_space = self._assign_word(
@@ -136,6 +146,7 @@ class Solver(object):
                     word_spaces, word_list, best_remaining
                 )
                 best_remaining = min(best_remaining, len(word_spaces))
+                consecutive_backtracks = 0  # Reset counter on successful assignment
 
         return self._finalize_solution(crossword, True)
 
@@ -209,14 +220,20 @@ class Solver(object):
 
         return None  # Signal to select next word space
 
-    def _backtrack(self, assigned_stack, word_spaces, word_list):
+    def _backtrack(self, assigned_stack, word_spaces, word_list, max_backtrack_steps=5):
         """
-        Perform backtracking when no valid assignment is found.
+        Perform intelligent backtracking when no valid assignment is found.
+
+        This method can backtrack multiple steps to escape unpromising branches:
+        - Single step: Normal backtracking
+        - Multiple steps: When we detect we're in a bad branch (consecutive failures)
+        - Branch jumping: Skip back to a more promising point in the search tree
 
         Args:
             assigned_stack: Stack of previous assignments
             word_spaces: List of remaining word spaces
             word_list: Available words
+            max_backtrack_steps: Maximum number of steps to backtrack in one go
 
         Returns:
             WordSpace to retry or None if backtracking failed
@@ -227,24 +244,120 @@ class Solver(object):
             # No more assignments to backtrack - puzzle is unsolvable
             return None
 
-        # Pop the most recent assignment
-        failed_word_space, failed_word = assigned_stack.pop()
+        # Determine how many steps to backtrack based on failure patterns
+        steps_to_backtrack = self._calculate_backtrack_steps(assigned_stack, max_backtrack_steps)
 
-        # Unbind the word and get affected spaces
-        affected_spaces = failed_word_space.unbind()
+        backtracked_spaces = []
+        last_space = None
 
-        # Rebuild possibility matrices for affected spaces
-        failed_word_space.rebuild_possibility_matrix(word_list)
+        # Perform multi-step backtracking
+        for step in range(steps_to_backtrack):
+            if not assigned_stack:
+                break
 
-        # Add the failed word space back to the list
-        word_spaces.append(failed_word_space)
+            # Pop assignment
+            failed_word_space, failed_word = assigned_stack.pop()
 
-        # Mark this word as failed for this space
-        failed_word_space.failed_words_index_set.add(failed_word.index)
+            # Unbind the word and get affected spaces
+            affected_spaces = failed_word_space.unbind()
 
-        self.counters['failed'] += 1
+            # Rebuild possibility matrices for affected spaces
+            failed_word_space.rebuild_possibility_matrix(word_list)
 
-        return failed_word_space
+            # Add the failed word space back to the list
+            word_spaces.append(failed_word_space)
+            backtracked_spaces.append(failed_word_space)
+
+            # Mark this word as failed for this space
+            failed_word_space.failed_words_index_set.add(failed_word.index)
+
+            last_space = failed_word_space
+            self.counters['failed'] += 1
+
+        # Return the earliest backtracked space to retry
+        # This gives us a better chance of finding alternative paths
+        return backtracked_spaces[-1] if backtracked_spaces else None
+
+    def _calculate_backtrack_steps(self, assigned_stack, max_steps):
+        """
+        Calculate how many steps to backtrack based on failure patterns.
+
+        Strategies for detecting unpromising branches:
+        1. Consecutive failures: If recent assignments keep failing
+        2. Low possibility count: If current branch has very few options
+        3. Deep search: If we've gone deep without progress
+
+        Args:
+            assigned_stack: Current assignment stack
+            max_steps: Maximum allowed backtrack steps
+
+        Returns:
+            Number of steps to backtrack (1 to max_steps)
+        """
+        if len(assigned_stack) < 2:
+            return 1
+
+        # Strategy 1: Check for consecutive failures
+        consecutive_failures = self._count_consecutive_failures()
+
+        # Strategy 2: Check depth vs progress ratio
+        current_depth = len(assigned_stack)
+        failure_rate = self.counters['failed'] / max(1, self.counters['assign'])
+
+        # Strategy 3: Check if recent assignments have very few alternatives
+        recent_low_options = self._count_recent_low_option_assignments(assigned_stack)
+
+        # Determine backtrack steps based on heuristics
+        steps = 1  # Default single step
+
+        # Increase steps based on failure patterns
+        if consecutive_failures >= 3:
+            steps = min(3, max_steps)
+        elif failure_rate > 0.3 and current_depth > 10:
+            steps = min(2, max_steps)
+        elif recent_low_options >= 2:
+            steps = min(2, max_steps)
+
+        # Adaptive: backtrack more aggressively as failures increase
+        if self.counters['failed'] > 100:
+            steps = min(steps + 1, max_steps)
+
+        return min(steps, len(assigned_stack), max_steps)
+
+    def _count_consecutive_failures(self):
+        """
+        Count recent consecutive backtracking events.
+        This helps detect when we're stuck in a bad branch.
+        """
+        # This is a simplified version - in practice you might want to
+        # track failure history more sophisticated
+        return min(self.counters['backtrack'] % 10, 5)
+
+    def _count_recent_low_option_assignments(self, assigned_stack, lookback=3):
+        """
+        Count how many recent assignments were made to word spaces with very few options.
+        This indicates we might be in an over-constrained branch.
+
+        Args:
+            assigned_stack: Current assignments
+            lookback: How many recent assignments to check
+
+        Returns:
+            Count of recent low-option assignments
+        """
+        if len(assigned_stack) < lookback:
+            return 0
+
+        low_option_count = 0
+        # Check the last few assignments
+        for i in range(min(lookback, len(assigned_stack))):
+            word_space, word = assigned_stack[-(i+1)]
+            # Heuristic: if a word space had very few failed words,
+            # it probably had few options when we assigned to it
+            if len(word_space.failed_words_index_set) <= 2:
+                low_option_count += 1
+
+        return low_option_count
 
     def _should_terminate(self):
         """Check if solving should be terminated due to too many failures."""
