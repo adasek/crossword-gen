@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
-from crossword.exporter import PrologExporter
-from crossword.runner import Runner
 from crossword.objects import WordList
 from crossword.parser import Parser
 from crossword.solver import Solver
 from crossword.objects import Crossword
 from pathlib import Path
 import json
-import cProfile
 import numpy as np
 import time
 
@@ -19,7 +16,12 @@ parser = Parser(DIRECTORY)
 
 start = time.perf_counter()
 #words = parser.parse_csv_wordlist("../word-gen/meanings_filtered.txt", delimiter=':')
-words_df = parser.load_dataframe('individual_words.pickle.gzip')
+#words_df = parser.load_dataframe('individual_words.pickle.gzip')
+# words_df = parser.load_dataframe('../wordlist.pickle.gzip')  # 'cs'
+words_df = parser.load_dataframe('./words/cs/general_words_matrix.pickle.gzip')  # 'cs'
+# words_df = parser.load_dataframe('./words/jafjdev.pickle.gzip')  # 'en'
+print(f"words_df loaded {words_df.shape}")
+words_df = words_df.sample(100000, random_state=1)
 
 #print(words_df.query('word_label_text.str.len() == 4'))
 #words_df = words_df.query('word_label_text.str.len() == 4').sample(20000, random_state=1)
@@ -30,6 +32,7 @@ print(f"  words_df loaded in {round(-start + (time.perf_counter()), 2)}s")
 start = time.perf_counter()
 # crossword = Crossword.from_grid(Path(DIRECTORY, "crossword4.dat"))
 # crossword = Crossword.from_grid(Path(DIRECTORY, "crossword_vkk174.dat"))
+# crossword = Crossword.from_grid(Path(DIRECTORY, "crossword.jose.dat"))
 crossword = Crossword.from_grid(Path(DIRECTORY, "crossword.dat"))
 
 print(f"  crossword loaded in {round(-start + (time.perf_counter()), 2)}s")
@@ -113,5 +116,6 @@ if max_crossword is None:
 else:
     print(f"Score: {max_crossword.evaluate_score()}")
     print(max_crossword)
+    print(f"As json", max_crossword.to_json(True))
     with open('out_crossword.json', 'w') as json_out:
         json_out.write(json.dumps(json.loads(crossword.to_json()), sort_keys=True, indent=4))

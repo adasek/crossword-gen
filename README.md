@@ -1,5 +1,12 @@
 ### Install
 
+#### Requirements
+For PyICU package it's nescessary to have the ICU library installed.
+```bash
+# Debian/Ubuntu
+sudo apt install libicu-dev
+```
+
 #### Poetry = Package manager
 This project uses Poetry as a package manager.
 Please refer to the [Poetry Installation docs](https://python-poetry.org/docs/#installation) or just run the following to install:
@@ -47,3 +54,20 @@ poetry run python3 ./run.py
 Branch `ab/experiment-memory-usage`
  * EMPTY data structure, english, 540k words: 3.3MiB
  * FILLED data structure, english, 540k words: 273.63MiB ~= 530B per word
+
+### Updating
+1) Enlist all upgradable dependencies:
+```bash
+poetry show --outdated --latest
+```
+2) Increase versions in `pyproject.toml`
+```bash
+poetry lock && poetry install
+```
+
+
+### Testing
+Not much unit test is written yet.
+```bash
+poetry run python3 -m pytest
+```
