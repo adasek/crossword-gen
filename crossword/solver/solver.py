@@ -387,7 +387,8 @@ class Solver(object):
 
     def _report_progress(self, remaining_spaces, best_remaining):
         """Report solving progress."""
-        print(f"Assigned {self.counters['assign']}, remaining: {remaining_spaces}/{best_remaining}")
+        pass
+        # print(f"Assigned {self.counters['assign']}, remaining: {remaining_spaces}/{best_remaining}")
 
     def time_elapsed(self):
         """
