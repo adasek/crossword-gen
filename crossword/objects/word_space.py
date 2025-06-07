@@ -1,8 +1,4 @@
-import itertools
-import json
-import math
-import random
-from typing import Dict, List, Set, Tuple
+from typing import List, Tuple, Optional
 
 import numpy as np
 import pandas as pd
@@ -81,12 +77,12 @@ class WordSpace:
         mask, chars = self.mask_current()
         return word_list.words(mask, chars, failed_index=self.failed_words_index_set)
 
-    def get_unbounded_crosses(self) -> List[Cross]:
+    def get_unbounded_crosses(self) -> list[Cross]:
         """List crosses that don't have certain Char bound.
         Will return empty list if word is bind to this WordSpace"""
         return [cross for cross in self.crosses if not cross.bound_value()]
 
-    def get_half_bound_crosses(self) -> List[Cross]:
+    def get_half_bound_crosses(self) -> list[Cross]:
         """List crosses that do have at least one word bounded"""
         return [cross for cross in self.crosses if cross.is_half_bound() or not cross.bound_value()]
 
@@ -125,7 +121,10 @@ class WordSpace:
         return [val[1] for val in zip(crosses_list, transform.transpose().tolist()) if val[0] is True]
 
 
-    def find_best_options(self, word_list: WordList):
+    # Returns pandas dataframe with all words that can be filled to this WordSpace
+    # along with their scores
+    #
+    def find_best_options(self, word_list: WordList) -> Optional[pd.DataFrame]:
         unbounded_crosses = self.get_half_bound_crosses()
         #if self._best_options is not None and self._best_options_unbouded_crosses == unbounded_crosses and self._best_options_unbouded_crosses:
         #    return self._best_options
@@ -165,7 +164,7 @@ class WordSpace:
             char_col = words_dataframe[f"word_split_char_{index}"]
             cross_chars.append(char_col.values)
 
-            char_matrix = np.column_stack(cross_chars)
+        char_matrix = np.column_stack(cross_chars)
 
         # Create score matrix by mapping characters to scores
         score_matrix = np.zeros_like(char_matrix, dtype=float)
@@ -175,31 +174,32 @@ class WordSpace:
             scores = np.array([char_dict.get(char, 0) for char in char_col])
             score_matrix[:, cross_idx] = scores
 
-        # Zero out entire rows where any character has score 0
-        zero_mask = (score_matrix == 0).any(axis=1)
-        score_matrix[zero_mask] = 0
+        # Any character has score 0 -> don't consider it
+        positive_mask = (score_matrix > 0).all(axis=1)
 
         # Calculate total scores (sum across crosses for each word)
         total_scores = score_matrix.sum(axis=1)
-
-        if total_scores.size == 0:
-            return []
-        max_score = total_scores.max()
-        if max_score > 0:
-            best_indices = np.where(total_scores == max_score)[0]
-            best_words = words_dataframe.iloc[best_indices]['word_split'].tolist()
+        if total_scores.size > 30:
+            threshold = np.percentile(total_scores, 95)
+            best_mask = (total_scores >= threshold) & positive_mask
         else:
-            best_words = []
-        return best_words
+            best_mask = positive_mask
 
-    def find_best_option(self, word_list: WordList):
+        positive_words_with_score = pd.DataFrame({
+            'word_split': words_dataframe['word_split'].values[best_mask],
+            'score': total_scores[best_mask]
+        })
+        sorted_scores = positive_words_with_score.sort_values(by='score', ascending=False)
+        if sorted_scores.empty:
+            return None
+        else:
+            return sorted_scores.head(1)
+
+
+    def find_best_option(self, word_list: WordList) -> Optional[Word]:
         best_options = self.find_best_options(word_list)
-        if best_options is not None and len(best_options) > 0:
-            #if len(best_options) > 10:
-            #    print(f"find_best_option {len(best_options)}")
-            best_options = sorted(best_options, key=lambda word: 0 if np.isnan(word.get_score()) else word.get_score(), reverse=True)
-            # rnd = random.choice(best_options)
-            return best_options[0]
+        if best_options is not None:
+            return best_options.sort_values(by='score', ascending=False).iloc[0]['word_split']
         else:
             # print(f"find_best_option: None")
             return None
