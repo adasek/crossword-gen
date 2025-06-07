@@ -7,7 +7,7 @@ license = "MIT"
 package-mode = false
 
 [tool.poetry.dependencies]
-python = ">=3.10,<3.14"
+python = ">=3.11,<3.14"
 more-itertools = "=10.7.0"
 pandas = "=2.3.0"
 PyICU = "=2.15.2"
@@ -18,10 +18,26 @@ requests = "=2.32.3"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.2"
+mypy = "^1.16.0"
+isort = "^6.0.1"
+pandas-stubs = "^2.2.3.250527"
 
 [tool.pytest.ini_options]
 pythonpath = [
     "."
+]
+
+[tool.mypy]
+# Disallow dynamic typing
+disallow_any_unimported = true
+disallow_any_expr = true
+disallow_any_decorated = true
+disallow_any_generics = true
+disallow_any_explicit = true
+disallow_subclassing_any = true
+files = "crossword"
+exclude = [
+    "experiment"
 ]
 
 [build-system]

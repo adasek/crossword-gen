@@ -1,12 +1,15 @@
 import more_itertools
+
 from .charlist import CharList
+from .cross import Cross
+from .word import Word
 
 
 class Mask(object):
     # Immutable, https://stackoverflow.com/a/4828108
     __slots__ = ["length", "mask"]
 
-    def __init__(self, spaces, crosses=None):
+    def __init__(self, spaces: list[bool], crosses: list[Cross]=None):
         if crosses:
             super(Mask, self).__setattr__("length", len(spaces))
             # print(f"Creating mask of {len(spaces)} with {spaces} and:")
@@ -39,7 +42,7 @@ class Mask(object):
     def __str__(self):
         return self.mask_string()
 
-    def mask_string(self):
+    def mask_string(self) -> str:
         mask_string = ""
         for applied in self.mask:
             if applied:
@@ -69,7 +72,7 @@ class Mask(object):
         return self.mask.count(True)
 
     # Returns relevant chars
-    def apply_word(self, word):
+    def apply_word(self, word: Word) -> CharList:
         applied = []
 
         for crossed, char in zip(self.mask, word):

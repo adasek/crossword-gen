@@ -1,8 +1,9 @@
-from crossword.objects import Mask, CharList, Word
 import pandas as pd
-from crossword.objects.language import alphabet_set
-from crossword.objects.language import split
-import time
+
+from .language import alphabet_set, split
+from .mask import Mask
+from .word import Word
+
 
 class WordList:
     """Data structure to effectively find suitable words"""
@@ -16,7 +17,7 @@ class WordList:
         self.words_df.insert(loc=len(self.words_df.columns),
                              column='word_length',
                              value=self.words_df.loc[:, 'word_label_text'].map(
-                                 lambda word: len(split(word.lower(),
+                                 lambda word_str: len(split(word_str.lower(),
                                                         locale_code=language))))
         self.words_df['word_split'] = None
 
@@ -30,7 +31,7 @@ class WordList:
             self.words_structure[i] = {}
             for n in range(0, i):
                 self.words_structure[i][n] = {}
-                for char in alphabet_set():
+                for char in alphabet_set(language):
                     self.words_structure[i][n][char] = set()
         for word_index, row in self.words_df.iterrows():
             word = split(row['word_label_text'].lower(), locale_code=language)
@@ -84,7 +85,7 @@ class WordList:
     def word_count(self, mask, chars):
         return len(self.words_indices(mask, chars))
 
-    def words(self, mask, chars, failed_index=None):
+    def words(self, mask: Mask, chars:list[str], failed_index: bool=None) -> pd.DataFrame:
         return self.words_df.loc[self.words_df.index.intersection(self.words_indices(mask, chars, failed_index))]
 
     def words_indices(self, mask, chars, failed_index=None):

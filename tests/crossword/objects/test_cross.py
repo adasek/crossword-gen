@@ -1,8 +1,9 @@
 
 import unittest
+
 import pytest
-from crossword.objects import Cross
-from crossword.objects import WordSpace
+
+from crossword.objects import Cross, WordSpace
 
 
 class TestCross(unittest.TestCase):

@@ -1,4 +1,5 @@
-from . import split, alphabet_set, alphabet_multiletters_from_singleletters
+from .alphabet import alphabet_multiletters_from_singleletters, alphabet_set
+from .split import split
 
 
 def is_crossword_suitable(word: str, locale_code: str, max_length: int = 20) -> bool:

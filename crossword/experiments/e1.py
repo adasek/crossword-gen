@@ -1,7 +1,8 @@
-from crossword.parser import Parser
 from crossword.exporter import PrologExporter
-from crossword.runner import Runner
 from crossword.objects import WordList
+from crossword.parser import Parser
+from crossword.runner import Runner
+
 
 # Experiment 1:
 # generate_8grid ~ words of length=8

@@ -1,10 +1,11 @@
-import re
-from pathlib import Path
-import itertools
-from . import WordSpace
-import json
-import numpy as np
 import copy
+import itertools
+import json
+import re
+
+import numpy as np
+
+from .word_space import WordSpace
 
 
 class Crossword():

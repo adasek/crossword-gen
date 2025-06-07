@@ -1,6 +1,8 @@
+import numpy as np
+
 from .charlist import CharList
 from .language import split
-import numpy as np
+
 
 class Word(CharList):
     id = 1

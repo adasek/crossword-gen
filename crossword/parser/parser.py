@@ -1,9 +1,12 @@
-from pathlib import Path
-from crossword.objects import Word, WordSpace
-import re
-import itertools
 import csv
+import itertools
+import re
+from pathlib import Path
+
 import pandas as pd
+
+from crossword.objects import Word, WordSpace
+
 
 class Parser(object):
     def __init__(self, directory):

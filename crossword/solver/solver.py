@@ -1,10 +1,10 @@
-import random
-from operator import attrgetter
-import time
-import pandas as pd
-import random
-from random import gauss
 import math
+import random
+import time
+from operator import attrgetter
+from random import gauss
+
+import pandas as pd
 
 
 class Solver(object):

@@ -1,8 +1,10 @@
-import unittest
-import pytest
-from crossword.objects import WordSpace, Word, WordList
 import types
+import unittest
+
 import pandas as pd
+import pytest
+
+from crossword.objects import Word, WordList, WordSpace
 
 
 class TestWordSpace(unittest.TestCase):

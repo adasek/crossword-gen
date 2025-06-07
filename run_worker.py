@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
 
-from config import ENV
-import faktory
-from faktory import Worker
-import time
-import logging
-from pathlib import Path
-import pandas as pd
 import json
-import requests
+import logging
 import re
 import sys
-from crossword.objects import WordList
-from crossword.objects import Crossword
+import time
+from pathlib import Path
+
+import faktory
+import pandas as pd
+import requests
+from faktory import Worker
+
+from config import ENV
+from crossword.objects import Crossword, WordList
 from crossword.solver import Solver
+
 
 # Quick and dirty description filter
 # todo: move this to the Wordgen!

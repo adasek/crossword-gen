@@ -1,15 +1,18 @@
-from crossword.objects import Cross
-from crossword.objects import Mask
-from crossword.objects import Word, CharList
-from crossword.objects import WordList
-
+import itertools
+import json
 import math
-from typing import List, Set, Dict, Tuple
+import random
+from typing import Dict, List, Set, Tuple
+
 import numpy as np
 import pandas as pd
-import itertools
-import random
-import json
+
+from .charlist import CharList
+from .cross import Cross
+from .mask import Mask
+from .word import Word
+from .word_list import WordList
+
 
 class WordSpace:
     """Single line of characters in crossroad that will be filled with a word"""

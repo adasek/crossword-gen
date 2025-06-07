@@ -1,5 +1,6 @@
-from . import alphabet
-from typing import Union, List
+from typing import List, Union
+
+from .alphabet import alphabet
 
 
 def split(word: str, locale_code: str) -> Union[List[str], bool]:

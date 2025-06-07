@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-from crossword.objects import WordList
+import cProfile
+import json
+import pickle
+import time
+from pathlib import Path
+
+import numpy as np
+
+from crossword.objects import Crossword, WordList
 from crossword.parser import Parser
 from crossword.solver import Solver
-from crossword.objects import Crossword
-from pathlib import Path
-import json
-import numpy as np
-import time
-import pickle
 
 DIRECTORY = "."
 parser = Parser(DIRECTORY)
@@ -110,8 +112,8 @@ times_to_solve = []
 success_counter = 0
 failure_counter = 0
 for i in range(30):
-    # cProfile.run('word_spaces = solver.solve(crossword, word_list)', 'restats')
     start = time.perf_counter()
+    # cProfile.run('word_spaces = solver.solve(crossword, word_list, randomize=0, assign_first_word=True, max_failed_words=200)', 'restats')
     word_spaces = solver.solve(crossword, word_list, randomize=0, assign_first_word=True, max_failed_words=200)
     time_to_solve = -start + (time.perf_counter())
     times_to_solve.append(time_to_solve)

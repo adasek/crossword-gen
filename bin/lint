@@ -1,0 +1,5 @@
+#!/bin/sh
+
+poetry run python3 -m isort --check .
+# poetry run pylint src/*
+poetry run mypy

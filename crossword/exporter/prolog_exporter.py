@@ -1,6 +1,7 @@
-from pathlib import Path
 import itertools
 from collections import Counter
+from pathlib import Path
+
 
 class PrologExporter(object):
     def __init__(self, directory_name):

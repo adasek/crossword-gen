@@ -3,16 +3,16 @@
 # This is a simple heuristic test:
 # without a Persona, score ...
 
-from crossword.objects import WordList
-from crossword.parser import Parser
-from crossword.solver import Solver
-from crossword.objects import Crossword
-from pathlib import Path
-import json
-import time
 import copy
 import csv
+import json
+import time
 from multiprocessing import Pool
+from pathlib import Path
+
+from crossword.objects import Crossword, WordList
+from crossword.parser import Parser
+from crossword.solver import Solver
 
 DIRECTORY = "."
 parser = Parser(DIRECTORY)

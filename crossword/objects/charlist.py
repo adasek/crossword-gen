@@ -1,5 +1,3 @@
-import json
-
 class CharList:
     def __init__(self, char_list):
         self.char_list = char_list

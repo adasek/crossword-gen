@@ -1,17 +1,27 @@
-from typing import List, Set
-from icu import LocaleData, Locale, Collator
+from typing import (Callable, Dict, FrozenSet, Generic, List, ParamSpec, Set,
+                    Tuple, TypeVar, cast)
 
+from icu import Collator, Locale, LocaleData  # type: ignore
 
-class Memoize:
-    def __init__(self, fn):
+P = ParamSpec("P")
+R = TypeVar("R")
+
+class Memoize(Generic[P, R]):
+    def __init__(self, fn: Callable[P, R]) -> None:
         self.fn = fn
-        self.memo = {}
+        self.memo: Dict[
+            Tuple[Tuple[object, ...], FrozenSet[Tuple[str, object]]],
+            R
+        ] = {}
 
-    def __call__(self, *args, **kwargs):
-        if args not in self.memo:
-            self.memo[args] = self.fn(*args, **kwargs)
-        return self.memo[args]
-
+    def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
+        key = (
+            cast(Tuple[object, ...], args),
+            frozenset(kwargs.items())
+        )
+        if key not in self.memo:
+            self.memo[key] = self.fn(*args, **kwargs)
+        return self.memo[key]
 
 # https://stackoverflow.com/questions/52045659/how-to-get-the-current-locales-alphabet-in-python-3
 # https://unicode-org.github.io/cldr-staging/charts/latest/by_type/core_data.alphabetic_information.main.html
