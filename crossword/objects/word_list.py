@@ -52,6 +52,10 @@ class WordList:
                                                    word_concept_id=row['word_concept_id'])
             self.words_by_index[word_index] = word
             self.words_df.at[word_index, 'word_split'] = word
+            for index, char in enumerate(word):
+                if f'word_split_char_{index}' not in self.words_df.columns:
+                    self.words_df[f'word_split_char_{index}'] = None
+                self.words_df.at[word_index, f'word_split_char_{index}'] = char
 
     def use_score_vector(self, score_vector):
         self.words_df.drop([x for x in ['score'] if x in self.words_df.columns], axis=1, inplace=True)

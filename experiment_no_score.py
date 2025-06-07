@@ -48,8 +48,7 @@ def worker_do_one(sample_size):
             crossword,
             word_list,
             max_failed_words=100,
-            randomize=0.2,
-            assign_first_word=False
+            randomize=0.2
         )
         if word_spaces is not False:
             counter_ok += 1

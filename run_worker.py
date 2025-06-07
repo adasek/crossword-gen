@@ -109,7 +109,6 @@ def generate_crossword(crossword_task):
         word_spaces = solver.solve(crossword,
                                    word_list,
                                    randomize=0.05,
-                                   assign_first_word=True,
                                    max_failed_words=int(ENV['CROSSWORD_MAX_FAILED_WORDS']) or 50
                                    )
         logger.debug(f"Score: {solver.score} in {round(-start + (time.perf_counter()), 2)}s")

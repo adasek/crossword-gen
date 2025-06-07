@@ -19,9 +19,8 @@ class Solver(object):
         self.t1 = None
         self.reset()
         self.randomize = True
-        self.assign_first_word = True
 
-    def solve(self, crossword, word_list, max_failed_words=2000, randomize=0.5, assign_first_word=True,
+    def solve(self, crossword, word_list, max_failed_words=2000, randomize=0.5,
               priority_crossing_aggregate: str = 'min', priority_letter_aggregate: str = 'max',
               priority_unbound: int = 0, priority_reverse: bool = False):
         """
@@ -32,7 +31,6 @@ class Solver(object):
             word_list: List of available words to use
             max_failed_words: Maximum number of failed attempts before giving up
             randomize: Probability of randomizing word space selection (0-1)
-            assign_first_word: Whether to assign a random first word
             priority_crossing_aggregate: Aggregation method for crossing priorities ('min', 'max', 'mean')
             priority_letter_aggregate: Aggregation method for letter priorities ('min', 'max', 'mean')
             priority_unbound: Priority weight for unbound spaces
@@ -41,7 +39,7 @@ class Solver(object):
         Returns:
             List of word spaces if solved, False if no solution found
         """
-        self._initialize_solve(crossword, max_failed_words, randomize, assign_first_word)
+        self._initialize_solve(crossword, max_failed_words, randomize)
 
         # Get initial word spaces and assign first word if requested
         word_spaces = self._get_initial_word_spaces(crossword, word_list)
@@ -53,11 +51,10 @@ class Solver(object):
             priority_unbound, priority_reverse
         )
 
-    def _initialize_solve(self, crossword, max_failed_words, randomize, assign_first_word):
+    def _initialize_solve(self, crossword, max_failed_words, randomize):
         """Initialize solver state for a new solve attempt."""
         self.reset()
         crossword.reset()
-        self.assign_first_word = assign_first_word
         self.randomize = randomize
         self.max_failed_words = max_failed_words
         self.t0 = time.time()
@@ -74,13 +71,15 @@ class Solver(object):
         """
         word_spaces = list(crossword.word_spaces)
 
-        if self.assign_first_word and word_spaces:
-            # Assign first word space randomly
+        # Assign first word space randomly
+        if self.randomize > 0:
             ws = random.choice(word_spaces)
-            word = ws.find_best_option(word_list)
-            if word:
-                ws.bind(word)
-                word_spaces.remove(ws)
+        else:
+            ws = word_spaces[0]
+        word = ws.find_best_option(word_list)
+        if word:
+            ws.bind(word)
+            word_spaces.remove(ws)
 
         return word_spaces
 

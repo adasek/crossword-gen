@@ -162,7 +162,7 @@ class WordSpace:
         cross_chars = []
         for cross in unbounded_crosses:
             index = cross.cross_index(self)
-            char_col = words_dataframe['word_split'].apply(lambda x: x[index] if len(x) > index else None)
+            char_col = words_dataframe[f"word_split_char_{index}"]
             cross_chars.append(char_col.values)
 
             char_matrix = np.column_stack(cross_chars)
