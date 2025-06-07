@@ -182,7 +182,8 @@ class WordSpace:
         # Calculate total scores (sum across crosses for each word)
         total_scores = score_matrix.sum(axis=1)
 
-        # Find maximum score and best words
+        if total_scores.size == 0:
+            return []
         max_score = total_scores.max()
         if max_score > 0:
             best_indices = np.where(total_scores == max_score)[0]

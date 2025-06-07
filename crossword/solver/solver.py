@@ -99,6 +99,7 @@ class Solver(object):
         Returns:
             Solution (list of word spaces) if found, False otherwise
         """
+
         assigned_stack = []  # Stack for backtracking: [(word_space, word), ...]
         current_word_space = None
         best_remaining = len(word_spaces)
