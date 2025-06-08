@@ -21,6 +21,7 @@ pytest = "^7.4.2"
 mypy = "^1.16.0"
 isort = "^6.0.1"
 pandas-stubs = "^2.2.3.250527"
+snakeviz = "^2.2.2"
 
 [tool.pytest.ini_options]
 pythonpath = [
