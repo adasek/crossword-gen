@@ -94,7 +94,7 @@ class WordList:
 
     def words_indices(self, mask, chars, failed_index=None):
         if mask.length not in self.words_structure:
-            raise Exception('No word suitable for the given space')
+            raise Exception(f"No word suitable for the given space (length {mask.length})")
 
         word_index_set = None
         if mask.bind_count() == 0:

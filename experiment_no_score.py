@@ -72,7 +72,7 @@ words_all_df = parser.load_dataframe('individual_words.pickle.gzip')
 words_all_df.loc[:, 'word_label_text_lower'] = words_all_df.loc[:, 'word_label_text'].map(lambda word: word.lower().strip())
 words_all_df = words_all_df.drop_duplicates(subset=['word_label_text_lower'])
 
-for crossword_file in ["crossword_vkk174.dat", "crossword_vkk175.dat"]:
+for crossword_file in ["grids/crossword_vkk174.dat", "grids/crossword_vkk175.dat"]:
 
     with open(crossword_file+'.csv', 'w', newline='') as out_file:
         writer = csv.writer(out_file)

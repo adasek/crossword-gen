@@ -57,10 +57,12 @@ else:
 print(f"  WordList in {round(-start + (time.perf_counter()), 2)}s")
 
 start = time.perf_counter()
-# crossword = Crossword.from_grid(Path(DIRECTORY, "crossword4.dat"))
-# crossword = Crossword.from_grid(Path(DIRECTORY, "crossword_vkk174.dat"))
-# crossword = Crossword.from_grid(Path(DIRECTORY, "crossword.jose.dat"))
-crossword = Crossword.from_grid(Path(DIRECTORY, "crossword.dat"))
+# crossword = Crossword.from_grid(Path(DIRECTORY, "grids/crossword4.dat"))
+# crossword = Crossword.from_grid(Path(DIRECTORY, "grids/crossword_vkk174.dat"))
+# crossword = Crossword.from_grid(Path(DIRECTORY, "grids/crossword.jose.dat"))
+crossword = Crossword.from_grid(Path(DIRECTORY, "grids/crossword.40h.dat"))
+#for ws in crossword.word_spaces:
+#   print(ws)
 
 print(f"  crossword loaded in {round(-start + (time.perf_counter()), 2)}s")
 start = time.perf_counter()
