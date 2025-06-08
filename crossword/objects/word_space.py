@@ -130,7 +130,7 @@ class WordSpace:
         #    return self._best_options
         # mask ...X.
         candidate_char_dict_array = []
-        for cross_index, cross in enumerate(unbounded_crosses):
+        for cross in unbounded_crosses:
             other_wordspace = cross.other(self)
             other_wordspace_mask, other_wordspace_chars = other_wordspace.mask_current()
             base_set = word_list.words_indices(other_wordspace_mask, other_wordspace_chars)
