@@ -1,8 +1,7 @@
 import math
 import random
 import time
-from operator import attrgetter
-from random import gauss
+import numpy as np
 
 import pandas as pd
 
@@ -109,6 +108,7 @@ class Solver(object):
             if len(word_spaces) == 0 and current_word_space is None:
                 return self._finalize_solution(crossword, True)
 
+
             if self._should_terminate():
                 return self._finalize_solution(crossword, False)
 
@@ -177,13 +177,14 @@ class Solver(object):
             reverse=priority_reverse
         )
 
+        choice_index = 0
         # Apply randomization if enabled
-        if (self.randomize > 0 and random.random() < self.randomize
-                and len(sorted_spaces) > 1):
-            # Swap first two elements to add some randomness
-            sorted_spaces[0], sorted_spaces[1] = sorted_spaces[1], sorted_spaces[0]
+        if self.randomize > 0 and random.random() < self.randomize:
+            choice_index = np.random.poisson(lam=2)
+            if choice_index > len(sorted_spaces) - 1:
+                choice_index = random.randint(0, len(sorted_spaces) - 1)
 
-        selected_space = sorted_spaces[0]
+        selected_space = sorted_spaces[choice_index]
         selected_space.failed_words_index_set = set()
         return selected_space
 
