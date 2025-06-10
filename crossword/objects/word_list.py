@@ -18,7 +18,7 @@ class WordList:
                              column='word_length',
                              value=self.words_df.loc[:, 'word_label_text'].map(
                                  lambda word_str: len(split(word_str.lower(),
-                                                        locale_code=language))))
+                                                            locale_code=language))))
         self.words_df['word_split'] = None
 
         self.words_structure = {}
@@ -45,11 +45,11 @@ class WordList:
             else:
                 word_score = None
             word = Word(row['word_label_text'], row['word_description_text'],
-                                                   index=word_index,
-                                                   language=language,
-                                                   score=word_score,
-                                                   word_list=self,
-                                                   word_concept_id=row['word_concept_id'])
+                        index=word_index,
+                        language=language,
+                        score=word_score,
+                        word_list=self,
+                        word_concept_id=row['word_concept_id'])
             self.words_by_index[word_index] = word
             self.words_df.at[word_index, 'word_split'] = word
             for index, char in enumerate(word):
@@ -89,7 +89,7 @@ class WordList:
     def word_count(self, mask, chars):
         return len(self.words_indices(mask, chars))
 
-    def words(self, mask: Mask, chars:list[str], failed_index: bool=None) -> pd.DataFrame:
+    def words(self, mask: Mask, chars: list[str], failed_index: bool = None) -> pd.DataFrame:
         return self.words_df.loc[self.words_df.index.intersection(self.words_indices(mask, chars, failed_index))]
 
     def words_indices(self, mask, chars, failed_index=None):

@@ -62,7 +62,6 @@ class WordSpace:
 
         return affected
 
-
     def unbind(self):
         """Remove binded word from WordSpace"""
         affected = []
@@ -86,7 +85,8 @@ class WordSpace:
         """List crosses that do have at least one word bounded"""
         return [cross for cross in self.crosses if cross.is_half_bound() or not cross.bound_value()]
 
-    def solving_priority(self, word_list: WordList, crossing_aggregate: str, letter_aggregate: str, unbound: int = 0) -> int:
+    def solving_priority(self, word_list: WordList, crossing_aggregate: str, letter_aggregate: str,
+                         unbound: int = 0) -> int:
         unbounded_crosses = self.get_unbounded_crosses()
         if len(unbounded_crosses) == 0:
             # This is a must have word!
@@ -120,13 +120,12 @@ class WordSpace:
 
         return [val[1] for val in zip(crosses_list, transform.transpose().tolist()) if val[0] is True]
 
-
     # Returns pandas dataframe with all words that can be filled to this WordSpace
     # along with their scores
     #
     def find_best_options(self, word_list: WordList) -> Optional[pd.DataFrame]:
         unbounded_crosses = self.get_half_bound_crosses()
-        #if self._best_options is not None and self._best_options_unbouded_crosses == unbounded_crosses and self._best_options_unbouded_crosses:
+        # if self._best_options is not None and self._best_options_unbouded_crosses == unbounded_crosses and self._best_options_unbouded_crosses:
         #    return self._best_options
         # mask ...X.
         candidate_char_dict_array = []
@@ -144,7 +143,9 @@ class WordSpace:
 
             candidate_chars = []
             for char in word_list.alphabet:
-                suitable_words_index = base_set.intersection(word_list.words_indices(one_mask, CharList([char]))).difference(other_wordspace.failed_words_index_set)
+                suitable_words_index = base_set.intersection(
+                    word_list.words_indices(one_mask, CharList([char]))).difference(
+                    other_wordspace.failed_words_index_set)
                 words_count = len(suitable_words_index)
                 if words_count > 0:
                     candidate_chars.append({'char': char, 'count': words_count})
@@ -155,7 +156,7 @@ class WordSpace:
 
         words_dataframe = self.bindable(word_list)
 
-        #with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.max_colwidth', None):
+        # with pd.option_context('display.max_rows', None, 'display.max_columns', None, 'display.max_colwidth', None):
         #    print(words_dataframe)
 
         cross_chars = []
@@ -194,7 +195,6 @@ class WordSpace:
             return None
         else:
             return sorted_scores.head(1)
-
 
     def find_best_option(self, word_list: WordList) -> Optional[Word]:
         best_options = self.find_best_options(word_list)
@@ -326,7 +326,7 @@ class WordSpace:
     def unbind_incompatible_crosswords(self):
         for cross in self.crosses:
             other = cross.other(self)
-            if other.occupied_by and other.char_at(cross.coordinates[0], cross.coordinates[1]) !=\
+            if other.occupied_by and other.char_at(cross.coordinates[0], cross.coordinates[1]) != \
                     self.char_at(cross.coordinates[0], cross.coordinates[1]):
                 other.unbind()
 
@@ -344,4 +344,3 @@ class WordSpace:
             'occupied_by': self.occupied_by.to_json() if self.occupied_by is not None and export_occupied_by else None,
             'meaning': self.occupied_by.description if self.occupied_by is not None else None
         }
-
