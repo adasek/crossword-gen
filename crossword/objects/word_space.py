@@ -130,12 +130,8 @@ class WordSpace:
         # mask ...X.
         candidate_char_dict_array = []
         for cross in unbounded_crosses:
-            if cross.is_half_bound():
-                # The other side already bounded this
-                candidate_char_dict = {cross.bound_value(): 1}
-            else:
-                other_wordspace = cross.other(self)
-                candidate_char_dict = other_wordspace.get_candidate_char_dict(word_list, cross)
+            other_wordspace = cross.other(self)
+            candidate_char_dict = other_wordspace.get_candidate_char_dict(word_list, cross)
             candidate_char_dict_array.append(candidate_char_dict)
 
         words_dataframe = self.bindable(word_list)
@@ -193,8 +189,13 @@ class WordSpace:
     def get_candidate_char_dict(self, word_list: WordList, cross: Cross):
         suitable_words = word_list.words_indices(*self.mask_current()).difference(self.failed_words_index_set)
 
+        if cross.is_half_bound() or cross.is_fully_bound():
+            characters_to_consider = [cross.bound_value()]
+        else:
+            characters_to_consider = word_list.alphabet
+
         candidate_chars = {}
-        for char in word_list.alphabet:
+        for char in characters_to_consider:
             cross_index = self.index_of_cross(cross)
             mask_list = [(i == cross_index) for i in range(self.length)]
             one_mask = Mask(mask_list)
