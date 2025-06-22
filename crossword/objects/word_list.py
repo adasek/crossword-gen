@@ -97,9 +97,16 @@ class WordList:
         return len(self.words_indices(mask, chars))
 
     def words(self, mask: Mask, chars: list[str], failed_index: bool = None) -> pd.DataFrame:
-        return self.words_df.iloc[self.words_indices(mask, chars, failed_index)]
+        return self.words_df.iloc[self.words_indices_with_failed_index(mask, chars, failed_index)]
 
-    def words_indices(self, mask, chars, failed_index=set()) -> list[int]:
+    def words_indices_with_failed_index(self, mask: Mask, chars: list[str], failed_index: set[int] = set()) -> list[int]:
+        if len(failed_index) == 0:
+            return self.words_indices(mask, chars)
+        else:
+            return [word_index for word_index in self.words_indices(mask, chars) if word_index not in failed_index]
+
+    @lru_cache(maxsize=512)
+    def words_indices(self, mask: Mask, chars: list[str]) -> list[int]:
         if mask.length not in self.words_structure:
             raise Exception(f"No word suitable for the given space (length {mask.length})")
 
@@ -121,10 +128,7 @@ class WordList:
             # empty
             word_index_set = set()
 
-        if len(failed_index) == 0:
-            return list(word_index_set)
-        else:
-            return list(word_index_set.difference(failed_index))
+        return list(word_index_set)
 
     def candidate_char_dict(self, words_indices_list: list[int], char_index: int):
         # TODO: Make this faster opportunity: use np bincount, but the word_split_char should be numeric (indices of chars)
