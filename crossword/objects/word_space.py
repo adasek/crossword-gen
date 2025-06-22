@@ -16,7 +16,11 @@ class WordSpace:
 
     def __init__(self, start: Tuple[int, int], length: int, direction: str):
         """Constuct WordSpace without any word"""
+        # Specific to word space
         self.failed_words_index_set = set()
+        self.current_suitable_words = None
+        self.current_suitable_words_cache_key = None
+
         self.crosses = []
         self.occupied_by = None
         self.my_counter = WordSpace.counter
@@ -27,6 +31,9 @@ class WordSpace:
         WordSpace.counter += 1
 
     def reset_failed_words(self):
+        # Invalidate
+        self.current_suitable_words_cache_key = None
+        self.current_suitable_words = None
         self.failed_words_index_set = set()
 
     def build_possibility_matrix(self, word_list: WordList):
@@ -184,7 +191,7 @@ class WordSpace:
             # print(f"find_best_option: None")
             return None
 
-    # Creates a map {'a':5, ...} stating the number of words if the given cross is bound to such char.
+    # Creates a map {'a':[5, ...} stating the number of words if the given cross is bound to such char.
     # The numbers are according to the current binding
     def get_candidate_char_dict(self, word_list: WordList, cross: Cross):
         cross_index = self.index_of_cross(cross)
@@ -192,8 +199,20 @@ class WordSpace:
         if cross.is_half_bound() or cross.is_fully_bound():
             return {cross.bound_value(): 1}
         else:
-            suitable_words = word_list.words_indices(*self.mask_current()).difference(self.failed_words_index_set)
-            return word_list.candidate_char_dict(list(suitable_words), cross_index)
+            return word_list.candidate_char_dict(self.get_current_suitable_words(word_list), cross_index)
+
+    def get_current_suitable_words(self, word_list: WordList) -> set[int]:
+        cache_key = self.current_suitable_words_new_cache_key()
+        if self.current_suitable_words_cache_key == cache_key:
+            return self.current_suitable_words
+        else:
+            value = list(word_list.words_indices(*self.mask_current()).difference(self.failed_words_index_set))
+            self.current_suitable_words_cache_key = cache_key
+            self.current_suitable_words = value
+            return value
+
+    def current_suitable_words_new_cache_key(self):
+        return f"{self.mask_current()}_{len(self.failed_words_index_set)}"
 
     # Returns set of tuples - positions that this words goes through
     def spaces(self):

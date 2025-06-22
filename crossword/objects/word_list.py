@@ -129,3 +129,6 @@ class WordList:
 
     def get_words_by_indices(self, word_indices: list):
         return [self.words_by_index[index] for index in word_indices if index in self.words_by_index]
+
+    def __hash__(self):
+        return hash(self.word_indices_by_length_set)
