@@ -35,17 +35,15 @@ class WordList:
             # self.words_df_by_length[i] = self.words_df.loc[self.words_df['word_length'] == i]
             # create X..  .X. ..X combinations
             self.word_indices_by_length_set[i] = set()
-            self.words_structure[i] = {}
-            for n in range(0, i):
-                self.words_structure[i][n] = {}
-                for char in alphabet_set(language):
-                    self.words_structure[i][n][char] = set()
         for word_index, row in self.words_df.iterrows():
             word = split(row['word_label_text'].lower(), locale_code=language)
             word_len = len(word)
             self.word_indices_by_length_set[word_len].add(word_index)
             for char_index, char in enumerate(word):
-                self.words_structure[word_len][char_index][char].add(word_index)
+                key = f"{word_len}_{char_index}_{char}"
+                if key not in self.words_structure:
+                    self.words_structure[key] = set()
+                self.words_structure[key].add(word_index)
 
             if 'score' in row:
                 word_score = row['score']
@@ -107,7 +105,7 @@ class WordList:
 
     @lru_cache(maxsize=512)
     def words_indices(self, mask: Mask, chars: list[str]) -> list[int]:
-        if mask.length not in self.words_structure:
+        if mask.length not in self.word_indices_by_length_set:
             raise Exception(f"No word suitable for the given space (length {mask.length})")
 
         word_index_set = None
@@ -117,10 +115,13 @@ class WordList:
         for mask_index, is_masked in enumerate(mask.mask):
             if is_masked:
                 char = chars[chars_index]
+                word_index_set_with_char = self.words_structure.get(f"{mask.length}_{mask_index}_{char}", set())
+                if len(word_index_set_with_char) == 0:
+                    return []
                 if word_index_set is None:
-                    word_index_set = self.words_structure[mask.length][mask_index][char]
+                    word_index_set = word_index_set_with_char
                 else:
-                    word_index_set = word_index_set.intersection(self.words_structure[mask.length][mask_index][char])
+                    word_index_set = word_index_set.intersection(word_index_set_with_char)
 
                 chars_index += 1
 
