@@ -1,7 +1,9 @@
+import hashlib
 from functools import lru_cache
 
+import numpy as np
+import numpy.typing as npt
 import pandas as pd
-import hashlib
 
 from .language import alphabet_set, split
 from .mask import Mask
@@ -92,19 +94,21 @@ class WordList:
         return -1
 
     def word_count(self, mask, chars):
-        return len(self.words_indices(mask, chars))
+        return self.words_indices(mask, chars).size
 
     def words(self, mask: Mask, chars: list[str], failed_index: bool = None) -> pd.DataFrame:
-        return self.words_df.iloc[self.words_indices_with_failed_index(mask, chars, failed_index)]
+        return self.words_df.take(self.words_indices_with_failed_index(mask, chars, failed_index))
 
-    def words_indices_with_failed_index(self, mask: Mask, chars: list[str], failed_index: set[int] = set()) -> list[int]:
+    def words_indices_with_failed_index(self, mask: Mask, chars: list[str], failed_index: set[int] = set()) -> npt.NDArray[np.int_]:
         if len(failed_index) == 0:
             return self.words_indices(mask, chars)
         else:
-            return [word_index for word_index in self.words_indices(mask, chars) if word_index not in failed_index]
+            word_indices = self.words_indices(mask, chars)
+            mask = ~np.isin(word_indices, list(failed_index))
+            return word_indices[mask]
 
     @lru_cache(maxsize=512)
-    def words_indices(self, mask: Mask, chars: list[str]) -> list[int]:
+    def words_indices(self, mask: Mask, chars: list[str]) -> npt.NDArray[np.int_]:
         if mask.length not in self.word_indices_by_length_set:
             raise Exception(f"No word suitable for the given space (length {mask.length})")
 
@@ -117,7 +121,7 @@ class WordList:
                 char = chars[chars_index]
                 word_index_set_with_char = self.words_structure.get(f"{mask.length}_{mask_index}_{char}", set())
                 if len(word_index_set_with_char) == 0:
-                    return []
+                    return np.array([])
                 if word_index_set is None:
                     word_index_set = word_index_set_with_char
                 else:
@@ -129,11 +133,11 @@ class WordList:
             # empty
             word_index_set = set()
 
-        return list(word_index_set)
+        return np.array(list(word_index_set))
 
-    def candidate_char_dict(self, words_indices_list: list[int], char_index: int):
+    def candidate_char_dict(self, words_indices: npt.NDArray[np.int_], char_index: int):
         # TODO: Make this faster opportunity: use np bincount, but the word_split_char should be numeric (indices of chars)
-        return self.words_df[f"word_split_char_{char_index}"].iloc[words_indices_list].value_counts(sort=False).to_dict()
+        return self.words_df[f"word_split_char_{char_index}"].iloc[words_indices].value_counts(sort=False).to_dict()
 
     def get_word_by_index(self, word_index: int):
         return self.words_by_index[word_index]

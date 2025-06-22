@@ -1,7 +1,8 @@
-from typing import List, Optional, Tuple
 from functools import lru_cache
+from typing import List, Optional, Tuple
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 
 from .charlist import CharList
@@ -202,9 +203,8 @@ class WordSpace:
             return word_list.candidate_char_dict(self.get_current_suitable_words(word_list), cross_index)
 
     @lru_cache(maxsize=16)
-    def get_current_suitable_words(self, word_list: WordList) -> list[int]:
-        word_indices = word_list.words_indices(*self.mask_current())
-        return [x for x in word_indices if x not in self.failed_words_index_set]
+    def get_current_suitable_words(self, word_list: WordList) -> npt.NDArray[np.int_]:
+        return word_list.words_indices_with_failed_index(*self.mask_current(), self.failed_words_index_set)
 
     def current_suitable_words_new_cache_key(self):
         return f"{self.mask_current()}_{len(self.failed_words_index_set)}"
