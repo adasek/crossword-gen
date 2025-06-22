@@ -1,4 +1,5 @@
 from typing import List, Optional, Tuple
+from functools import lru_cache
 
 import numpy as np
 import pandas as pd
@@ -16,7 +17,7 @@ class WordSpace:
 
     def __init__(self, start: Tuple[int, int], length: int, direction: str):
         """Constuct WordSpace without any word"""
-        # Specific to word space
+        # Specific to word list
         self.failed_words_index_set = set()
         self.current_suitable_words = None
         self.current_suitable_words_cache_key = None
@@ -32,8 +33,7 @@ class WordSpace:
 
     def reset_failed_words(self):
         # Invalidate
-        self.current_suitable_words_cache_key = None
-        self.current_suitable_words = None
+        self.get_current_suitable_words.cache_clear()
         self.failed_words_index_set = set()
 
     def build_possibility_matrix(self, word_list: WordList):
@@ -201,15 +201,10 @@ class WordSpace:
         else:
             return word_list.candidate_char_dict(self.get_current_suitable_words(word_list), cross_index)
 
-    def get_current_suitable_words(self, word_list: WordList) -> set[int]:
-        cache_key = self.current_suitable_words_new_cache_key()
-        if self.current_suitable_words_cache_key == cache_key:
-            return self.current_suitable_words
-        else:
-            value = list(word_list.words_indices(*self.mask_current()).difference(self.failed_words_index_set))
-            self.current_suitable_words_cache_key = cache_key
-            self.current_suitable_words = value
-            return value
+    @lru_cache(maxsize=16)
+    def get_current_suitable_words(self, word_list: WordList) -> list[int]:
+        word_indices = word_list.words_indices(*self.mask_current())
+        return [x for x in word_indices if x not in self.failed_words_index_set]
 
     def current_suitable_words_new_cache_key(self):
         return f"{self.mask_current()}_{len(self.failed_words_index_set)}"
@@ -354,3 +349,13 @@ class WordSpace:
             'occupied_by': self.occupied_by.to_json() if self.occupied_by is not None and export_occupied_by else None,
             'meaning': self.occupied_by.description if self.occupied_by is not None else None
         }
+
+    # Todo: This should also include failed_words_index_set, mask, chars - but call of mask_current() is recursive
+    def __eq__(self, other_wordspace: 'WordSpace'):
+        return self.start == other_wordspace.start and \
+            self.length == other_wordspace.length
+
+    # For lru_cache on get_current_suitable_words; https://docs.python.org/3/faq/programming.html#faq-cache-method-calls
+    def __hash__(self):
+        mask, chars = self.mask_current()
+        return hash(f"{mask}_{','.join(chars)}_{len(self.failed_words_index_set)}")

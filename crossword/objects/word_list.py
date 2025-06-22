@@ -1,4 +1,7 @@
+from functools import lru_cache
+
 import pandas as pd
+import hashlib
 
 from .language import alphabet_set, split
 from .mask import Mask
@@ -11,6 +14,9 @@ class WordList:
 
     def __init__(self, words_df: pd.DataFrame, language: str):
         self.words_df = words_df
+        hash_array = pd.util.hash_pandas_object(self.words_df, index=True)
+        self.dataframe_hash = hashlib.md5(hash_array.values.tobytes()).hexdigest()
+
         self.alphabet = alphabet_set(language)
 
         # Add column with word length into words_df
@@ -91,9 +97,9 @@ class WordList:
         return len(self.words_indices(mask, chars))
 
     def words(self, mask: Mask, chars: list[str], failed_index: bool = None) -> pd.DataFrame:
-        return self.words_df.loc[self.words_df.index.intersection(self.words_indices(mask, chars, failed_index))]
+        return self.words_df.loc[self.words_indices(mask, chars, failed_index)]
 
-    def words_indices(self, mask, chars, failed_index=set()):
+    def words_indices(self, mask, chars, failed_index=set()) -> list[int]:
         if mask.length not in self.words_structure:
             raise Exception(f"No word suitable for the given space (length {mask.length})")
 
@@ -116,9 +122,9 @@ class WordList:
             word_index_set = set()
 
         if len(failed_index) == 0:
-            return word_index_set
+            return list(word_index_set)
         else:
-            return word_index_set.difference(failed_index)
+            return list(word_index_set.difference(failed_index))
 
     def candidate_char_dict(self, words_indices_list: list[int], char_index: int):
         # TODO: Make this faster opportunity: use np bincount, but the word_split_char should be numeric (indices of chars)
@@ -131,4 +137,4 @@ class WordList:
         return [self.words_by_index[index] for index in word_indices if index in self.words_by_index]
 
     def __hash__(self):
-        return hash(self.word_indices_by_length_set)
+        return hash(self.dataframe_hash)
