@@ -187,23 +187,13 @@ class WordSpace:
     # Creates a map {'a':5, ...} stating the number of words if the given cross is bound to such char.
     # The numbers are according to the current binding
     def get_candidate_char_dict(self, word_list: WordList, cross: Cross):
-        suitable_words = word_list.words_indices(*self.mask_current()).difference(self.failed_words_index_set)
+        cross_index = self.index_of_cross(cross)
 
         if cross.is_half_bound() or cross.is_fully_bound():
-            characters_to_consider = [cross.bound_value()]
+            return {cross.bound_value(): 1}
         else:
-            characters_to_consider = word_list.alphabet
-
-        candidate_chars = {}
-        for char in characters_to_consider:
-            cross_index = self.index_of_cross(cross)
-            mask_list = [(i == cross_index) for i in range(self.length)]
-            one_mask = Mask(mask_list)
-            words_with_that_char = suitable_words.intersection(word_list.words_indices(one_mask, [char]))
-            words_count = len(words_with_that_char)
-            if words_count > 0:
-                candidate_chars[char] = words_count
-        return candidate_chars
+            suitable_words = word_list.words_indices(*self.mask_current()).difference(self.failed_words_index_set)
+            return word_list.candidate_char_dict(list(suitable_words), cross_index)
 
     # Returns set of tuples - positions that this words goes through
     def spaces(self):

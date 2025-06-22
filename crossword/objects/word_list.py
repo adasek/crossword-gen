@@ -24,6 +24,7 @@ class WordList:
         self.words_structure = {}
         self.word_indices_by_length_set = {}
         self.words_by_index = {}
+
         for i in sorted(self.words_df.loc[:, 'word_length'].unique()):
             # self.words_df_by_length[i] = self.words_df.loc[self.words_df['word_length'] == i]
             # create X..  .X. ..X combinations
@@ -92,7 +93,7 @@ class WordList:
     def words(self, mask: Mask, chars: list[str], failed_index: bool = None) -> pd.DataFrame:
         return self.words_df.loc[self.words_df.index.intersection(self.words_indices(mask, chars, failed_index))]
 
-    def words_indices(self, mask, chars, failed_index=None):
+    def words_indices(self, mask, chars, failed_index=set()):
         if mask.length not in self.words_structure:
             raise Exception(f"No word suitable for the given space (length {mask.length})")
 
@@ -114,9 +115,14 @@ class WordList:
             # empty
             word_index_set = set()
 
-        if failed_index is not None:
-            word_index_set = word_index_set.difference(failed_index)
-        return word_index_set
+        if len(failed_index) == 0:
+            return word_index_set
+        else:
+            return word_index_set.difference(failed_index)
+
+    def candidate_char_dict(self, words_indices_list: list[int], char_index: int):
+        filtered_df = self.words_df.iloc[words_indices_list]
+        return filtered_df[f"word_split_char_{char_index}"].value_counts().to_dict()
 
     def get_word_by_index(self, word_index: int):
         return self.words_by_index[word_index]
