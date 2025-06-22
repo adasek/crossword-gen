@@ -104,7 +104,7 @@ class WordList:
             return self.words_indices(mask, chars)
         else:
             word_indices = self.words_indices(mask, chars)
-            mask = ~np.isin(word_indices, list(failed_index))
+            mask = np.isin(word_indices, list(failed_index))
             return word_indices[mask]
 
     @lru_cache(maxsize=512)

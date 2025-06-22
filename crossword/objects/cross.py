@@ -58,10 +58,10 @@ class Cross:
     def bound_value_right(self):
         return self.word_space_vertical.my_char_on_cross(self)
 
-    def is_fully_bound(self):
+    def is_fully_bound(self) -> bool:
         return self.bound_value_left() and self.bound_value_right()
 
-    def is_half_bound(self):
+    def is_half_bound(self) -> bool:
         return (not self.is_fully_bound()) and (self.bound_value_left() or self.bound_value_right())
 
     def __eq__(self, other):
