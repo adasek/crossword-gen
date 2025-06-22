@@ -97,7 +97,7 @@ class WordList:
         return len(self.words_indices(mask, chars))
 
     def words(self, mask: Mask, chars: list[str], failed_index: bool = None) -> pd.DataFrame:
-        return self.words_df.loc[self.words_indices(mask, chars, failed_index)]
+        return self.words_df.iloc[self.words_indices(mask, chars, failed_index)]
 
     def words_indices(self, mask, chars, failed_index=set()) -> list[int]:
         if mask.length not in self.words_structure:
