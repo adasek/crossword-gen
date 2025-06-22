@@ -121,8 +121,8 @@ class WordList:
             return word_index_set.difference(failed_index)
 
     def candidate_char_dict(self, words_indices_list: list[int], char_index: int):
-        filtered_df = self.words_df.iloc[words_indices_list]
-        return filtered_df[f"word_split_char_{char_index}"].value_counts().to_dict()
+        # TODO: Make this faster opportunity: use np bincount, but the word_split_char should be numeric (indices of chars)
+        return self.words_df[f"word_split_char_{char_index}"].iloc[words_indices_list].value_counts(sort=False).to_dict()
 
     def get_word_by_index(self, word_index: int):
         return self.words_by_index[word_index]
