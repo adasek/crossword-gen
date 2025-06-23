@@ -91,9 +91,9 @@ class WordSpace:
         Will return empty list if word is bind to this WordSpace"""
         return [cross for cross in self.crosses if not cross.bound_value()]
 
-    def get_half_bound_crosses(self) -> list[Cross]:
+    def get_half_bound_and_unbound_crosses(self) -> list[Cross]:
         """List crosses that do have at least one word bounded"""
-        return [cross for cross in self.crosses if cross.is_half_bound() or not cross.bound_value()]
+        return [cross for cross in self.crosses if cross.is_half_bound_or_unbound()]
 
     def solving_priority(self, word_list: WordList, crossing_aggregate: str, letter_aggregate: str,
                          unbound: int = 0) -> int:
@@ -134,7 +134,7 @@ class WordSpace:
     # along with their scores
     #
     def find_best_options(self, word_list: WordList) -> Optional[pd.DataFrame]:
-        unbounded_crosses = self.get_half_bound_crosses()
+        unbounded_crosses = self.get_half_bound_and_unbound_crosses()
         # if self._best_options is not None and self._best_options_unbouded_crosses == unbounded_crosses and self._best_options_unbouded_crosses:
         #    return self._best_options
         # mask ...X.

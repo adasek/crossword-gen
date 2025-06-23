@@ -64,6 +64,9 @@ class Cross:
     def is_half_bound(self) -> bool:
         return (not self.is_fully_bound()) and (self.bound_value_left() or self.bound_value_right())
 
+    def is_half_bound_or_unbound(self) -> bool:
+        return (not self.is_fully_bound())
+
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return NotImplemented
