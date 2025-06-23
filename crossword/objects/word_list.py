@@ -131,9 +131,9 @@ class WordList:
 
         if word_index_set is None:
             # empty
-            word_index_set = set()
+            return np.array([], dtype=np.int32)
 
-        return np.array(list(word_index_set), dtype=np.int32)
+        return np.fromiter(word_index_set, dtype=np.int32, count=len(word_index_set))
 
     def candidate_char_dict(self, words_indices: npt.NDArray[np.int32], char_index: int):
         # TODO: Make this faster opportunity: use np bincount, but the word_split_char should be numeric (indices of chars)
