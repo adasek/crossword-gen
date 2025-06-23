@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -42,10 +42,8 @@ class WordSpace:
         self.possibility_matrix = np.zeros(shape=(len(self.crosses), len(word_list.alphabet)))
         self.rebuild_possibility_matrix(word_list)
 
-    def rebuild_possibility_matrix(self, word_list: WordList, only_cross: Optional[Cross] = None):
+    def rebuild_possibility_matrix(self, word_list):
         for cross_index, cross in enumerate(self.crosses):
-            if only_cross is not None and cross != only_cross:
-                continue
             if not cross.bound_value():
                 for char_index, char in word_list.alphabet_with_index():
                     other_ws = cross.other(self)
@@ -56,7 +54,7 @@ class WordSpace:
         """Prolog identifer of this object"""
         return f"WS_{self.my_counter}"
 
-    def bind(self, word: Word) -> Tuple["WordSpace", Cross]:
+    def bind(self, word: Word):
         """Add the word into WordSpace"""
         affected = []
         if word.length != self.length:
@@ -66,19 +64,19 @@ class WordSpace:
 
         for cross in self.crosses:
             if not cross.bound_value():
-                affected.append([cross.other(self), cross])
+                affected.append(cross.other(self))
 
         self.occupied_by = word
 
         return affected
 
-    def unbind(self) -> Tuple["WordSpace", Cross]:
+    def unbind(self):
         """Remove binded word from WordSpace"""
         affected = []
         self.occupied_by = None
         for cross in self.crosses:
             if not cross.bound_value():
-                affected.append([cross.other(self), cross])
+                affected.append(cross.other(self))
         return affected
 
     def bindable(self, word_list: WordList) -> pd.DataFrame:
