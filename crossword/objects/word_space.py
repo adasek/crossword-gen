@@ -203,7 +203,7 @@ class WordSpace:
             return word_list.candidate_char_dict(self.get_current_suitable_words(word_list), cross_index)
 
     @lru_cache(maxsize=16)
-    def get_current_suitable_words(self, word_list: WordList) -> npt.NDArray[np.int_]:
+    def get_current_suitable_words(self, word_list: WordList) -> npt.NDArray[np.int32]:
         return word_list.words_indices_with_failed_index(*self.mask_current(), self.failed_words_index_set)
 
     def current_suitable_words_new_cache_key(self):

@@ -99,7 +99,7 @@ class WordList:
     def words(self, mask: Mask, chars: list[str], failed_index: bool = None) -> pd.DataFrame:
         return self.words_df.take(self.words_indices_with_failed_index(mask, chars, failed_index))
 
-    def words_indices_with_failed_index(self, mask: Mask, chars: list[str], failed_index: set[int] = set()) -> npt.NDArray[np.int_]:
+    def words_indices_with_failed_index(self, mask: Mask, chars: list[str], failed_index: set[int] = set()) -> npt.NDArray[np.int32]:
         if len(failed_index) == 0:
             return self.words_indices(mask, chars)
         else:
@@ -108,7 +108,7 @@ class WordList:
             return word_indices[mask]
 
     @lru_cache(maxsize=512)
-    def words_indices(self, mask: Mask, chars: list[str]) -> npt.NDArray[np.int_]:
+    def words_indices(self, mask: Mask, chars: list[str]) -> npt.NDArray[np.int32]:
         if mask.length not in self.word_indices_by_length_set:
             raise Exception(f"No word suitable for the given space (length {mask.length})")
 
@@ -133,9 +133,9 @@ class WordList:
             # empty
             word_index_set = set()
 
-        return np.array(list(word_index_set))
+        return np.array(list(word_index_set), dtype=np.int32)
 
-    def candidate_char_dict(self, words_indices: npt.NDArray[np.int_], char_index: int):
+    def candidate_char_dict(self, words_indices: npt.NDArray[np.int32], char_index: int):
         # TODO: Make this faster opportunity: use np bincount, but the word_split_char should be numeric (indices of chars)
         return self.words_df[f"word_split_char_{char_index}"].iloc[words_indices].value_counts(sort=False).to_dict()
 
