@@ -5,6 +5,8 @@ import time
 import numpy as np
 import pandas as pd
 
+from crossword.objects import WordSpace, WordList
+
 
 class Solver(object):
     """
@@ -79,7 +81,7 @@ class Solver(object):
         if word:
             affected_spaces = ws.bind(word)
             word_spaces.remove(ws)
-            self._rebuild_affected(affected_spaces, word_list)
+            self._update_possibilities_affected(affected_spaces, word_list)
 
         return word_spaces
 
@@ -206,7 +208,7 @@ class Solver(object):
         """
         # Bind word to space and get affected spaces
         affected_spaces = word_space.bind(word)
-        self._rebuild_affected(affected_spaces, word_list)
+        self._update_possibilities_affected(affected_spaces, word_list)
 
         # Update tracking
         assigned_stack.append((word_space, word))
@@ -219,10 +221,10 @@ class Solver(object):
 
         return None  # Signal to select next word space
 
-    def _rebuild_affected(self, affected_spaces, word_list):
+    def _update_possibilities_affected(self, affected_word_spaces: list[WordSpace], word_list: WordList):
         # Propagate constraints to affected spaces
-        for affected_space in affected_spaces:
-            affected_space.rebuild_possibility_matrix(word_list)
+        for affected_space in affected_word_spaces:
+            affected_space.update_possibilities(word_list)
 
     def _backtrack(self, assigned_stack, word_spaces, word_list, max_backtrack_steps=5):
         """
@@ -264,10 +266,7 @@ class Solver(object):
 
             # Unbind the word and get affected spaces
             affected_spaces = failed_word_space.unbind()
-            self._rebuild_affected(affected_spaces, word_list)
-
-            # Rebuild possibility matrices for affected spaces
-            failed_word_space.rebuild_possibility_matrix(word_list)
+            self._update_possibilities_affected(affected_spaces, word_list)
 
             # Add the failed word space back to the list
             word_spaces.append(failed_word_space)

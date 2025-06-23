@@ -40,9 +40,9 @@ class WordSpace:
     def build_possibility_matrix(self, word_list: WordList):
         # possible_words number for letter x cross
         self.possibility_matrix = np.zeros(shape=(len(self.crosses), len(word_list.alphabet)))
-        self.rebuild_possibility_matrix(word_list)
+        self.update_possibilities(word_list)
 
-    def rebuild_possibility_matrix(self, word_list):
+    def update_possibilities(self, word_list):
         for cross_index, cross in enumerate(self.crosses):
             if not cross.bound_value():
                 for char_index, char in word_list.alphabet_with_index():
@@ -72,7 +72,7 @@ class WordSpace:
 
     def unbind(self):
         """Remove binded word from WordSpace"""
-        affected = []
+        affected = [self]
         self.occupied_by = None
         for cross in self.crosses:
             if not cross.bound_value():
