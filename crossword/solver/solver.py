@@ -77,8 +77,9 @@ class Solver(object):
             ws = word_spaces[0]
         word = ws.find_best_option(word_list)
         if word:
-            ws.bind(word)
+            affected_spaces = ws.bind(word)
             word_spaces.remove(ws)
+            self._rebuild_affected(affected_spaces, word_list)
 
         return word_spaces
 
@@ -205,10 +206,7 @@ class Solver(object):
         """
         # Bind word to space and get affected spaces
         affected_spaces = word_space.bind(word)
-
-        # Propagate constraints to affected spaces
-        for affected_space in affected_spaces:
-            affected_space.rebuild_possibility_matrix(word_list)
+        self._rebuild_affected(affected_spaces, word_list)
 
         # Update tracking
         assigned_stack.append((word_space, word))
@@ -220,6 +218,11 @@ class Solver(object):
             self._report_progress(len(word_spaces), best_remaining)
 
         return None  # Signal to select next word space
+
+    def _rebuild_affected(self, affected_spaces, word_list):
+        # Propagate constraints to affected spaces
+        for affected_space in affected_spaces:
+            affected_space.rebuild_possibility_matrix(word_list)
 
     def _backtrack(self, assigned_stack, word_spaces, word_list, max_backtrack_steps=5):
         """
@@ -261,6 +264,7 @@ class Solver(object):
 
             # Unbind the word and get affected spaces
             affected_spaces = failed_word_space.unbind()
+            self._rebuild_affected(affected_spaces, word_list)
 
             # Rebuild possibility matrices for affected spaces
             failed_word_space.rebuild_possibility_matrix(word_list)
