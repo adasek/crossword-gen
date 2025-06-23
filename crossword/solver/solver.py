@@ -204,11 +204,11 @@ class Solver(object):
             None (indicating to select next word space)
         """
         # Bind word to space and get affected spaces
-        affected_spaces = word_space.bind(word)
+        affected_spaces_and_crosses = word_space.bind(word)
 
         # Propagate constraints to affected spaces
-        for affected_space in affected_spaces:
-            affected_space.rebuild_possibility_matrix(word_list)
+        for affected_space, affected_cross in affected_spaces_and_crosses:
+            affected_space.rebuild_possibility_matrix(word_list, affected_cross)
 
         # Update tracking
         assigned_stack.append((word_space, word))
