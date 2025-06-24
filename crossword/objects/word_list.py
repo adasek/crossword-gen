@@ -93,6 +93,7 @@ class WordList:
                 return index
         return -1
 
+    @lru_cache(maxsize=None)
     def word_count(self, mask, chars):
         return self.words_indices(mask, chars).size
 
