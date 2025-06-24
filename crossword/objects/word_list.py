@@ -95,7 +95,7 @@ class WordList:
 
     @lru_cache(maxsize=None)
     def word_count(self, mask, chars):
-        return self.words_indices(mask, chars).size
+        return len(self.words_indices_sets(mask, chars))
 
     def words(self, mask: Mask, chars: list[str], failed_index: bool = None) -> pd.DataFrame:
         return self.words_df.take(self.words_indices_with_failed_index(mask, chars, failed_index))
@@ -113,28 +113,17 @@ class WordList:
         if mask.length not in self.word_indices_by_length_set:
             raise Exception(f"No word suitable for the given space (length {mask.length})")
 
-        word_index_set = None
-        if mask.bind_count() == 0:
-            word_index_set = self.word_indices_by_length_set[mask.length]
-        chars_index = 0
-        for mask_index, is_masked in enumerate(mask.mask):
-            if is_masked:
-                char = chars[chars_index]
-                word_index_set_with_char = self.words_structure.get(f"{mask.length}_{mask_index}_{char}", set())
-                if len(word_index_set_with_char) == 0:
-                    return np.array([])
-                if word_index_set is None:
-                    word_index_set = word_index_set_with_char
-                else:
-                    word_index_set = word_index_set.intersection(word_index_set_with_char)
-
-                chars_index += 1
-
-        if word_index_set is None:
-            # empty
-            return np.array([], dtype=np.int32)
+        word_index_set = self.words_indices_sets(mask, chars)
 
         return np.fromiter(word_index_set, dtype=np.int32, count=len(word_index_set))
+
+    def words_indices_sets(self, mask: Mask, chars: list[str]) -> set[int]:
+        if mask.bind_count() == 0:
+            return self.word_indices_by_length_set[mask.length]
+        else:
+            mask_indexes = [mask_index for mask_index, is_masked in enumerate(mask.mask) if is_masked]
+            single_letter_sets: list[set[int]] = [self.words_structure.get(f"{mask.length}_{mask_index}_{char}", set()) for mask_index, char in zip(mask_indexes, chars)]
+            return set.intersection(*single_letter_sets)
 
     def candidate_char_dict(self, words_indices: npt.NDArray[np.int32], char_index: int):
         # TODO: Make this faster opportunity: use np bincount, but the word_split_char should be numeric (indices of chars)
