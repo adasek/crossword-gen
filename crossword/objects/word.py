@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 
 from .charlist import CharList
@@ -37,7 +39,19 @@ class Word(CharList):
             self.score = 0
             return 0
 
-    def set_score_in_stone(self):
-        self.score = None
-        self.score = self.get_score()
-        self.word_list = None
+    def __deepcopy__(self, memo):
+        # Create a new instance without calling __init__
+        cls = self.__class__
+        result = cls.__new__(cls)
+
+        # Add the new object to memo before recursion to handle self-references
+        memo[id(self)] = result
+
+        for key, value in self.__dict__.items():
+            if key in ['word_list']:
+                setattr(result, key, value)
+            else:
+                # Recursively deepcopy other attributes
+                setattr(result, key, copy.deepcopy(value, memo))
+
+        return result

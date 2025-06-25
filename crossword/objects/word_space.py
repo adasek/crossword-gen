@@ -1,5 +1,6 @@
+import inspect
 from functools import lru_cache
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -349,6 +350,14 @@ class WordSpace:
             'occupied_by': self.occupied_by.to_json() if self.occupied_by is not None and export_occupied_by else None,
             'meaning': self.occupied_by.description if self.occupied_by is not None else None
         }
+
+    def cache_clear(self):
+        """
+        Clears the lru_cache for all methods of an object that support cache_clear.
+        """
+        for name, method in inspect.getmembers(self, predicate=inspect.ismethod):
+            if hasattr(method, 'cache_clear') and callable(method.cache_clear):
+                method.cache_clear()
 
     # Todo: This should also include failed_words_index_set, mask, chars - but call of mask_current() is recursive
     def __eq__(self, other_wordspace: 'WordSpace'):

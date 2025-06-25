@@ -47,7 +47,6 @@ else:
 
 
     start = time.perf_counter()
-    word_list_cache = Path("cache",f"wordlist_{wordlist_filename.stem}.pkl")
     # Build WordList from Dataframe
     word_list = WordList(words_df=words_df, language='cs')
 
@@ -60,13 +59,12 @@ start = time.perf_counter()
 # crossword = Crossword.from_grid(Path(DIRECTORY, "grids/crossword4.dat"))
 # crossword = Crossword.from_grid(Path(DIRECTORY, "grids/crossword_vkk174.dat"))
 # crossword = Crossword.from_grid(Path(DIRECTORY, "grids/crossword.jose.dat"))
-crossword = Crossword.from_grid(Path(DIRECTORY, "grids/crossword.40h.dat"))
+crossword = Crossword.from_grid(Path(DIRECTORY, "grids/crossword.20b.dat"))
 #for ws in crossword.word_spaces:
 #   print(ws)
 
 print(f"  crossword loaded in {round(-start + (time.perf_counter()), 2)}s")
 start = time.perf_counter()
-
 
 parser.build_possibility_matrix(crossword.word_spaces, word_list)
 
@@ -115,20 +113,20 @@ success_counter = 0
 failure_counter = 0
 for i in range(30):
     start = time.perf_counter()
-    # cProfile.run('word_spaces = solver.solve(crossword, word_list, randomize=0, max_failed_words=200)', 'restats')
+    # cProfile.run('word_spaces = solver.solve(crossword, word_list, randomize=0, max_failed_words=200)', 'profiles/restats_e9446e_20h')
     word_spaces = solver.solve(crossword, word_list, randomize=0, max_failed_words=200)
     time_to_solve = -start + (time.perf_counter())
     times_to_solve.append(time_to_solve)
     if crossword.is_success():
         success_counter += 1
         print(f"Success, Score: {solver.score}")
+        if crossword.evaluate_score() > max_score:
+            max_score = crossword.evaluate_score()
+            max_crossword = crossword.get_copy()
     else:
         failure_counter += 1
         print(f"Failed: {solver.score}")
 
-    if crossword.is_success() and crossword.evaluate_score() > max_score:
-        max_score = crossword.evaluate_score()
-        max_crossword = crossword.get_copy()
     crossword.reset()
 
 average_time_to_solve = np.average(np.array(times_to_solve))

@@ -64,9 +64,9 @@ class Crossword():
         return json.dumps(self.as_json(export_occupied_by))
 
     def get_copy(self):
-        for ws in self.word_spaces:
-            if ws.occupied_by is not None:
-                ws.occupied_by.set_score_in_stone()
+        # flush caches
+        for word_space in self.word_spaces:
+            word_space.cache_clear()
         return copy.deepcopy(self)
 
     @staticmethod
