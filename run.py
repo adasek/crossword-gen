@@ -128,6 +128,8 @@ for i in range(30):
         print(f"Failed: {solver.score}")
 
     crossword.reset()
+    parser.build_possibility_matrix(crossword.word_spaces, word_list)
+
 
 average_time_to_solve = np.average(np.array(times_to_solve))
 print(f"{success_counter} from {success_counter + failure_counter} ok")

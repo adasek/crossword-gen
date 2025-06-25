@@ -182,3 +182,4 @@ class Crossword():
         for word_space in self.word_spaces:
             word_space.unbind()
             word_space.reset_failed_words()
+
