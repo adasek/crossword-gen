@@ -1,9 +1,7 @@
-import math
 import random
 import time
 
 import numpy as np
-import pandas as pd
 
 from crossword.objects import WordList, WordSpace
 
@@ -19,7 +17,7 @@ class Solver(object):
         self.t0 = None
         self.t1 = None
         self.reset()
-        self.randomize = True
+        self.randomize = 1.0
 
     def solve(self, crossword, word_list, max_failed_words=2000, randomize=0.5,
               priority_crossing_aggregate: str = 'min', priority_letter_aggregate: str = 'max',
@@ -107,11 +105,6 @@ class Solver(object):
         consecutive_backtracks = 0  # Track consecutive backtracking to detect stuck situations
 
         while word_spaces or current_word_space:
-            # Check termination conditions
-            if len(word_spaces) == 0 and current_word_space is None:
-                return self._finalize_solution(crossword, True)
-
-
             if self._should_terminate():
                 return self._finalize_solution(crossword, False)
 

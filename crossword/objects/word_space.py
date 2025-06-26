@@ -57,6 +57,8 @@ class WordSpace:
 
     def bind(self, word: Word):
         """Add the word into WordSpace"""
+        if word is None:
+            raise Exception("Won't bind None")
         affected = []
         if word.length != self.length:
             print(self)
@@ -66,7 +68,6 @@ class WordSpace:
         for cross in self.crosses:
             if not cross.bound_value():
                 affected.append(cross.other(self))
-
         self.occupied_by = word
 
         return affected
@@ -362,7 +363,7 @@ class WordSpace:
     # Todo: This should also include failed_words_index_set, mask, chars - but call of mask_current() is recursive
     def __eq__(self, other_wordspace: 'WordSpace'):
         return self.start == other_wordspace.start and \
-            self.length == other_wordspace.length
+            self.length == other_wordspace.length and self.type == other_wordspace.type
 
     # For lru_cache on get_current_suitable_words; https://docs.python.org/3/faq/programming.html#faq-cache-method-calls
     def __hash__(self):
