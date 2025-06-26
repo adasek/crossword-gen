@@ -12,7 +12,7 @@ more-itertools = "^10.7.0"
 pandas = "^2.3.0"
 PyICU = "^2.15.2"
 faktory = "^1.0.0"
-python-dotenv = "^1.1.0"
+python-dotenv = "^1.1.1"
 requests = "^2.32.4"
 numpy = "^2.3.1"
 
