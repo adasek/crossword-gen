@@ -18,7 +18,6 @@ parser = Parser(DIRECTORY)
 #dict_file = "input/Czech.dic"
 #words = parser.parse_original_wordlist(dict_file)
 
-start = time.perf_counter()
 #words = parser.parse_csv_wordlist("../word-gen/meanings_filtered.txt", delimiter=':')
 #words_df = parser.load_dataframe('individual_words.pickle.gzip')
 # words_df = parser.load_dataframe('../wordlist.pickle.gzip')  # 'cs'
@@ -29,6 +28,7 @@ Path("cache").mkdir(parents=True, exist_ok=True)
 start = time.perf_counter()
 wordlist_filename = Path('individual_words.pickle.gzip')
 word_list_cache = Path("cache",f"wordlist_{wordlist_filename.stem}.pkl")
+word_list = None
 if word_list_cache.exists() and word_list_cache.is_file():
     print(f"Loading WordList from cache {word_list_cache}")
     with word_list_cache.open('rb') as f:

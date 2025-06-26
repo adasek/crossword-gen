@@ -348,7 +348,7 @@ class Solver(object):
         low_option_count = 0
         # Check the last few assignments
         for i in range(min(lookback, len(assigned_stack))):
-            word_space, word = assigned_stack[-(i+1)]
+            word_space, word = assigned_stack[-(i + 1)]
             # Heuristic: if a word space had very few failed words,
             # it probably had few options when we assigned to it
             if len(word_space.failed_words_index_set) <= 2:

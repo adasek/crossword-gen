@@ -7,16 +7,15 @@ from .language import split
 
 
 class Word(CharList):
-    id = 1
 
-    def __init__(self, word_string, description="", language='cs', index=None, word_list=None, word_concept_id=None, score=None):
+    def __init__(self, word_string: list[str] | str, description: str="", language: str='cs', index: int=-1,
+                 word_list=None, word_concept_id=None, score=None):
         if isinstance(word_string, list):
             word_as_list = word_string
         else:
             word_as_list = split(word_string.lower(), locale_code=language)
         CharList.__init__(self, word_as_list)
         self.use = 1  # probability it will be used
-        self.id = Word.id
         if description is None:
             raise ValueError(f"Description cannot be None for word {word_string}")
         self.description = description
@@ -24,7 +23,6 @@ class Word(CharList):
         self.word_list = word_list
         self.word_concept_id = word_concept_id
         self.index = index
-        Word.id += 1
 
     def get_score(self):
         if self.score is not None:
@@ -34,12 +32,11 @@ class Word(CharList):
         word_row = self.word_list.words_df.loc[self.word_list.words_df['word_concept_id'] == self.word_concept_id]
         if 'score' in word_row.columns and not np.isnan(word_row.iloc[0]['score']):
             self.score = word_row.iloc[0]['score']
-            return word_row.iloc[0]['score']
         else:
             self.score = 0
-            return 0
+        return self.score
 
-    def __deepcopy__(self, memo):
+    def __deepcopy__(self, memo: dict[int, object]):
         # Create a new instance without calling __init__
         cls = self.__class__
         result = cls.__new__(cls)
