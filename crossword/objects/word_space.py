@@ -20,18 +20,16 @@ class WordSpace:
     def __init__(self, start: Tuple[int, int], length: int, direction: str):
         """Constuct WordSpace without any word"""
         # Specific to word list
-        self.failed_words_index_set = set()
+        self.failed_words_index_set: set[int] = set()
         self.current_suitable_words = None
         self.current_suitable_words_cache_key = None
 
-        self.crosses = []
+        self.crosses: list[Cross] = []
         self.occupied_by = None
-        self.my_counter = WordSpace.counter
         self.possibility_matrix = None
         self.start = start
         self.length = length
         self.type = direction
-        WordSpace.counter += 1
 
     def reset_failed_words(self):
         # Invalidate
@@ -50,10 +48,6 @@ class WordSpace:
                     other_ws = cross.other(self)
                     mask, mask_chars = other_ws.mask_with(cross, char)
                     self.possibility_matrix[cross_index, char_index] = word_list.word_count(mask, mask_chars)
-
-    def id(self) -> str:
-        """Prolog identifer of this object"""
-        return f"WS_{self.my_counter}"
 
     def bind(self, word: Word):
         """Add the word into WordSpace"""
@@ -212,7 +206,7 @@ class WordSpace:
         return f"{self.mask_current()}_{len(self.failed_words_index_set)}"
 
     # Returns set of tuples - positions that this words goes through
-    def spaces(self):
+    def spaces(self) -> list[Tuple[int, int]]:
         spaces = list()
         if self.type == 'horizontal':
             for x in range(self.start[0], self.start[0] + self.length):
