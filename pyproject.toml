@@ -29,6 +29,9 @@ pythonpath = [
     "."
 ]
 
+[tool.pylint.format]
+max-line-length = 120
+
 [tool.mypy]
 # Disallow dynamic typing
 disallow_any_unimported = true

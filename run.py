@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import cProfile
 import json
 import pickle
@@ -88,15 +89,6 @@ start = time.perf_counter()
 # [5 0 10]
 # inverted_bind_vector = [true, false]^-1
 #
-
-#exporter = PrologExporter("dataset")
-#exporter.export_all(words, word_spaces, possible_masks, words_by_masks)
-
-
-#runner = Runner('../solve.pl', "dataset")
-#runner.run()
-#runner.fetch_results(word_spaces)
-#print(runner.output(), flush=True)
 
 # Solve
 print("Solving:")
