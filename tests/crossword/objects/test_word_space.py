@@ -24,7 +24,7 @@ class TestWordSpace(unittest.TestCase):
 
         word_list1 = WordList(words1, language="en")
         word_space1.bind(Word("abc"))
-        assert len(word_space1.get_half_bound_crosses()) == 1
+        assert len(word_space1.get_half_bound_and_unbound_crosses()) == 1
         result = word_space1.find_best_options(word_list1)
         assert len(result) == 1
 
