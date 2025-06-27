@@ -33,6 +33,9 @@ pythonpath = [
 [tool.pylint.format]
 max-line-length = 120
 
+[tool.pylint.'MAIN']
+disable = ["missing-module-docstring"]
+
 [tool.mypy]
 # Disallow dynamic typing
 disallow_any_unimported = true

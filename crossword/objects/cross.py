@@ -13,14 +13,14 @@ class Cross:
         self.index_in_vertical: int = 0
         self.coordinates: tuple[int, int] | None = None
 
-        if word_space1.type == 'horizontal' and word_space2.type == 'vertical':
+        if word_space1.is_horizontal() and word_space2.is_vertical():
             self.word_space_horizontal = word_space1
             self.word_space_vertical = word_space2
-        elif word_space1.type == 'vertical' and word_space2.type == 'horizontal':
+        elif word_space1.is_vertical() and word_space2.is_horizontal():
             self.word_space_vertical = word_space1
             self.word_space_horizontal = word_space2
         else:
-            raise ValueError("Bad types")
+            raise ValueError("Bad word space directions")
 
         # Compute coordinates
         cross_coordinates = set(self.word_space_vertical.spaces()).intersection(
@@ -54,7 +54,7 @@ class Cross:
         else:
             raise Exception("Bad call of other", self, word_space, self.word_space_horizontal, self.word_space_vertical)
 
-    def bound_value(self):
+    def bound_value(self) -> str | None:
         return self.bound_value_left() or self.bound_value_right()
 
     def bound_value_left(self) -> str | None:

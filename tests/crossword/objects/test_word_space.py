@@ -4,14 +4,14 @@ import unittest
 import pandas as pd
 import pytest
 
-from crossword.objects import Word, WordList, WordSpace
+from crossword.objects import Word, WordList, WordSpace, Direction
 
 
 class TestWordSpace(unittest.TestCase):
 
     def test_find_best_options2(self):
-        word_space1 = WordSpace((2, 1), 3, 'vertical')
-        word_space2 = WordSpace((1, 3), 3, 'horizontal')
+        word_space1 = WordSpace((2, 1), 3, Direction.VERTICAL)
+        word_space2 = WordSpace((1, 3), 3, Direction.HORIZONTAL)
         word_space1.add_cross(word_space2)
         word_space2.add_cross(word_space1)
 
@@ -27,4 +27,3 @@ class TestWordSpace(unittest.TestCase):
         assert len(word_space1.get_half_bound_and_unbound_crosses()) == 1
         result = word_space1.find_best_options(word_list1)
         assert len(result) == 1
-

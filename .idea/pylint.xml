@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PylintConfigService">
+    <option name="customPylintPath" value="$USER_HOME$/.cache/pypoetry/virtualenvs/crossword-generator-K4s3Vq1x-py3.13/bin/pylint" />
+  </component>
+</project>

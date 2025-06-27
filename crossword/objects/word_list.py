@@ -1,11 +1,12 @@
 import hashlib
 from functools import lru_cache
+from typing import Iterator
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
-from .language import alphabet_set, split
+from .language import alphabet, split
 from .mask import Mask
 from .word import Word
 
@@ -19,7 +20,7 @@ class WordList:
         hash_array = pd.util.hash_pandas_object(self.words_df, index=True)
         self.dataframe_hash = hashlib.md5(hash_array.values.tobytes()).hexdigest()
 
-        self.alphabet = alphabet_set(language)
+        self.alphabet = alphabet(language)
 
         # Add column with word length into words_df
         self.words_df.insert(loc=len(self.words_df.columns),
@@ -84,10 +85,10 @@ class WordList:
 
         return words_by_masks
 
-    def alphabet_with_index(self):
+    def alphabet_with_index(self) -> Iterator[tuple[int, str]]:
         return enumerate(self.alphabet, start=0)
 
-    def char_index(self, char):
+    def char_index(self, char: str) -> int:
         for index, ch in enumerate(self.alphabet):
             if ch == char:
                 return index

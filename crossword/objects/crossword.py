@@ -5,7 +5,7 @@ import re
 
 import numpy as np
 
-from .word_space import WordSpace
+from .word_space import Direction, WordSpace
 
 
 class Crossword():
@@ -119,7 +119,7 @@ class Crossword():
                     word_length = x - in_word
                     if word_length > 1:
                         # flush word
-                        word_spaces.append(WordSpace((in_word, y), word_length, 'horizontal'))
+                        word_spaces.append(WordSpace((in_word, y), word_length, Direction.HORIZONTAL))
                     in_word = None
 
 
@@ -133,7 +133,7 @@ class Crossword():
                 elif char not in ['_', ' '] and in_word >= 0:
                     if word_length > 1:
                         # flush word
-                        word_spaces.append(WordSpace((x, in_word), word_length, 'vertical'))
+                        word_spaces.append(WordSpace((x, in_word), word_length, Direction.VERTICAL))
                     in_word = -1
             # flush last word
             word_length = len(crossword_grid) - in_word + 1
@@ -152,7 +152,7 @@ class Crossword():
 
         for word_space_pair in itertools.product(self.word_spaces, repeat=2):
             # Do only vertical->horizontal
-            if word_space_pair[0].type == word_space_pair[1].type or word_space_pair[0].type == 'horizontal':
+            if word_space_pair[0].direction == word_space_pair[1].direction or word_space_pair[0].is_horizontal():
                 continue
             cross = set(word_space_pair[0].spaces()).intersection(set(word_space_pair[1].spaces()))
             if len(cross) > 1:
@@ -182,4 +182,3 @@ class Crossword():
         for word_space in self.word_spaces:
             word_space.unbind()
             word_space.reset_failed_words()
-
