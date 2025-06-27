@@ -33,7 +33,7 @@ class WordSpace:
 
         self.crosses: list[Cross] = []
         self.occupied_by: Optional[Word] = None
-        self.possibility_matrix: Optional[npt.NDArray[np.float64]] = None
+        self.possibility_matrix: Optional[npt.NDArray[np.int32]] = None
         self.start: tuple[int, int] = start
         self.length: int = length
         self.direction: Direction = direction
@@ -48,7 +48,7 @@ class WordSpace:
         # possible_words number for letter x cross
         self.possibility_matrix = np.zeros(
             shape=(len(self.crosses), len(word_list.alphabet)),
-            dtype=np.float64
+            dtype=np.int32
         )
         self.update_possibilities(word_list)
 
@@ -56,12 +56,11 @@ class WordSpace:
         """Update possibility matrix based on current state."""
         for cross_index, cross in enumerate(self.crosses):
             if not cross.bound_value():
-                for char_index, char in word_list.alphabet_with_index():
-                    other_ws = cross.other(self)
-                    mask, mask_chars = other_ws.mask_with(cross, char)
-                    self.possibility_matrix[cross_index, char_index] = word_list.word_count(
-                        mask, mask_chars
-                    )
+                other_ws = cross.other(self)
+                other_ws_cross_index = other_ws.index_of_cross(cross)
+                mask, mask_chars = other_ws.mask_current()
+                self.possibility_matrix[cross_index] = word_list.word_counts_with_addition(mask, mask_chars, other_ws_cross_index)
+
 
     def bind(self, word: Word) -> list['WordSpace']:
         """Add the word into WordSpace.

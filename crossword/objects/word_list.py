@@ -95,8 +95,16 @@ class WordList:
         return -1
 
     @lru_cache(maxsize=None)
-    def word_count(self, mask, chars):
-        return len(self.words_indices_sets(mask, chars))
+    def word_counts_with_addition(self, mask: Mask, mask_chars: list[str], cross_index: int) -> npt.NDArray[np.int32]:
+        parent_mask_indices = self.words_indices(mask, mask_chars)
+        letter_and_count = self.words_df.iloc[parent_mask_indices].groupby(f"word_split_char_{cross_index}").size()
+        # expand the vector to the alphabet
+        letter_to_index = dict((ch, idx) for idx, ch in self.alphabet_with_index())
+        result = np.zeros((1, len(self.alphabet)), dtype=np.int32)
+        for letter, count in letter_and_count.items():
+            col = letter_to_index[letter]
+            result[0, col] = count
+        return result
 
     def words(self, mask: Mask, chars: list[str], failed_index: bool = None) -> pd.DataFrame:
         return self.words_df.take(self.words_indices_with_failed_index(mask, chars, failed_index))
