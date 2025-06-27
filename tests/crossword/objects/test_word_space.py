@@ -4,7 +4,7 @@ import unittest
 import pandas as pd
 import pytest
 
-from crossword.objects import Word, WordList, WordSpace, Direction
+from crossword.objects import Direction, Word, WordList, WordSpace
 
 
 class TestWordSpace(unittest.TestCase):

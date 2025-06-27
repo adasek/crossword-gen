@@ -7,8 +7,9 @@ from .language import split
 
 
 class Word(CharList):
+    """Represents a word with its characters, description, and associated metadata."""
 
-    def __init__(self, word_string: list[str] | str, description: str="", language: str='cs', index: int=-1,
+    def __init__(self, word_string: list[str] | str, description: str = "", language: str = 'cs', index: int = -1,
                  word_list=None, word_concept_id=None, score=None):
         if isinstance(word_string, list):
             word_as_list = word_string
@@ -25,6 +26,10 @@ class Word(CharList):
         self.index = index
 
     def get_score(self):
+        """
+        Returns the score of the word.
+         A cached value is used if available, otherwise score is taken from the word list.
+         """
         if self.score is not None:
             return self.score
         if self.word_list is None:

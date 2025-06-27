@@ -148,9 +148,7 @@ class Solver(object):
         # Sort word spaces by solving priority
         sorted_spaces = sorted(
             word_spaces,
-            key=lambda ws: ws.solving_priority(
-                word_list=word_list,
-            ),
+            key=lambda ws: ws.solving_priority(),
             reverse=False
         )
 
@@ -365,7 +363,6 @@ class Solver(object):
 
     def _report_progress(self, remaining_spaces, best_remaining):
         """Report solving progress."""
-        pass
         # print(f"Assigned {self.counters['assign']}, remaining: {remaining_spaces}/{best_remaining}")
 
     def time_elapsed(self):

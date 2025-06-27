@@ -118,8 +118,7 @@ class WordSpace:
         return [cross for cross in self.crosses if cross.is_half_bound_or_unbound()]
 
     def solving_priority(
-            self,
-            word_list: WordList,
+            self
     ) -> Union[int, float]:
         """Calculate solving priority for this WordSpace."""
         unbounded_crosses = self.get_unbounded_crosses()

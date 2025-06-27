@@ -1,6 +1,6 @@
 import unittest
 
-from crossword.objects import Cross, WordSpace, Direction
+from crossword.objects import Cross, Direction, WordSpace
 
 
 class TestCross(unittest.TestCase):
