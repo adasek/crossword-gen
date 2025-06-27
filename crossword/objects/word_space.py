@@ -120,46 +120,26 @@ class WordSpace:
     def solving_priority(
             self,
             word_list: WordList,
-            crossing_aggregate: str,
-            letter_aggregate: str,
-            unbound: int = 0
     ) -> Union[int, float]:
         """Calculate solving priority for this WordSpace."""
         unbounded_crosses = self.get_unbounded_crosses()
         if len(unbounded_crosses) == 0:
             # This is a must have word!
-            return unbound
+            return 0
 
-        data = self.count_candidate_crossings(word_list, letter_aggregate=letter_aggregate)
+        data = self.count_candidate_crossings()
+        # By returning the minimum, crosses with less candidates will be prioritized.
+        return np.min(data)
 
-        if crossing_aggregate == 'sum':
-            return np.sum(data)
-        elif crossing_aggregate == 'max':
-            return np.max(data)
-        elif crossing_aggregate == 'min':
-            return np.min(data)
-        elif crossing_aggregate == 'mean':
-            return np.mean(data)
-        else:
-            raise ValueError(f"Unknown crossing_aggregate: {crossing_aggregate}")
-
-    def count_candidate_crossings(self, word_list: WordList, letter_aggregate: str) -> list[float]:
+    def count_candidate_crossings(self) -> list[float]:
         """Count candidate crossings based on aggregation method."""
         crosses_list = [not cross.bound_value() for cross in self.crosses]
 
         if self.possibility_matrix is None:
             raise ValueError("Possibility matrix not built")
 
-        if letter_aggregate == 'sum':
-            transform = self.possibility_matrix.sum(axis=1)
-        elif letter_aggregate == 'max':
-            transform = self.possibility_matrix.max(axis=1)
-        elif letter_aggregate == 'min':
-            transform = self.possibility_matrix.min(axis=1)
-        elif letter_aggregate == 'mean':
-            transform = self.possibility_matrix.mean(axis=1)
-        else:
-            raise ValueError(f"Unknown letter_aggregate: {letter_aggregate}")
+        # Get the option with the maximum number of candidates
+        transform = self.possibility_matrix.max(axis=1)
 
         return [
             val[1] for val in zip(crosses_list, transform.tolist())

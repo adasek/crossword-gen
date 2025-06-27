@@ -19,9 +19,7 @@ class Solver(object):
         self.reset()
         self.randomize = 1.0
 
-    def solve(self, crossword, word_list, max_failed_words=2000, randomize=0.5,
-              priority_crossing_aggregate: str = 'min', priority_letter_aggregate: str = 'max',
-              priority_unbound: int = 0, priority_reverse: bool = False):
+    def solve(self, crossword, word_list, max_failed_words=2000, randomize=0.5):
         """
        Fill the crossword grid with know words using backtracking with priority-based selection.
 
@@ -30,10 +28,6 @@ class Solver(object):
             word_list: List of available words to use
             max_failed_words: Maximum number of failed attempts before giving up
             randomize: Probability of randomizing word space selection (0-1)
-            priority_crossing_aggregate: Aggregation method for crossing priorities ('min', 'max', 'mean')
-            priority_letter_aggregate: Aggregation method for letter priorities ('min', 'max', 'mean')
-            priority_unbound: Priority weight for unbound spaces
-            priority_reverse: Whether to reverse priority order
 
         Returns:
             List of word spaces if solved, False if no solution found
@@ -45,9 +39,7 @@ class Solver(object):
 
         # Main solving loop using backtracking
         return self._backtrack_solve(
-            word_spaces, word_list, crossword,
-            priority_crossing_aggregate, priority_letter_aggregate,
-            priority_unbound, priority_reverse
+            word_spaces, word_list, crossword
         )
 
     def _initialize_solve(self, crossword, max_failed_words, randomize):
@@ -83,9 +75,7 @@ class Solver(object):
 
         return word_spaces
 
-    def _backtrack_solve(self, word_spaces, word_list, crossword,
-                         priority_crossing_aggregate, priority_letter_aggregate,
-                         priority_unbound, priority_reverse):
+    def _backtrack_solve(self, word_spaces, word_list, crossword):
         """
         Main backtracking algorithm template for solving the crossword.
 
@@ -110,11 +100,7 @@ class Solver(object):
 
             # Select next word space if none is currently being processed
             if current_word_space is None:
-                current_word_space = self._select_next_word_space(
-                    word_spaces, word_list,
-                    priority_crossing_aggregate, priority_letter_aggregate,
-                    priority_unbound, priority_reverse
-                )
+                current_word_space = self._select_next_word_space(word_spaces, word_list)
 
                 if current_word_space is None:
                     # No valid word spaces available - backtrack (potentially multiple steps)
@@ -146,9 +132,7 @@ class Solver(object):
 
         return self._finalize_solution(crossword, True)
 
-    def _select_next_word_space(self, word_spaces, word_list,
-                                priority_crossing_aggregate, priority_letter_aggregate,
-                                priority_unbound, priority_reverse):
+    def _select_next_word_space(self, word_spaces: list[WordSpace], word_list: WordList):
         """
         Select the next word space to fill based on priority heuristics.
 
@@ -166,11 +150,8 @@ class Solver(object):
             word_spaces,
             key=lambda ws: ws.solving_priority(
                 word_list=word_list,
-                crossing_aggregate=priority_crossing_aggregate,
-                letter_aggregate=priority_letter_aggregate,
-                unbound=priority_unbound
             ),
-            reverse=priority_reverse
+            reverse=False
         )
 
         choice_index = 0
