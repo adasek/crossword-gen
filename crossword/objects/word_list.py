@@ -97,7 +97,8 @@ class WordList:
     @lru_cache(maxsize=None)
     def word_counts_with_addition(self, mask: Mask, mask_chars: list[str], cross_index: int) -> npt.NDArray[np.int32]:
         parent_mask_indices = self.words_indices(mask, mask_chars)
-        letter_and_count = self.words_df.iloc[parent_mask_indices].groupby(f"word_split_char_{cross_index}").size()
+        filtered_words = self.words_df.take(parent_mask_indices)
+        letter_and_count = filtered_words.groupby(f"word_split_char_{cross_index}").size()
         # expand the vector to the alphabet
         letter_to_index = dict((ch, idx) for idx, ch in self.alphabet_with_index())
         result = np.zeros((1, len(self.alphabet)), dtype=np.int32)
@@ -117,7 +118,7 @@ class WordList:
             mask = np.isin(word_indices, list(failed_index))
             return word_indices[mask]
 
-    @lru_cache(maxsize=512)
+    @lru_cache(maxsize=None)
     def words_indices(self, mask: Mask, chars: list[str]) -> npt.NDArray[np.int32]:
         if mask.length not in self.word_indices_by_length_set:
             raise Exception(f"No word suitable for the given space (length {mask.length})")
