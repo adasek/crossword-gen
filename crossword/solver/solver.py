@@ -238,16 +238,16 @@ class Solver(object):
 
             # Unbind the word and get affected spaces
             affected_spaces = failed_word_space.unbind()
-            self._update_possibilities_affected(affected_spaces, word_list)
+
+            # Mark this word as failed for this space
+            failed_word_space.failed_words_index_set.add(failed_word.index)
+
+            self._update_possibilities_affected([failed_word_space] + affected_spaces, word_list)
 
             # Add the failed word space back to the list
             word_spaces.append(failed_word_space)
             backtracked_spaces.append(failed_word_space)
 
-            # Mark this word as failed for this space
-            failed_word_space.failed_words_index_set.add(failed_word.index)
-
-            last_space = failed_word_space
             self.counters['failed'] += 1
 
         # Return the earliest backtracked space to retry

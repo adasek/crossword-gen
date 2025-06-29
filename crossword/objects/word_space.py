@@ -40,7 +40,7 @@ class WordSpace:
 
     def reset_failed_words(self) -> None:
         """Reset failed words and invalidate cache."""
-        self.get_current_suitable_words.cache_clear()
+        self.cache_clear()
         self.failed_words_index_set = set()
 
     def build_possibility_matrix(self, word_list: WordList) -> None:
