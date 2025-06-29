@@ -333,7 +333,7 @@ class WordSpace:
         return self.occupied_by[self.index_of_cross(cross)]
 
     def index_of_cross(self, cross: Cross) -> int:
-        """Get zero-based index of cross."""
+        """Get zero-based char index of cross."""
         return cross.cross_index(self)
 
     def is_horizontal(self):

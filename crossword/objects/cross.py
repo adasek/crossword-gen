@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .word_space import WordSpace
 
+
 class Cross:
     def __init__(self, word_space1: WordSpace, word_space2: WordSpace):
         self.word_space_horizontal: WordSpace | None = None
@@ -38,6 +39,7 @@ class Cross:
         return f"C_{self.coordinates[0]}_{self.coordinates[1]}"
 
     def cross_index(self, word_space: WordSpace) -> int:
+        """Returns the character index in the word space that corresponds to this cross."""
         if word_space == self.word_space_vertical:
             return self.index_in_vertical
         elif word_space == self.word_space_horizontal:

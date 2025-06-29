@@ -95,10 +95,15 @@ class WordList:
         return -1
 
     @lru_cache(maxsize=None)
-    def word_counts_with_addition(self, mask: Mask, mask_chars: list[str], cross_index: int) -> npt.NDArray[np.int32]:
+    def word_counts_with_addition(
+            self,
+            mask: Mask,
+            mask_chars: list[str],
+            cross_char_index: int
+    ) -> npt.NDArray[np.int32]:
         parent_mask_indices = self.words_indices(mask, mask_chars)
         filtered_words = self.words_df.take(parent_mask_indices)
-        letter_and_count = filtered_words.groupby(f"word_split_char_{cross_index}").size()
+        letter_and_count = filtered_words.groupby(f"word_split_char_{cross_char_index}").size()
         # expand the vector to the alphabet
         letter_to_index = dict((ch, idx) for idx, ch in self.alphabet_with_index())
         result = np.zeros((1, len(self.alphabet)), dtype=np.int32)
@@ -110,7 +115,12 @@ class WordList:
     def words(self, mask: Mask, chars: list[str], failed_index: bool = None) -> pd.DataFrame:
         return self.words_df.take(self.words_indices_with_failed_index(mask, chars, failed_index))
 
-    def words_indices_with_failed_index(self, mask: Mask, chars: list[str], failed_index: set[int] = set()) -> npt.NDArray[np.int32]:
+    def words_indices_with_failed_index(
+            self,
+            mask: Mask,
+            chars: list[str],
+            failed_index: set[int] = set()
+    ) -> npt.NDArray[np.int32]:
         if len(failed_index) == 0:
             return self.words_indices(mask, chars)
         else:
@@ -132,12 +142,18 @@ class WordList:
             return self.word_indices_by_length_set[mask.length]
         else:
             mask_indexes = [mask_index for mask_index, is_masked in enumerate(mask.mask) if is_masked]
-            single_letter_sets: list[set[int]] = [self.words_structure.get(f"{mask.length}_{mask_index}_{char}", set()) for mask_index, char in zip(mask_indexes, chars)]
+            single_letter_sets: list[set[int]] = [
+                self.words_structure.get(f"{mask.length}_{mask_index}_{char}", set())
+                for mask_index, char in zip(mask_indexes, chars)
+            ]
             return set.intersection(*single_letter_sets)
 
-    def candidate_char_dict(self, words_indices: npt.NDArray[np.int32], char_index: int):
+    def candidate_char_dict(self, words_indices: npt.NDArray[np.int32], cross_char_index: int):
         # TODO: Make this faster opportunity: use np bincount, but the word_split_char should be numeric (indices of chars)
-        return self.words_df[f"word_split_char_{char_index}"].iloc[words_indices].value_counts(sort=False).to_dict()
+        return self.words_df[f"word_split_char_{cross_char_index}"].iloc[words_indices].value_counts(
+            sort=False).to_dict()
+        # Slower version
+        # return self.words_df.take(words_indices).groupby(f"word_split_char_{cross_char_index}").size().to_dict()
 
     def get_word_by_index(self, word_index: int):
         return self.words_by_index[word_index]
