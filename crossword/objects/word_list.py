@@ -143,7 +143,7 @@ class WordList:
         column_names = [f"word_split_char_{cross_char_index}" for cross_char_index in cross_char_indices]
 
         words_indices = self.words_indices_without_failed(mask, chars, failed_indices)
-        words_subset = self.words_df.iloc[words_indices]
+        words_subset = self.words_df[column_names].iloc[words_indices]
         candidate_vectors = []
         for column_name in column_names:
             # For categorical columns, value_counts preserves all categories
