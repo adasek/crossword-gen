@@ -1,6 +1,5 @@
 import inspect
 from enum import Enum
-from functools import lru_cache
 from typing import Any, Optional, Union
 
 import numpy as np
@@ -28,8 +27,6 @@ class WordSpace:
         """Construct WordSpace without any word."""
         # Specific to word list
         self.failed_words_index_set: set[int] = set()
-        self.current_suitable_words: Optional[npt.NDArray[np.int32]] = None
-        self.current_suitable_words_cache_key: Optional[str] = None
 
         self.crosses: list[Cross] = []
         self.occupied_by: Optional[Word] = None
@@ -40,7 +37,6 @@ class WordSpace:
 
     def reset_failed_words(self) -> None:
         """Reset failed words and invalidate cache."""
-        self.cache_clear()
         self.failed_words_index_set = set()
 
     def build_possibility_matrix(self, word_list: WordList) -> None:
@@ -54,17 +50,15 @@ class WordSpace:
 
     def update_possibilities(self, word_list: WordList) -> None:
         """Update possibility matrix based on current state."""
-        # current_suitable_words = self.get_current_suitable_words(word_list)
-        # mask, mask_chars = self.mask_current()
-        for cross_index, cross in enumerate(self.crosses):
-            if not cross.bound_value():
-                # Faster, but ignores failure index
-                mask, mask_chars = self.mask_current()
-                self.possibility_matrix[cross_index] = word_list.word_counts_with_addition(mask, mask_chars, self.index_of_cross(cross))
-                # Slower
-                #char_dict = word_list.candidate_char_dict(current_suitable_words, self.index_of_cross(cross))
-                #self.possibility_matrix[cross_index] = self.transform_char_dict_to_vector(char_dict, word_list.alphabet)
-                # self.possibility_matrix[cross_index] = word_list.word_counts_with_addition(mask, mask_chars, self.index_of_cross(cross))
+        unbounded_crosses = self.get_unbounded_crosses()
+
+        cross_char_indices = [self.index_of_cross(cross) for cross in unbounded_crosses]
+        candidate_char_vectors = word_list.candidate_char_vectors(*self.mask_current(), self.failed_words_index_set, cross_char_indices)
+
+        for candidate_char_vector, cross in zip(candidate_char_vectors, unbounded_crosses):
+            cross_index = self.crosses.index(cross)
+            self.possibility_matrix[cross_index] = candidate_char_vector
+
 
     def bind(self, word: Word) -> list['WordSpace']:
         """Add the word into WordSpace.
@@ -107,7 +101,7 @@ class WordSpace:
     def bindable(self, word_list: WordList) -> pd.DataFrame:
         """List all words that can be filled to WordSpace at this moment."""
         mask, chars = self.mask_current()
-        return word_list.words(mask, chars, failed_index=self.failed_words_index_set)
+        return word_list.words(mask, chars, failed_indices=self.failed_words_index_set)
 
     def get_unbounded_crosses(self) -> list[Cross]:
         """List crosses that don't have certain Char bound.
@@ -214,13 +208,6 @@ class WordSpace:
                                    zip(word_list.alphabet, self.possibility_matrix[cross_index].tolist()) if count > 0}
 
             return candidate_char_dict
-
-    @lru_cache(maxsize=16)
-    def get_current_suitable_words(self, word_list: WordList) -> npt.NDArray[np.int32]:
-        """Get current suitable words with caching."""
-        return word_list.words_indices_with_failed_index(
-            *self.mask_current(), self.failed_words_index_set
-        )
 
     def current_suitable_words_new_cache_key(self) -> str:
         """Generate new cache key for current suitable words."""
@@ -384,16 +371,6 @@ class WordSpace:
             raise ValueError("Possibility matrix not built")
         return int(self.possibility_matrix[self.crosses.index(cross)].max())
 
-    # todo: is this used?
-    @staticmethod
-    def transform_char_dict_to_vector(char_dict, alphabet):
-        return np.array([char_dict.get(char, 0) for char in alphabet])
-
-    def cache_clear(self) -> None:
-        """Clear the lru_cache for all methods that support cache_clear."""
-        for name, method in inspect.getmembers(self, predicate=inspect.ismethod):
-            if hasattr(method, 'cache_clear') and callable(method.cache_clear):
-                method.cache_clear()
 
     def to_json(self, export_occupied_by: bool = False) -> dict[str, Any]:
         """Convert to JSON representation."""
@@ -432,8 +409,3 @@ class WordSpace:
         return (self.start == other.start and
                 self.length == other.length and
                 self.direction == other.direction)
-
-    def __hash__(self) -> int:
-        """Hash for lru_cache on get_current_suitable_words."""
-        mask, chars = self.mask_current()
-        return hash(f"{mask}_{','.join(chars)}_{len(self.failed_words_index_set)}")

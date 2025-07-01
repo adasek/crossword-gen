@@ -62,7 +62,7 @@ class WordList:
             self.words_df.at[word_index, 'word_split'] = word
             for index, char in enumerate(word):
                 if f'word_split_char_{index}' not in self.words_df.columns:
-                    self.words_df[f'word_split_char_{index}'] = None
+                    self.words_df[f'word_split_char_{index}'] = pd.Categorical([None] * self.words_df.shape[0], categories=self.alphabet)
                 self.words_df.at[word_index, f'word_split_char_{index}'] = char
 
     def use_score_vector(self, score_vector):
@@ -112,20 +112,20 @@ class WordList:
             result[0, col] = count
         return result
 
-    def words(self, mask: Mask, chars: list[str], failed_index: bool = None) -> pd.DataFrame:
-        return self.words_df.take(self.words_indices_with_failed_index(mask, chars, failed_index))
+    def words(self, mask: Mask, chars: list[str], failed_indices: bool = None) -> pd.DataFrame:
+        return self.words_df.take(self.words_indices_without_failed(mask, chars, failed_indices))
 
-    def words_indices_with_failed_index(
+    def words_indices_without_failed(
             self,
             mask: Mask,
             chars: list[str],
-            failed_index: set[int] = set()
+            failed_indices: set[int] = set()
     ) -> npt.NDArray[np.int32]:
-        if len(failed_index) == 0:
+        if len(failed_indices) == 0:
             return self.words_indices(mask, chars)
         else:
             word_indices = self.words_indices(mask, chars)
-            mask = np.isin(word_indices, list(failed_index))
+            mask = np.isin(word_indices, list(failed_indices))
             return word_indices[mask]
 
     @lru_cache(maxsize=None)
@@ -148,12 +148,23 @@ class WordList:
             ]
             return set.intersection(*single_letter_sets)
 
-    def candidate_char_dict(self, words_indices: npt.NDArray[np.int32], cross_char_index: int):
-        # TODO: Make this faster opportunity: use np bincount, but the word_split_char should be numeric (indices of chars)
-        return self.words_df[f"word_split_char_{cross_char_index}"].iloc[words_indices].value_counts(
-            sort=False).to_dict()
-        # Slower version
-        # return self.words_df.take(words_indices).groupby(f"word_split_char_{cross_char_index}").size().to_dict()
+    def candidate_char_vectors(self, mask: Mask, chars: list[str], failed_indices: set[int], cross_char_indices: list[int]) -> list[npt.NDArray[np.int32]]:
+        """
+        Returns a list of vectors representing the counts of characters in the alphabet for each cross character index.
+        Each element corresponds to an alphabet index of a potentially assigned cross character
+        """
+
+        column_names = [f"word_split_char_{cross_char_index}" for cross_char_index in cross_char_indices]
+
+        words_indices = self.words_indices_without_failed(mask, chars, set()) # failed_indices
+        words_subset = self.words_df.take(words_indices)
+        candidate_vectors = []
+        for column_name in column_names:
+            # For categorical columns, value_counts preserves all categories
+            value_counts = words_subset[column_name].value_counts(sort=False)
+            # Reindex to ensure alphabet order and fill missing with 0
+            candidate_vectors.append(value_counts.reindex(self.alphabet, fill_value=0).to_numpy())
+        return candidate_vectors
 
     def get_word_by_index(self, word_index: int):
         return self.words_by_index[word_index]
