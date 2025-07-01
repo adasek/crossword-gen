@@ -1,4 +1,3 @@
-import inspect
 from enum import Enum
 from typing import Any, Optional, Union
 
@@ -17,6 +16,7 @@ class Direction(Enum):
     """Direction enum for WordSpace orientation."""
     HORIZONTAL = "horizontal"
     VERTICAL = "vertical"
+
 
 class WordSpace:
     """Single line of characters in crossroad that will be filled with a word."""
@@ -50,15 +50,21 @@ class WordSpace:
 
     def update_possibilities(self, word_list: WordList) -> None:
         """Update possibility matrix based on current state."""
+        if self.possibility_matrix is None:
+            raise ValueError("Possibility matrix not initialized")
+
         unbounded_crosses = self.get_unbounded_crosses()
 
         cross_char_indices = [self.index_of_cross(cross) for cross in unbounded_crosses]
-        candidate_char_vectors = word_list.candidate_char_vectors(*self.mask_current(), self.failed_words_index_list, cross_char_indices)
+        mask, chars = self.mask_current()
+        candidate_char_vectors = word_list.candidate_char_vectors(mask,
+                                                                  chars,
+                                                                  self.failed_words_index_list,
+                                                                  cross_char_indices)
 
         for candidate_char_vector, cross in zip(candidate_char_vectors, unbounded_crosses):
             cross_index = self.crosses.index(cross)
             self.possibility_matrix[cross_index] = candidate_char_vector
-
 
     def bind(self, word: Word) -> list['WordSpace']:
         """Add the word into WordSpace.
@@ -129,8 +135,8 @@ class WordSpace:
 
     def count_candidate_crossings(self) -> list[int]:
         """Count candidate crossings"""
-        return [cross.other(self).max_possibilities_on_cross(cross) for cross in self.crosses if not cross.bound_value()]
-
+        return [cross.other(self).max_possibilities_on_cross(cross) for cross in self.crosses if
+                not cross.bound_value()]
 
     def find_best_options(self, word_list: WordList) -> Optional[pd.DataFrame]:
         """Find best word options with scores.
@@ -150,9 +156,11 @@ class WordSpace:
 
         for cross_index, cross in enumerate(unbounded_crosses):
             other_word_space = cross.other(self)
+            if other_word_space.possibility_matrix is None:
+                raise ValueError("Possibility matrix not built for other word space")
             char_index = cross.cross_index(self)
             other_cross_index = other_word_space.crosses.index(cross)
-            possibilities = other_word_space.possibility_matrix[other_cross_index]
+            possibilities: npt.NDArray[np.int32] = other_word_space.possibility_matrix[other_cross_index]
             # The word_split_char_{char_index} column contains indices of alphabet chars,
             # that will be used as indices to possibilities (alphabet-length vector of distinct char counts)
             score_matrix[:, cross_index] = possibilities[words_dataframe[f"word_split_char_{char_index}"]]
@@ -192,7 +200,9 @@ class WordSpace:
         cross_index = self.crosses.index(cross)
 
         if cross.is_half_bound() or cross.is_fully_bound():
-            return {cross.bound_value(): 1}
+            assinged_char = cross.bound_value()
+            assert(isinstance(assinged_char, str))
+            return {assinged_char: 1}
         else:
             candidate_char_dict = {char: count for (char, count) in
                                    zip(word_list.alphabet, self.possibility_matrix[cross_index].tolist()) if count > 0}
@@ -357,10 +367,10 @@ class WordSpace:
                 other.unbind()
 
     def max_possibilities_on_cross(self, cross: Cross) -> int:
+        """Get a maximum number of crossing words once a specific char is bound to the cross.   """
         if self.possibility_matrix is None:
             raise ValueError("Possibility matrix not built")
         return int(self.possibility_matrix[self.crosses.index(cross)].max())
-
 
     def to_json(self, export_occupied_by: bool = False) -> dict[str, Any]:
         """Convert to JSON representation."""

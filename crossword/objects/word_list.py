@@ -64,7 +64,8 @@ class WordList:
             self.words_df.at[word_index, 'word_split'] = word
             for index, char in enumerate(word):
                 if f'word_split_char_{index}' not in self.words_df.columns:
-                    self.words_df[f'word_split_char_{index}'] = pd.Categorical([None] * self.words_df.shape[0], categories=list(char_to_index.values()))
+                    self.words_df[f'word_split_char_{index}'] = pd.Categorical([None] * self.words_df.shape[0],
+                                                                               categories=list(char_to_index.values()))
                 self.words_df.at[word_index, f'word_split_char_{index}'] = char_to_index[char]
 
     def use_score_vector(self, score_vector):
@@ -96,7 +97,7 @@ class WordList:
                 return index
         return -1
 
-    def words(self, mask: Mask, chars: list[str], failed_indices: list[int] = []) -> pd.DataFrame:
+    def words(self, mask: Mask, chars: Word, failed_indices: list[int] = []) -> pd.DataFrame:
         return self.words_df.take(self.words_indices_without_failed(mask, chars, failed_indices))
 
     def words_indices_without_failed(
@@ -134,7 +135,8 @@ class WordList:
 
     # todo: cache?
     # @lru_cache(maxsize=None)
-    def candidate_char_vectors(self, mask: Mask, chars: list[str], failed_indices: list[int], cross_char_indices: list[int]) -> list[npt.NDArray[np.int32]]:
+    def candidate_char_vectors(self, mask: Mask, chars: Word, failed_indices: list[int],
+                               cross_char_indices: list[int]) -> list[npt.NDArray[np.int32]]:
         """
         Returns a list of vectors representing the counts of characters in the alphabet for each cross character index.
         Each element corresponds to an alphabet index of a potentially assigned cross character
