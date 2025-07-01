@@ -48,7 +48,7 @@ class Cross:
             raise Exception("Bad call of cross_index", self, word_space, self.word_space_horizontal,
                             self.word_space_vertical)
 
-    def other(self, word_space):
+    def other(self, word_space: WordSpace) -> WordSpace:
         if word_space == self.word_space_vertical:
             return self.word_space_horizontal
         elif word_space == self.word_space_horizontal:

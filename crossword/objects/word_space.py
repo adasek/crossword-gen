@@ -54,13 +54,17 @@ class WordSpace:
 
     def update_possibilities(self, word_list: WordList) -> None:
         """Update possibility matrix based on current state."""
+        # current_suitable_words = self.get_current_suitable_words(word_list)
+        # mask, mask_chars = self.mask_current()
         for cross_index, cross in enumerate(self.crosses):
             if not cross.bound_value():
-                other_ws = cross.other(self)
-                other_ws_cross_index = other_ws.index_of_cross(cross)
-                mask, mask_chars = other_ws.mask_current()
-                self.possibility_matrix[cross_index] = word_list.word_counts_with_addition(mask, mask_chars, other_ws_cross_index)
-
+                # Faster, but ignores failure index
+                mask, mask_chars = self.mask_current()
+                self.possibility_matrix[cross_index] = word_list.word_counts_with_addition(mask, mask_chars, self.index_of_cross(cross))
+                # Slower
+                #char_dict = word_list.candidate_char_dict(current_suitable_words, self.index_of_cross(cross))
+                #self.possibility_matrix[cross_index] = self.transform_char_dict_to_vector(char_dict, word_list.alphabet)
+                # self.possibility_matrix[cross_index] = word_list.word_counts_with_addition(mask, mask_chars, self.index_of_cross(cross))
 
     def bind(self, word: Word) -> list['WordSpace']:
         """Add the word into WordSpace.
@@ -127,22 +131,12 @@ class WordSpace:
 
         data = self.count_candidate_crossings()
         # By returning the minimum, crosses with less candidates will be prioritized.
-        return np.min(data)
+        return min(data)
 
-    def count_candidate_crossings(self) -> list[float]:
-        """Count candidate crossings based on aggregation method."""
-        crosses_list = [not cross.bound_value() for cross in self.crosses]
+    def count_candidate_crossings(self) -> list[int]:
+        """Count candidate crossings"""
+        return [cross.other(self).max_possibilities_on_cross(cross) for cross in self.crosses if not cross.bound_value()]
 
-        if self.possibility_matrix is None:
-            raise ValueError("Possibility matrix not built")
-
-        # Get the option with the maximum number of candidates
-        transform = self.possibility_matrix.max(axis=1)
-
-        return [
-            val[1] for val in zip(crosses_list, transform.tolist())
-            if val[0] is True
-        ]
 
     def find_best_options(self, word_list: WordList) -> Optional[pd.DataFrame]:
         """Find best word options with scores.
@@ -211,14 +205,15 @@ class WordSpace:
 
         The numbers are according to the current binding.
         """
-        cross_index = self.index_of_cross(cross)
+        cross_index = self.crosses.index(cross)
 
         if cross.is_half_bound() or cross.is_fully_bound():
             return {cross.bound_value(): 1}
         else:
-            return word_list.candidate_char_dict(
-                self.get_current_suitable_words(word_list), cross_index
-            )
+            candidate_char_dict = {char: count for (char, count) in
+                                   zip(word_list.alphabet, self.possibility_matrix[cross_index].tolist()) if count > 0}
+
+            return candidate_char_dict
 
     @lru_cache(maxsize=16)
     def get_current_suitable_words(self, word_list: WordList) -> npt.NDArray[np.int32]:
@@ -383,6 +378,16 @@ class WordSpace:
                     other.char_at(cross.coordinates[0], cross.coordinates[1]) !=
                     self.char_at(cross.coordinates[0], cross.coordinates[1])):
                 other.unbind()
+
+    def max_possibilities_on_cross(self, cross: Cross) -> int:
+        if self.possibility_matrix is None:
+            raise ValueError("Possibility matrix not built")
+        return int(self.possibility_matrix[self.crosses.index(cross)].max())
+
+    # todo: is this used?
+    @staticmethod
+    def transform_char_dict_to_vector(char_dict, alphabet):
+        return np.array([char_dict.get(char, 0) for char in alphabet])
 
     def cache_clear(self) -> None:
         """Clear the lru_cache for all methods that support cache_clear."""
