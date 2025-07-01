@@ -21,8 +21,10 @@ class TestWordSpace(unittest.TestCase):
             ('bcd', 'Test bcd', 2)
             ], columns=['word_label_text', 'word_description_text', 'word_concept_id'])
 
-
         word_list1 = WordList(words1, language="en")
+        word_space1.build_possibility_matrix(word_list1)
+        word_space2.build_possibility_matrix(word_list1)
+        
         word_space1.bind(Word("abc"))
         assert len(word_space1.get_half_bound_and_unbound_crosses()) == 1
         result = word_space1.find_best_options(word_list1)
