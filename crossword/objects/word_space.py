@@ -26,7 +26,7 @@ class WordSpace:
     def __init__(self, start: tuple[int, int], length: int, direction: Direction) -> None:
         """Construct WordSpace without any word."""
         # Specific to word list
-        self.failed_words_index_set: set[int] = set()
+        self.failed_words_index_list: list[int] = []
 
         self.crosses: list[Cross] = []
         self.occupied_by: Optional[Word] = None
@@ -37,7 +37,7 @@ class WordSpace:
 
     def reset_failed_words(self) -> None:
         """Reset failed words and invalidate cache."""
-        self.failed_words_index_set = set()
+        self.failed_words_index_list = []
 
     def build_possibility_matrix(self, word_list: WordList) -> None:
         """Build possibility matrix for word selection."""
@@ -53,7 +53,7 @@ class WordSpace:
         unbounded_crosses = self.get_unbounded_crosses()
 
         cross_char_indices = [self.index_of_cross(cross) for cross in unbounded_crosses]
-        candidate_char_vectors = word_list.candidate_char_vectors(*self.mask_current(), self.failed_words_index_set, cross_char_indices)
+        candidate_char_vectors = word_list.candidate_char_vectors(*self.mask_current(), self.failed_words_index_list, cross_char_indices)
 
         for candidate_char_vector, cross in zip(candidate_char_vectors, unbounded_crosses):
             cross_index = self.crosses.index(cross)
@@ -101,7 +101,7 @@ class WordSpace:
     def bindable(self, word_list: WordList) -> pd.DataFrame:
         """List all words that can be filled to WordSpace at this moment."""
         mask, chars = self.mask_current()
-        return word_list.words(mask, chars, failed_indices=self.failed_words_index_set)
+        return word_list.words(mask, chars, failed_indices=self.failed_words_index_list)
 
     def get_unbounded_crosses(self) -> list[Cross]:
         """List crosses that don't have certain Char bound.
@@ -140,32 +140,22 @@ class WordSpace:
         """
         unbounded_crosses = self.get_half_bound_and_unbound_crosses()
 
-        candidate_char_dict_array = []
-        for cross in unbounded_crosses:
-            other_wordspace = cross.other(self)
-            candidate_char_dict = other_wordspace.get_candidate_char_dict(word_list, cross)
-            candidate_char_dict_array.append(candidate_char_dict)
-
         words_dataframe = self.bindable(word_list)
 
-        cross_chars = []
-        for cross in unbounded_crosses:
-            index = cross.cross_index(self)
-            char_col = words_dataframe[f"word_split_char_{index}"]
-            cross_chars.append(char_col.values)
-
-        if not cross_chars:
-            return words_dataframe.head(1) if not words_dataframe.empty else None
-
-        char_matrix = np.column_stack(cross_chars)
-
         # Create score matrix by mapping characters to scores
-        score_matrix = np.zeros_like(char_matrix, dtype=float)
-        for cross_idx, char_dict in enumerate(candidate_char_dict_array):
-            # Vectorized character-to-score mapping
-            char_col = char_matrix[:, cross_idx]
-            scores = np.array([char_dict.get(char, 0) for char in char_col])
-            score_matrix[:, cross_idx] = scores
+        score_matrix = np.zeros(
+            shape=(words_dataframe.shape[0], len(unbounded_crosses)),
+            dtype=np.float32
+        )
+
+        for cross_index, cross in enumerate(unbounded_crosses):
+            other_word_space = cross.other(self)
+            char_index = cross.cross_index(self)
+            other_cross_index = other_word_space.crosses.index(cross)
+            possibilities = other_word_space.possibility_matrix[other_cross_index]
+            # The word_split_char_{char_index} column contains indices of alphabet chars,
+            # that will be used as indices to possibilities (alphabet-length vector of distinct char counts)
+            score_matrix[:, cross_index] = possibilities[words_dataframe[f"word_split_char_{char_index}"]]
 
         # Any character has score 0 -> don't consider it
         positive_mask = (score_matrix > 0).all(axis=1)
@@ -211,7 +201,7 @@ class WordSpace:
 
     def current_suitable_words_new_cache_key(self) -> str:
         """Generate new cache key for current suitable words."""
-        return f"{self.mask_current()}_{len(self.failed_words_index_set)}"
+        return f"{self.mask_current()}_{len(self.failed_words_index_list)}"
 
     def spaces(self) -> list[tuple[int, int]]:
         """Return set of positions that this word goes through."""

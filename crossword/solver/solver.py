@@ -160,7 +160,8 @@ class Solver(object):
                 choice_index = random.randint(0, len(sorted_spaces) - 1)
 
         selected_space = sorted_spaces[choice_index]
-        selected_space.failed_words_index_set = set()
+        # todo: accessor
+        selected_space.failed_words_index_list = []
         return selected_space
 
     def _assign_word(self, word_space, word, assigned_stack, word_spaces, word_list, best_remaining):
@@ -240,7 +241,7 @@ class Solver(object):
             affected_spaces = failed_word_space.unbind()
 
             # Mark this word as failed for this space
-            failed_word_space.failed_words_index_set.add(failed_word.index)
+            failed_word_space.failed_words_index_list.append(failed_word.index)
 
             self._update_possibilities_affected([failed_word_space] + affected_spaces, word_list)
 
@@ -330,7 +331,7 @@ class Solver(object):
             word_space, word = assigned_stack[-(i + 1)]
             # Heuristic: if a word space had very few failed words,
             # it probably had few options when we assigned to it
-            if len(word_space.failed_words_index_set) <= 2:
+            if len(word_space.failed_words_index_list) <= 2:
                 low_option_count += 1
 
         return low_option_count
