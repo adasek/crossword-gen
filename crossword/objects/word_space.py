@@ -209,7 +209,7 @@ class WordSpace:
 
     def id(self) -> str:
         """Generate unique ID for this WordSpace."""
-        return f"{self.direction}_{self.start[0]}_{self.start[1]}_{self.length}"
+        return f"{self.direction.value}_{self.start[0]}_{self.start[1]}_{self.length}"
 
     def _index_of_cross(self, cross: Cross) -> int:
         """Get zero-based char index of cross."""
@@ -303,7 +303,7 @@ class WordSpace:
 
     def __str__(self) -> str:
         describing_string = (
-            f"{str(self.direction).capitalize()} WordSpace starting at {self.start} "
+            f"{self.direction.value.capitalize()} WordSpace starting at {self.start} "
             f"of length {self.length}"
         )
         if self.occupied_by:
