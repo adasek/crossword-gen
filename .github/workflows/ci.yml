@@ -53,4 +53,4 @@ jobs:
       - uses: ./.github/actions/setup-python-poetry
 
       - name: Run performance benchmark (placeholder)
-        run: echo "TODO: Add benchmark script here"
+        run: "echo 'TODO: Add benchmark script here'"
