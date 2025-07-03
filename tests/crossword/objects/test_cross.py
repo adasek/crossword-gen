@@ -19,10 +19,3 @@ class TestCross(unittest.TestCase):
         assert cross.index_in_vertical == 1
 
         assert cross.coordinates == (2, 2)
-
-    def test_id(self):
-        word_space1 = WordSpace((2, 1), 3, Direction.VERTICAL)
-        word_space2 = WordSpace((1, 2), 3, Direction.HORIZONTAL)
-        cross = Cross(word_space1, word_space2)
-
-        assert cross.id() == "C_2_2"

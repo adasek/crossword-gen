@@ -7,6 +7,7 @@ if TYPE_CHECKING:
 
 
 class Cross:
+    """Cross represents a cross between two word spaces in a crossword puzzle."""
     def __init__(self, word_space1: WordSpace, word_space2: WordSpace):
         self.word_space_horizontal: WordSpace | None = None
         self.word_space_vertical: WordSpace | None = None
@@ -25,7 +26,8 @@ class Cross:
 
         # Compute coordinates
         cross_coordinates = set(self.word_space_vertical.spaces()).intersection(
-            set(self.word_space_horizontal.spaces()))
+            set(self.word_space_horizontal.spaces())
+        )
         if len(cross_coordinates) > 1:
             raise ValueError("Non Euclidian crossword")
         if len(cross_coordinates) == 0:
@@ -35,44 +37,55 @@ class Cross:
         self.index_in_horizontal = self.word_space_horizontal.spaces().index(self.coordinates)
         self.index_in_vertical = self.word_space_vertical.spaces().index(self.coordinates)
 
-    def id(self):
-        return f"C_{self.coordinates[0]}_{self.coordinates[1]}"
-
     def cross_index(self, word_space: WordSpace) -> int:
         """Returns the character index in the word space that corresponds to this cross."""
         if word_space == self.word_space_vertical:
             return self.index_in_vertical
-        elif word_space == self.word_space_horizontal:
+        if word_space == self.word_space_horizontal:
             return self.index_in_horizontal
-        else:
-            raise Exception("Bad call of cross_index", self, word_space, self.word_space_horizontal,
-                            self.word_space_vertical)
+
+        raise ValueError("Bad call of cross_index", self, word_space, self.word_space_horizontal,
+                        self.word_space_vertical)
 
     def other(self, word_space: WordSpace) -> WordSpace:
+        """Returns the other word space that is not equal to the given one."""
+
         if word_space == self.word_space_vertical:
+            assert self.word_space_horizontal is not None, "Cross has no other word space"
             return self.word_space_horizontal
-        elif word_space == self.word_space_horizontal:
+        if word_space == self.word_space_horizontal:
+            assert self.word_space_vertical is not None, "Cross has no other word space"
             return self.word_space_vertical
-        else:
-            raise Exception("Bad call of other", self, word_space, self.word_space_horizontal, self.word_space_vertical)
+
+        raise ValueError("Bad call of other", self, word_space, self.word_space_horizontal, self.word_space_vertical)
 
     def bound_value(self) -> str | None:
+        """Returns the character that is bound to this cross, or None if it is unbound."""
         return self.bound_value_left() or self.bound_value_right()
 
     def bound_value_left(self) -> str | None:
+        """Returns the character bound to this cross in the horizontal word space, or None if unbound."""
+        if self.word_space_horizontal is None:
+            return None
         return self.word_space_horizontal.my_char_on_cross(self)
 
     def bound_value_right(self) -> str | None:
+        """Returns the character bound to this cross in the vertical word space, or None if unbound."""
+        if self.word_space_vertical is None:
+            return None
         return self.word_space_vertical.my_char_on_cross(self)
 
     def is_fully_bound(self) -> bool:
+        """Returns True if both word spaces are bound to this cross."""
         return self.bound_value_left() is not None and self.bound_value_right() is not None
 
     def is_half_bound(self) -> bool:
+        """Returns True if at least one of the word spaces is bound to this cross."""
         return (not self.is_fully_bound()) and \
             (self.bound_value_left() is not None or self.bound_value_right() is not None)
 
     def is_half_bound_or_unbound(self) -> bool:
+        """Returns True if at least one of the word spaces is bound to this cross, or it is unbound."""
         return not self.is_fully_bound()
 
     def __eq__(self, other):
