@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint-test:
+    name: Lint, Type Check, and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python-poetry
+
+      - name: Run isort, pylint, and mypy (lint)
+        run: ./bin/lint
+
+      - name: Annotate pylint output
+        if: always()
+        uses: wearerequired/lint-action@v2
+        with:
+          name: pylint
+          pattern: '**/*.py'
+          run: poetry run pylint config crossword
+          reporter: github-check
+
+      - name: Annotate mypy output
+        if: always()
+        uses: tsuyoshicho/action-mypy@v5
+        with:
+          mypy_args: 'config crossword'
+          poetry: true
+
+      - name: Run Tests
+        run: ./bin/test
+
+      - name: Upload pytest results (if structured output added later)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-results
+          path: .pytest_cache/
+
+  benchmark:
+    name: Performance Benchmark (Placeholder)
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python-poetry
+
+      - name: Run performance benchmark (placeholder)
+        run: echo "TODO: Add benchmark script here"
