@@ -26,6 +26,6 @@ class TestWordSpace(unittest.TestCase):
         word_space2.build_possibility_matrix(word_list1)
 
         word_space1.bind(Word("abc"))
-        assert len(word_space1.get_half_bound_and_unbound_crosses()) == 1
-        result = word_space1.find_best_options(word_list1)
+        assert len(word_space1._get_half_bound_and_unbound_crosses()) == 1
+        result = word_space1._find_best_options(word_list1)
         assert len(result) == 1

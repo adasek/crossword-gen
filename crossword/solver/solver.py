@@ -67,7 +67,7 @@ class Solver(object):
             ws = random.choice(word_spaces)
         else:
             ws = word_spaces[0]
-        word = ws.find_best_option(word_list)
+        word = ws.find_best_option(word_list, randomize=self.randomize)
         if word:
             affected_spaces = ws.bind(word)
             word_spaces.remove(ws)

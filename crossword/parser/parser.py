@@ -33,17 +33,3 @@ class Parser(object):
     def build_possibility_matrix(self, word_spaces, word_list):
         for ws in word_spaces:
             ws.build_possibility_matrix(word_list)
-
-    def create_possible_masks(self, word_spaces, generate_children_threshold=0, generate_prefix=False):
-        possible_masks = set()
-        for word_space in word_spaces:
-            if word_space.mask() not in possible_masks:
-                if generate_children_threshold > 0:
-                    possible_masks.update(word_space.masks_all(generate_children_threshold))
-                if generate_prefix:
-                    possible_masks.update(word_space.masks_prefix())
-
-                possible_masks.add(word_space.mask())
-
-
-        return possible_masks

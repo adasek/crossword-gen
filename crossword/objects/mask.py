@@ -1,3 +1,5 @@
+from typing import Optional
+
 import more_itertools
 
 from .charlist import CharList
@@ -9,12 +11,9 @@ class Mask(object):
     # Immutable, https://stackoverflow.com/a/4828108
     __slots__ = ["length", "mask"]
 
-    def __init__(self, spaces: list[bool], crosses: list[Cross]=None):
+    def __init__(self, spaces: list[tuple[int, int]] | list[bool], crosses: Optional[list[Cross]]=None):
         if crosses:
             super(Mask, self).__setattr__("length", len(spaces))
-            # print(f"Creating mask of {len(spaces)} with {spaces} and:")
-            # for cross in crosses:
-            #    print(f"  {cross}")
 
             mask_list = []
             for space in spaces:
