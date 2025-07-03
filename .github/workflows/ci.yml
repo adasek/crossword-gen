@@ -30,8 +30,11 @@ jobs:
         if: always()
         uses: tsuyoshicho/action-mypy@v5
         with:
-          mypy_args: 'config crossword'
-          poetry: true
+          github_token: ${{ secrets.github_token }}
+          reporter: github-pr-review
+          level: warning
+          workdir: src
+          execute_command: 'poetry run mypy config crossword'
 
       - name: Run Tests
         run: ./bin/test
