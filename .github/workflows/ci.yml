@@ -44,6 +44,7 @@ jobs:
       - uses: ./.github/actions/setup-python-poetry
 
       - name: Run performance benchmark
+        id: benchmark
         run: poetry run python3 -m benchmark.benchmark
 
       - name: Benchmark results
