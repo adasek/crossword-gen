@@ -15,15 +15,15 @@ class Mask:
     def __post_init__(self):
         object.__setattr__(self, "length", len(self.mask))
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.mask_string())
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if not isinstance(other, type(self)):
-            return NotImplemented
+            return False
         return self.mask == other.mask
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.mask_string()
 
     def mask_string(self) -> str:
@@ -39,13 +39,13 @@ class Mask:
                 mask_string += "."
         return mask_string
 
-    def is_fully_bound(self):
+    def is_fully_bound(self) -> bool:
         """
         Returns True if all positions in the mask are bound
         """
         return False not in self.mask
 
-    def bind_count(self):
+    def bind_count(self) -> int:
         """
         Returns the number of bound characters in the mask.
         """

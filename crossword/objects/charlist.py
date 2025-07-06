@@ -2,10 +2,11 @@
 Module: charlist
 Defines the CharList class for managing and manipulating lists of characters.
 """
+from collections.abc import Hashable
 from typing import Iterator
 
 
-class CharList:
+class CharList(Hashable):
     """
     Represents a list of characters with utility methods for iteration,
     comparison, and serialization.
