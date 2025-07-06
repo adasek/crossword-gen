@@ -14,17 +14,17 @@ DIRECTORY = "benchmark"
 start = time.perf_counter()
 
 word_list_cache = Path(DIRECTORY, f"./benchmark_word_list.pkl")
-# print(f"Loading WordList from cache {word_list_cache}")
+print(f"Loading WordList from cache {word_list_cache}")
 with word_list_cache.open('rb') as f:
         word_list = pickle.load(f)
 
-# print(f"  WordList in {round(-start + (time.perf_counter()), 2)}s")
+print(f"  WordList in {round(-start + (time.perf_counter()), 2)}s")
 
 start = time.perf_counter()
 crossword_solvable = Crossword.from_grid(Path(DIRECTORY, "crossword.20b.dat"))
 crossword_unsolvable = Crossword.from_grid(Path(DIRECTORY, "crossword.20h.dat"))
 
-# print(f"  crossword loaded in {round(-start + (time.perf_counter()), 2)}s")
+print(f"  crossword loaded in {round(-start + (time.perf_counter()), 2)}s")
 start = time.perf_counter()
 
 crossword_solvable.build_possibility_matrix(word_list)
@@ -56,12 +56,15 @@ for crossword in [crossword_solvable, crossword_unsolvable]:
     if len(valid_scores) > 0:
         solved_time = round(np.mean(times_to_solve[crossword]), 3)
         avg_score = np.mean(valid_scores)
-        # print(f"Solved {crossword.grid_file.stem} in {solved_time}s "
-        #      f"with average score {avg_score} ({len(valid_scores)})")
+        print(f"Solved {crossword.grid_file.stem} in {solved_time}s "
+            f"with average score {avg_score} ({len(valid_scores)})")
     else:
         unsolvable_time = round(np.mean(times_to_solve[crossword]), 3)
-        # print(f"Unsolvable {crossword.grid_file.stem} in {unsolvable_time}s")
+        print(f"Unsolvable {crossword.grid_file.stem} in {unsolvable_time}s")
 
-print(f"solved_time={solved_time}")
-print(f"avg_score={avg_score}")
-print(f"unsolvable_time={unsolvable_time}")
+github_output = os.environ.get("GITHUB_OUTPUT")
+if github_output:
+    with open(github_output, "a") as fh:
+        fh.write(f"solved_time={solved_time}")
+        fh.write(f"avg_score={avg_score}")
+        fh.write(f"unsolvable_time={unsolvable_time}")

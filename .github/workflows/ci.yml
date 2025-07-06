@@ -44,9 +44,16 @@ jobs:
       - uses: ./.github/actions/setup-python-poetry
 
       - name: Run performance benchmark
-        run: poetry run python3 -m benchmark.benchmark >> $GITHUB_OUTPUT
+        run: poetry run python3 -m benchmark.benchmark
+
+      - name: Benchmark results
+        run: |
+          echo "🧠 Solved Time: ${{ steps.bench.outputs.solved_time }}"
+          echo "📊 Average Score: ${{ steps.bench.outputs.avg_score }}"
+          echo "🚫 Unsolvable Time: ${{ steps.bench.outputs.unsolvable_time }}"
 
       - name: Comment benchmark on PR
+        if: github.event_name == 'pull_request'
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ github.event.pull_request.number }}
