@@ -25,9 +25,9 @@ class Cross:
             raise ValueError("Bad word space directions")
 
         # Compute coordinates
-        cross_coordinates = set(self.word_space_vertical.spaces()).intersection(
-            set(self.word_space_horizontal.spaces())
-        )
+        set_a = set(self.word_space_vertical.spaces())
+        set_b = set(self.word_space_horizontal.spaces())
+        cross_coordinates = set_a.intersection(set_b)
         if len(cross_coordinates) > 1:
             raise ValueError("Non Euclidian crossword")
         if len(cross_coordinates) == 0:
