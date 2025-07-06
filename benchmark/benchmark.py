@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
+import os
 import pickle
 import time
-import os
 from pathlib import Path
 
 import numpy as np

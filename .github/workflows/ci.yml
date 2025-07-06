@@ -48,9 +48,9 @@ jobs:
 
       - name: Benchmark results
         run: |
-          echo "🧠 Solved Time: ${{ steps.bench.outputs.solved_time }}"
-          echo "📊 Average Score: ${{ steps.bench.outputs.avg_score }}"
-          echo "🚫 Unsolvable Time: ${{ steps.bench.outputs.unsolvable_time }}"
+          echo "🧠 Solved Time: ${{ steps.benchmark.outputs.solved_time }}"
+          echo "📊 Average Score: ${{ steps.benchmark.outputs.avg_score }}"
+          echo "🚫 Unsolvable Time: ${{ steps.benchmark.outputs.unsolvable_time }}"
 
       - name: Comment benchmark on PR
         if: github.event_name == 'pull_request'
