@@ -1,7 +1,8 @@
 from typing import (Callable, Dict, FrozenSet, Generic, List, ParamSpec, Set,
                     Tuple, TypeVar, cast)
 
-from icu import Collator, Locale, LocaleData  # type: ignore # pylint: disable=no-name-in-module
+from icu import (Collator,  # type: ignore # pylint: disable=no-name-in-module
+                 Locale, LocaleData)
 
 P = ParamSpec("P")
 R = TypeVar("R")
