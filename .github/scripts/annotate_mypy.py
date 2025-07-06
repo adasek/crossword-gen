@@ -11,6 +11,7 @@ for error in errors:
     print(f"::error file={file},line={line},col={col}::{msg}")
 
 if len(errors) > 0:
+    print(f"Found #{len(errors)} mypy issues")
     sys.exit(1)
 else:
     sys.exit(0)

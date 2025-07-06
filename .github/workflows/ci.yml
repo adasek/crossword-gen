@@ -25,7 +25,7 @@ jobs:
       - name: Run mypy
         if: always()
         run: |
-          poetry run mypy config crossword --error-format=json > mypy-report.json || true
+          poetry run mypy --output=json config crossword > mypy-report.json || true
           python .github/scripts/annotate_mypy.py
 
       - name: Run Tests
