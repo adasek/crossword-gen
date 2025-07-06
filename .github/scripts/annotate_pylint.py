@@ -17,7 +17,7 @@ for error in errors:
     print(f"::{level} file={path},line={line},col={col}::{msg_id}: {message}")
 
 if len(errors) > 0:
-    print(f"Found #{len(errors)} pylint issues")
+    print(f"Found {len(errors)} pylint issues")
     sys.exit(1)
 else:
     sys.exit(0)
