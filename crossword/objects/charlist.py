@@ -2,6 +2,7 @@
 Module: charlist
 Defines the CharList class for managing and manipulating lists of characters.
 """
+from typing import Iterator
 
 
 class CharList:
@@ -15,11 +16,11 @@ class CharList:
         self.length = len(self.char_list)
         self._iter_counter = 0
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         self._iter_counter = 0
         return self
 
-    def __next__(self):
+    def __next__(self) -> str:
         if self._iter_counter < self.length:
             result = self.char_list[self._iter_counter]
             self._iter_counter += 1

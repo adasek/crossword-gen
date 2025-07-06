@@ -1,34 +1,19 @@
-from typing import Optional
-
-import more_itertools
+from dataclasses import dataclass, field
 
 from .charlist import CharList
-from .cross import Cross
 from .word import Word
 
 
-class Mask(object):
-    # Immutable, https://stackoverflow.com/a/4828108
-    __slots__ = ["length", "mask"]
+@dataclass(frozen=True)
+class Mask:
+    """
+    Immutable mask representing a word space binding status (bound/unbound characters).
+    """
+    mask: list[bool]
+    length: int = field(init=False)
 
-    def __init__(self, spaces: list[tuple[int, int]] | list[bool], crosses: Optional[list[Cross]]=None):
-        if crosses:
-            super(Mask, self).__setattr__("length", len(spaces))
-
-            mask_list = []
-            for space in spaces:
-                space_cross = [cross for cross in crosses if cross.coordinates == space]
-                if len(space_cross) == 0:
-                    mask_list.append(False)
-                elif len(space_cross) == 1:
-                    mask_list.append(True)
-                elif len(space_cross) > 1:
-                    raise Exception("Multiple crosses")
-            super(Mask, self).__setattr__("mask", mask_list)
-        else:
-            # First parameter = mask array
-            super(Mask, self).__setattr__("mask", spaces)
-            super(Mask, self).__setattr__("length", len(spaces))
+    def __post_init__(self):
+        object.__setattr__(self, "length", len(self.mask))
 
     def __hash__(self):
         return hash(self.mask_string())
@@ -42,6 +27,10 @@ class Mask(object):
         return self.mask_string()
 
     def mask_string(self) -> str:
+        """
+        Get the mask as a string representation, e.g. X...X
+        :return:
+        """
         mask_string = ""
         for applied in self.mask:
             if applied:
@@ -51,51 +40,24 @@ class Mask(object):
         return mask_string
 
     def is_fully_bound(self):
+        """
+        Returns True if all positions in the mask are bound
+        """
         return False not in self.mask
 
-    def all_derivations(self):
-        my_indices = []
-        for index, applied in enumerate(self.mask):
-            my_indices.append(index)
-
-        return [self.from_indices(indices) for indices in more_itertools.powerset(my_indices)]
-
-    def prefix_derivations(self):
-        return_list = []
-        for index, applied in enumerate(self.mask):
-            if applied:
-                return_list.append(Mask(self.mask[0:index+1] + [False]*(self.length-index - 1)))
-        return return_list
-
     def bind_count(self):
+        """
+        Returns the number of bound characters in the mask.
+        """
         return self.mask.count(True)
 
-    # Returns relevant chars
     def apply_word(self, word: Word) -> CharList:
+        """
+        Applies the mask to a word, returning a CharList of characters that are not crossed out.
+        """
         applied = []
 
         for crossed, char in zip(self.mask, word):
             if crossed:
                 applied.append(char)
         return CharList(applied)
-
-    def invert(self):
-        mask_list = [0 if b else 1 for b in self.mask]
-        return Mask(mask_list)
-
-    # Returns array of tuples (mask, char)
-    # according to this mask one_masks
-    def divide(self, chars):
-        mask_char_tuples = []
-        applied_cnt = 0
-        for index, applied in enumerate(self.mask):
-            if applied:
-                mask_list = [False] * self.length
-                mask_list[index] = True
-                mask_char_tuples.append((Mask(mask_list), CharList([chars[applied_cnt]])))
-                applied_cnt += 1
-
-        return mask_char_tuples
-
-    def from_indices(self, indices):
-        return Mask([(index in indices) for index in range(0, self.length)])

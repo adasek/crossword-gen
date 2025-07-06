@@ -236,7 +236,7 @@ class WordSpace:
             mask_list[index] = True
             char_list[index] = add_char
 
-        return Mask(mask_list), Word([ch for ch in char_list if ch is not None])
+        return Mask(mask=mask_list), Word([ch for ch in char_list if ch is not None])
 
     def _count_candidate_crossings(self) -> list[int]:
         """Count candidate crossings"""
