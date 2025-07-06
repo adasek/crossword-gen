@@ -316,3 +316,6 @@ class WordSpace:
         return (self.start == other.start and
                 self.length == other.length and
                 self.direction == other.direction)
+
+    def __hash__(self) -> int:
+        return hash((self.start, self.length, self.direction))

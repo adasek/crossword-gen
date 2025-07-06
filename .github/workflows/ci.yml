@@ -42,7 +42,7 @@ jobs:
           path: .pytest_cache/
 
   benchmark:
-    name: Performance Benchmark (Placeholder)
+    name: Performance Benchmark
     runs-on: ubuntu-latest
     if: always()
 
@@ -50,5 +50,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-python-poetry
 
-      - name: Run performance benchmark (placeholder)
-        run: "echo 'TODO: Add benchmark script here'"
+      - name: Run performance benchmark
+        run: poetry run python3 -m benchmark.benchmark
+
+  benchmark-comment:
+    name: Comment benchmark on PR
+    uses: peter-evans/create-or-update-comment@v4
+    with:
+      issue-number: ${{ github.event.pull_request.number }}
+      body: |
+        🧪 **Benchmark Results**
+        - 🧠 Solved Time: `${{ steps.benchmark.outputs.solved_time }}s`
+        - 📊 Average Score: `${{ steps.benchmark.outputs.avg_score }}`
+        - 🚫 Unsolvable Time: `${{ steps.benchmark.outputs.unsolvable_time }}s`

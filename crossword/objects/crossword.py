@@ -14,10 +14,11 @@ from .word_space import Direction, WordSpace
 class Crossword:
     """Represents a crossword puzzle with its dimensions and word spaces."""
 
-    def __init__(self, word_spaces: list[WordSpace]):
+    def __init__(self, word_spaces: list[WordSpace], grid_file: Optional[Path] = None):
         self.word_spaces = word_spaces
         self.width: Optional[int] = None
         self.height: Optional[int] = None
+        self.grid_file = grid_file
 
     def __str__(self):
         string = ""
@@ -76,7 +77,7 @@ class Crossword:
     @staticmethod
     def from_grid(crossword_grid_file: Path) -> 'Crossword':
         """Creates a Crossword object from a grid file."""
-        crossword = Crossword([])
+        crossword = Crossword([], crossword_grid_file)
         grid = crossword.parse_crossword(crossword_grid_file)
         crossword.load_word_spaces_from_grid(grid)
         crossword.add_crosses()
@@ -204,3 +205,20 @@ class Crossword:
         """Builds the possibility matrix for each word space using the provided word list."""
         for word_space in self.word_spaces:
             word_space.build_possibility_matrix(word_list)
+
+    def __eq__(self, other):
+        """Check if two crosswords are equal."""
+        if not isinstance(other, Crossword):
+            return False
+        if self.width != other.width or self.height != other.height:
+            return False
+        if len(self.word_spaces) != len(other.word_spaces):
+            return False
+        for ws in self.word_spaces:
+            if ws not in other.word_spaces:
+                return False
+        return True
+
+    def __hash__(self):
+        """Hash function for the crossword."""
+        return hash((self.width, self.height, tuple(self.word_spaces)))
