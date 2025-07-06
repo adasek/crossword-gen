@@ -2,6 +2,7 @@
 
 import pickle
 import time
+import os
 from pathlib import Path
 
 import numpy as np
@@ -65,6 +66,6 @@ for crossword in [crossword_solvable, crossword_unsolvable]:
 github_output = os.environ.get("GITHUB_OUTPUT")
 if github_output:
     with open(github_output, "a") as fh:
-        fh.write(f"solved_time={solved_time}")
-        fh.write(f"avg_score={avg_score}")
-        fh.write(f"unsolvable_time={unsolvable_time}")
+        fh.write(f"solved_time={solved_time}\n")
+        fh.write(f"avg_score={avg_score}\n")
+        fh.write(f"unsolvable_time={unsolvable_time}\n")
