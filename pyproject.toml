@@ -33,6 +33,12 @@ pythonpath = [
 [tool.pylint.format]
 max-line-length = 120
 
+[tool.pylint.design]
+min-public-methods = 1
+max-args = 10
+max-positional-arguments = 10
+max-locals = 20
+
 [tool.pylint.'MAIN']
 disable = ["missing-module-docstring"]
 
