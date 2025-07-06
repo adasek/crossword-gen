@@ -13,7 +13,7 @@ class Solver:
     word space selection and constraint propagation.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.max_failed_words = 2000
         self.t0: Optional[float]  = None
         self.t1: Optional[float]  = None
@@ -21,7 +21,7 @@ class Solver:
         self.solution: Optional[list[WordSpace]] = None
         self.counters: dict[str, int] = {}
         self.reset()
-        self.randomize = 1.0
+        self.randomize: float = 1.0
 
     def solve(self, crossword, word_list, max_failed_words=2000, randomize=0.5):
         """
@@ -133,7 +133,7 @@ class Solver:
 
         return self._finalize_solution(crossword, True)
 
-    def _select_next_word_space(self, word_spaces: list[WordSpace]):
+    def _select_next_word_space(self, word_spaces: list[WordSpace]) -> Optional[WordSpace]:
         """
         Select the next word space to fill based on priority heuristics.
 
@@ -147,9 +147,12 @@ class Solver:
             return None
 
         # Sort word spaces by solving priority
+        def solving_priority_key(word_space: WordSpace) -> int:
+            return word_space.solving_priority()
+
         sorted_spaces = sorted(
             word_spaces,
-            key=lambda ws: ws.solving_priority(),
+            key=solving_priority_key,
             reverse=False
         )
 

@@ -14,6 +14,7 @@ Coordinates = tuple[int, int]
 JsonValue: TypeAlias = Union[str, int, float, bool, None,
 list['JsonValue'], Coordinates, dict[str, 'JsonValue'], Optional[list[str]]]
 
+
 class Direction(Enum):
     """Direction enum for WordSpace orientation."""
     HORIZONTAL = "horizontal"
@@ -106,9 +107,7 @@ class WordSpace:
                 affected.append(cross.other(self))
         return affected
 
-    def solving_priority(
-            self
-    ) -> Union[int, float]:
+    def solving_priority(self) -> int:
         """Calculate solving priority for this WordSpace."""
         unbounded_crosses = self._get_unbounded_crosses()
         if len(unbounded_crosses) == 0:
@@ -130,8 +129,8 @@ class WordSpace:
                 index_to_take = min(np.random.poisson(lam=2), sorted_options.shape[0] - 1)
             else:
                 index_to_take = 0
-            word_split_column_index: int = sorted_options.columns.get_loc('word_split') #type: ignore
-            value: Word = sorted_options.iat[index_to_take, word_split_column_index] #type: ignore
+            word_split_column_index: int = sorted_options.columns.get_loc('word_split')  # type: ignore
+            value: Word = sorted_options.iat[index_to_take, word_split_column_index]  # type: ignore
             return value
         return None
 
@@ -279,24 +278,25 @@ class WordSpace:
             possibilities: npt.NDArray[np.int32] = other_word_space.possibility_matrix[other_cross_index]
             # The word_split_char_{char_index} column contains indices of alphabet chars,
             # that will be used as indices to possibilities (alphabet-length vector of distinct char counts)
-            score_matrix[:, cross_index] = possibilities[words_dataframe[f"word_split_char_{char_index}"]]
+            score_matrix[:, cross_index] = possibilities[
+                words_dataframe[f"word_split_char_{char_index}"]]  # type: ignore
 
         # Any character has score 0 -> don't consider it
-        positive_mask = (score_matrix > 0).all(axis=1)
+        positive_mask = (score_matrix > 0).all(axis=1)  # type: ignore
 
         # Calculate total scores (sum across crosses for each word)
-        total_scores = score_matrix.sum(axis=1)
+        total_scores = score_matrix.sum(axis=1)  # type: ignore
 
-        if total_scores.size > 30:
-            threshold = np.percentile(total_scores, 95)
-            best_mask = (total_scores >= threshold) & positive_mask
+        if total_scores.size > 30:  # type: ignore
+            threshold = np.percentile(total_scores, 95)  # type: ignore
+            best_mask = (total_scores >= threshold) & positive_mask  # type: ignore
         else:
             best_mask = positive_mask
 
         positive_words_with_score = pd.DataFrame({
-            'word_split': words_dataframe['word_split'].values[best_mask],
-            'score': total_scores[best_mask]
-        })
+            'word_split': words_dataframe['word_split'].values[best_mask],  # type: ignore
+            'score': total_scores[best_mask]  # type: ignore
+        })  # type: ignore
 
         sorted_scores = positive_words_with_score.sort_values(by='score', ascending=False)
         return sorted_scores.head(1) if not sorted_scores.empty else None

@@ -33,13 +33,15 @@ class WordList:
             word_index: int = int(word_index_hashable)  # type: ignore
             word_properties: dict[str, int | float | str] = row.to_dict()  # type: ignore
 
-            word = Word(str(word_properties['word_label_text']),
-                        str(word_properties['word_description_text']),
-                        index=word_index,
-                        language=language,
-                        score=float(word_properties['score']) if 'score' in word_properties else None,
-                        word_list=self,
-                        word_concept_id=word_properties['word_concept_id'])
+            word = Word(
+                str(word_properties['word_label_text']),
+                str(word_properties['word_description_text']),
+                index=word_index,
+                language=language,
+                score=float(word_properties['score']) if 'score' in word_properties else None,
+                word_list=self,
+                word_concept_id=int(word_properties['word_concept_id'])  # type: ignore
+            )
 
             word_len = len(word)
             if word_len not in self.word_indices_by_length_set:

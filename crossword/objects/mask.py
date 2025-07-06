@@ -18,7 +18,7 @@ class Mask:
     def __hash__(self) -> int:
         return hash(self.mask_string())
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, type(self)):
             return False
         return self.mask == other.mask

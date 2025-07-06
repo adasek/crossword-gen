@@ -1,16 +1,23 @@
+from __future__ import annotations
+
 import copy
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 
 from .charlist import CharList
 from .language import split
 
+if TYPE_CHECKING:
+    from .word_list import WordList
+
 
 class Word(CharList):
     """Represents a word with its characters, description, and associated metadata."""
 
     def __init__(self, word_string: list[str] | str, description: str = "", language: str = 'cs', index: int = -1,
-                 word_list=None, word_concept_id=None, score=None):
+                 word_list: Optional[WordList] = None, word_concept_id: Optional[int] = None,
+                 score: Optional[float] = None):
         if isinstance(word_string, list):
             word_as_list = word_string
         else:
@@ -33,12 +40,14 @@ class Word(CharList):
         if self.score is not None:
             return self.score
         if self.word_list is None:
-            return 0
-        word_row = self.word_list.words_df.loc[self.word_list.words_df['word_concept_id'] == self.word_concept_id]
+            return 0.0
+        word_row = self.word_list.words_df.loc[
+            self.word_list.words_df['word_concept_id'] == self.word_concept_id
+            ]  # type: ignore
         if 'score' in word_row.columns and not np.isnan(word_row.iloc[0]['score']):
-            self.score = word_row.iloc[0]['score']
+            self.score = float(word_row.iloc[0]['score'])  # type: ignore
         else:
-            self.score = 0
+            self.score = 0.0
         return self.score
 
     def __deepcopy__(self, memo: dict[int, object]):
@@ -49,11 +58,11 @@ class Word(CharList):
         # Add the new object to memo before recursion to handle self-references
         memo[id(self)] = result
 
-        for key, value in self.__dict__.items():
+        for key, value in self.__dict__.items():  # type: ignore
             if key in ['word_list']:
-                setattr(result, key, value)
+                setattr(result, key, value)  # type: ignore
             else:
                 # Recursively deepcopy other attributes
-                setattr(result, key, copy.deepcopy(value, memo))
+                setattr(result, key, copy.deepcopy(value, memo))  # type: ignore
 
         return result

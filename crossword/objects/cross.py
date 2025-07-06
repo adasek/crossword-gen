@@ -88,9 +88,9 @@ class Cross:
         """Returns True if at least one of the word spaces is bound to this cross, or it is unbound."""
         return not self.is_fully_bound()
 
-    def __eq__(self, other):
+    def __eq__(self, other: object):
         if not isinstance(other, type(self)):
-            return NotImplemented
+            return False
         return self.coordinates == other.coordinates
 
     def __hash__(self):
