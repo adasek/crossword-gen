@@ -32,14 +32,7 @@ jobs:
 
       - name: Run Tests
         if: always()
-        run: ./bin/test
-
-      - name: Upload pytest results (if structured output added later)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pytest-results
-          path: .pytest_cache/
+        run: poetry run python3 -m pytest
 
   benchmark:
     name: Performance Benchmark
@@ -51,4 +44,14 @@ jobs:
       - uses: ./.github/actions/setup-python-poetry
 
       - name: Run performance benchmark
-        run: poetry run python3 -m benchmark.benchmark
+        run: poetry run python3 -m benchmark.benchmark >> $GITHUB_OUTPUT
+
+      - name: Comment benchmark on PR
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            🧪 **Benchmark Results**
+            - 🧠 Solved Time: `${{ steps.benchmark.outputs.solved_time }}s`
+            - 📊 Average Score: `${{ steps.benchmark.outputs.avg_score }}`
+            - 🚫 Unsolvable Time: `${{ steps.benchmark.outputs.unsolvable_time }}s`
