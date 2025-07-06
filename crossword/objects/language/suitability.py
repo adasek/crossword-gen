@@ -1,4 +1,4 @@
-from .alphabet import alphabet_multiletters_from_singleletters, alphabet_set
+from .alphabet import alphabet_set
 from .split import split
 
 
@@ -19,11 +19,6 @@ def is_crossword_suitable(word: str, locale_code: str, max_length: int = 20) -> 
     for char in word_lower:
         if char not in alphabet_set_possible_characters:
             return False
-
-    # fast track: if word is short enough when we count multiletter ExemplarSet as 2
-    # it would be short enough when we don't
-    if alphabet_multiletters_from_singleletters(locale_code) and 0 < len(word_lower) <= max_length:
-        return True
 
     # Do the proper word split in the locale
     word_characters = split(word_lower, locale_code)

@@ -3,7 +3,7 @@ from typing import List, Union
 from .alphabet import alphabet
 
 
-def split(word: str, locale_code: str) -> Union[List[str], bool]:
+def split(word: str, locale_code: str) -> Union[List[str]]:
     """
     Split one word according to locale alphabet
 
@@ -24,5 +24,5 @@ def split(word: str, locale_code: str) -> Union[List[str], bool]:
                 found_match = True
                 break
         if not found_match:
-            return False
+            raise ValueError(f"Unknown letter encountered in word: {word}")
     return word_characters

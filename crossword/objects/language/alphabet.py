@@ -1,12 +1,13 @@
 from typing import (Callable, Dict, FrozenSet, Generic, List, ParamSpec, Set,
                     Tuple, TypeVar, cast)
 
-from icu import Collator, Locale, LocaleData  # type: ignore
+from icu import Collator, Locale, LocaleData  # type: ignore # pylint: disable=no-name-in-module
 
 P = ParamSpec("P")
 R = TypeVar("R")
 
 class Memoize(Generic[P, R]):
+    """A decorator class to memoize function calls with arguments and keyword arguments."""
     def __init__(self, fn: Callable[P, R]) -> None:
         self.fn = fn
         self.memo: Dict[
@@ -37,20 +38,18 @@ def alphabet(locale_code: str) -> List[str]:
     Returns:
         List of different characters(including clusters) for the given locale alphabetically sorted
     """
-    collator = Collator.createInstance(Locale(locale_code))
-    return sorted(list(alphabet_set(locale_code=locale_code, only_characters=False)), key=collator.getSortKey)
+    collator = Collator.createInstance(Locale(locale_code))  # type: ignore
+    return sorted(
+        list(alphabet_set(locale_code=locale_code, only_characters=False)),
+        key=collator.getSortKey  # type: ignore
+    )
 
 
 @Memoize
 def alphabet_set(locale_code: str, only_characters: bool = False) -> Set[str]:
-    locale_data = LocaleData(locale_code)
+    """Returns alphabet as a set of characters or clusters."""
+    locale_data = LocaleData(locale_code) # type: ignore
     if only_characters:
-        return set(list("".join(locale_data.getExemplarSet())))
-    else:
-        return set(locale_data.getExemplarSet())
+        return set(list("".join(locale_data.getExemplarSet()))) # type: ignore
 
-
-@Memoize
-def alphabet_multiletters_from_singleletters(locale_code: str) -> bool:
-    single_letters = [singleletter for singleletter in alphabet_set(locale_code) if len(singleletter) == 1]
-    return len(alphabet_set(locale_code, only_characters=True)) == len(single_letters)
+    return set(locale_data.getExemplarSet()) # type: ignore
