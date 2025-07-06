@@ -15,3 +15,8 @@ for msg in data:
     level = levels.get(msg.get("type"), "warning")
 
     print(f"::{level} file={path},line={line},col={col}::{msg_id}: {message}")
+
+if len(errors) > 0:
+    sys.exit(1)
+else:
+    sys.exit(0)

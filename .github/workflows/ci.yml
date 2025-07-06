@@ -18,19 +18,15 @@ jobs:
         run: poetry run python3 -m isort --check .
 
       - name: Run pylint
-        run: poetry run pylint config crossword --output-format=json > pylint-report.json
-
-      - name: Annotate pylint results
-        run: python .github/scripts/annotate_pylint.py
+        run: |
+          poetry run pylint config crossword --output-format=json > pylint-report.json || true
+          python .github/scripts/annotate_pylint.py
 
       - name: Run mypy
         if: always()
-        uses: tsuyoshicho/action-mypy@v5
-        with:
-          github_token: ${{ secrets.github_token }}
-          reporter: github-pr-review
-          level: warning
-          execute_command: 'poetry run mypy config crossword'
+        run: |
+          poetry run mypy config crossword --error-format=json > mypy-report.json || true
+          python .github/scripts/annotate_mypy.py
 
       - name: Run Tests
         if: always()
