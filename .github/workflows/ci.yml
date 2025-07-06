@@ -25,7 +25,9 @@ jobs:
       - name: Run mypy
         if: always()
         run: |
-          poetry run mypy --output=json config crossword > mypy-report.json || true
+          echo [ > mypy-report.json
+          poetry run mypy --output=json config crossword | sed -e 's/$/,/' >> mypy-report.json || true
+          echo ] >> mypy-report.json
           python .github/scripts/annotate_mypy.py
 
       - name: Run Tests
