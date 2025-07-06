@@ -112,8 +112,7 @@ def generate_crossword(crossword_task):
                                    max_failed_words=int(ENV['CROSSWORD_MAX_FAILED_WORDS']) or 50
                                    )
         logger.debug(f"Score: {solver.score} in {round(-start + (time.perf_counter()), 2)}s")
-        # if not solver.solution_found:
-        #    logger.debug(crossword)
+
         if crossword.is_success() and crossword.evaluate_score() > max_score:
             max_score = crossword.evaluate_score()
             max_crossword = crossword.get_copy()

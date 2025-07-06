@@ -1,12 +1,13 @@
 import random
 import time
+from typing import Optional
 
 import numpy as np
 
 from crossword.objects import WordList, WordSpace
 
 
-class Solver(object):
+class Solver:
     """
     A backtracking crossword puzzles word filler that uses priority-based
     word space selection and constraint propagation.
@@ -14,8 +15,11 @@ class Solver(object):
 
     def __init__(self):
         self.max_failed_words = 2000
-        self.t0 = None
-        self.t1 = None
+        self.t0: Optional[float]  = None
+        self.t1: Optional[float]  = None
+        self.score: Optional[int] = None
+        self.solution: Optional[list[WordSpace]] = None
+        self.counters: dict[str, int] = {}
         self.reset()
         self.randomize = 1.0
 
@@ -49,9 +53,6 @@ class Solver(object):
         self.randomize = randomize
         self.max_failed_words = max_failed_words
         self.t0 = time.time()
-
-        for key in self.counters.keys():
-            self.counters[key] = 0
 
     def _get_initial_word_spaces(self, crossword, word_list):
         """
@@ -100,7 +101,7 @@ class Solver(object):
 
             # Select next word space if none is currently being processed
             if current_word_space is None:
-                current_word_space = self._select_next_word_space(word_spaces, word_list)
+                current_word_space = self._select_next_word_space(word_spaces)
 
                 if current_word_space is None:
                     # No valid word spaces available - backtrack (potentially multiple steps)
@@ -122,17 +123,17 @@ class Solver(object):
                                                          max_backtrack_steps=min(5, len(assigned_stack)))
                     consecutive_backtracks = 0  # Reset counter after aggressive backtrack
             else:
-                # Assign word and propagate constraints
-                current_word_space = self._assign_word(
+                self._assign_word(
                     current_word_space, best_word, assigned_stack,
                     word_spaces, word_list, best_remaining
                 )
+                current_word_space = None
                 best_remaining = min(best_remaining, len(word_spaces))
                 consecutive_backtracks = 0  # Reset counter on successful assignment
 
         return self._finalize_solution(crossword, True)
 
-    def _select_next_word_space(self, word_spaces: list[WordSpace], word_list: WordList):
+    def _select_next_word_space(self, word_spaces: list[WordSpace]):
         """
         Select the next word space to fill based on priority heuristics.
 
@@ -160,8 +161,7 @@ class Solver(object):
                 choice_index = random.randint(0, len(sorted_spaces) - 1)
 
         selected_space = sorted_spaces[choice_index]
-        # todo: accessor
-        selected_space.failed_words_index_list = []
+        selected_space.reset_failed_words()
         return selected_space
 
     def _assign_word(self, word_space, word, assigned_stack, word_spaces, word_list, best_remaining):
@@ -192,10 +192,9 @@ class Solver(object):
         if self.counters['assign'] % 100 == 0:
             self._report_progress(len(word_spaces), best_remaining)
 
-        return None  # Signal to select next word space
-
-    def _update_possibilities_affected(self, affected_word_spaces: list[WordSpace], word_list: WordList):
-        # Propagate constraints to affected spaces
+    @staticmethod
+    def _update_possibilities_affected(affected_word_spaces: list[WordSpace], word_list: WordList):
+        """ Propagate constraints to affected spaces """
         for affected_space in affected_word_spaces:
             affected_space.update_possibilities(word_list)
 
@@ -227,10 +226,9 @@ class Solver(object):
         steps_to_backtrack = self._calculate_backtrack_steps(assigned_stack, max_backtrack_steps)
 
         backtracked_spaces = []
-        last_space = None
 
         # Perform multi-step backtracking
-        for step in range(steps_to_backtrack):
+        for _step in range(steps_to_backtrack):
             if not assigned_stack:
                 break
 
@@ -310,7 +308,8 @@ class Solver(object):
         # track failure history more sophisticated
         return min(self.counters['backtrack'] % 10, 5)
 
-    def _count_recent_low_option_assignments(self, assigned_stack, lookback=3):
+    @staticmethod
+    def _count_recent_low_option_assignments(assigned_stack, lookback=3):
         """
         Count how many recent assignments were made to word spaces with very few options.
         This indicates we might be in an over-constrained branch.
@@ -328,7 +327,7 @@ class Solver(object):
         low_option_count = 0
         # Check the last few assignments
         for i in range(min(lookback, len(assigned_stack))):
-            word_space, word = assigned_stack[-(i + 1)]
+            word_space, _word = assigned_stack[-(i + 1)]
             # Heuristic: if a word space had very few failed words,
             # it probably had few options when we assigned to it
             if len(word_space.failed_words_index_list) <= 2:
@@ -352,15 +351,15 @@ class Solver(object):
             Solution or False
         """
         self.t1 = time.time()
-        self.solved = True
-        self.solution_found = solution_found
 
         if solution_found:
             self.score = crossword.evaluate_score()
             self.solution = crossword.word_spaces
             return crossword.word_spaces
-        else:
-            return False
+
+        self.score = None
+        self.solution = None
+        return False
 
     def _report_progress(self, remaining_spaces, best_remaining):
         """Report solving progress."""
@@ -376,14 +375,10 @@ class Solver(object):
         Raises:
             Exception: If called before solve() completes
         """
-        if not self.solved:
-            raise Exception("Not solved")
         return self.t1 - self.t0
 
     def reset(self):
         """Reset solver state for a new solving attempt."""
         self.score = 0
-        self.solved = False
-        self.solution_found = False
         self.solution = None
         self.counters = {'assign': 0, 'backtrack': 0, 'failed': 0}
