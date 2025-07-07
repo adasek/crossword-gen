@@ -34,6 +34,11 @@ class WordSpace:
         self.crosses: list[Cross] = []
         self.occupied_by: Optional[Word] = None
         self.possibility_matrix: Optional[npt.NDArray[np.int32]] = None
+
+        self.possibility_matrix_version: int = 0
+        self.max_possibilities_on_cross_value_version: int = -1
+        self.max_possibilities_on_cross_value: int = 0
+
         self.start: Coordinates = start
         self.length: int = length
         self.direction: Direction = direction
@@ -55,6 +60,7 @@ class WordSpace:
         """Update possibility matrix based on current state."""
         if self.possibility_matrix is None:
             raise ValueError("Possibility matrix not initialized")
+        self.possibility_matrix_version += 1
 
         unbounded_crosses = self._get_unbounded_crosses()
 
@@ -108,13 +114,10 @@ class WordSpace:
 
     def solving_priority(self) -> int:
         """Calculate solving priority for this WordSpace."""
-        unbounded_crosses = self._get_unbounded_crosses()
-        if len(unbounded_crosses) == 0:
-            # This is a must-have word!
-            return 0
-
-        data = self._count_candidate_crossings()
         # By returning the minimum, crosses with fewer candidates will be prioritized.
+        data = self._count_candidate_crossings()
+        if len(data) == 0:
+            return 0
         return min(data)
 
     def find_best_option(self, word_list: WordList, randomize: float = 0.0) -> Optional[Word]:
@@ -184,8 +187,11 @@ class WordSpace:
     def max_possibilities_on_cross(self, cross: Cross) -> int:
         """Get a maximum number of crossing words once a specific char is bound to the cross."""
         assert self.possibility_matrix is not None
+        if self.max_possibilities_on_cross_value_version == self.possibility_matrix_version:
+            return self.max_possibilities_on_cross_value
         possibilities: npt.NDArray[np.int32] = self.possibility_matrix[self.crosses.index(cross)]
-        return int(np.max(possibilities))
+        self.max_possibilities_on_cross_value = int(np.max(possibilities))
+        return self.max_possibilities_on_cross_value
 
     def to_json(self, export_occupied_by: bool = False) -> dict[str, JsonValue]:
         """Convert to JSON representation."""

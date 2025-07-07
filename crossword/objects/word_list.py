@@ -127,11 +127,14 @@ class WordList:
             for cross_char_index in cross_char_indices
         ]
 
-    @lru_cache(maxsize=10000)
-    def candidate_char_vector(self, mask: Mask, chars: Word, cross_char_index):
+    @lru_cache(maxsize=10000) # type: ignore
+    def candidate_char_vector(self, mask: Mask, chars: Word, cross_char_index: int) -> npt.NDArray[np.int32]:
+        """
+        Returns a vector of counts of characters in the alphabet for a specific cross character index.
+        """
         column_name = f"word_split_char_{cross_char_index}"
-        words_indices = self.words_indices_without_failed(mask, chars)
-        words_subset = self.words_df[column_name].iloc[words_indices]
+        words_indices = self.words_indices(mask, chars)
+        words_subset = self.words_df[column_name].iloc[words_indices] # type: ignore
         # For categorical columns, value_counts preserves all categories
         counts: npt.NDArray[np.int32] = np.bincount(
             words_subset,  # type: ignore
