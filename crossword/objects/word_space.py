@@ -62,7 +62,6 @@ class WordSpace:
         mask, chars = self._mask_current()
         candidate_char_vectors = word_list.candidate_char_vectors(mask,
                                                                   chars,
-                                                                  self.failed_words_index_list,
                                                                   cross_char_indices)
 
         for candidate_char_vector, cross in zip(candidate_char_vectors, unbounded_crosses):

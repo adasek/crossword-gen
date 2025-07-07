@@ -115,26 +115,29 @@ class WordList:
         ]
         return set.intersection(*single_letter_sets)
 
-    def candidate_char_vectors(self, mask: Mask, chars: Word, failed_indices: list[int],
+    def candidate_char_vectors(self, mask: Mask, chars: Word,
                                cross_char_indices: list[int]) -> list[npt.NDArray[np.int32]]:
         """
         Returns a list of vectors representing the counts of characters in the alphabet for each cross character index.
         Each element corresponds to an alphabet index of a potentially assigned cross character
         """
 
-        column_names = [f"word_split_char_{cross_char_index}" for cross_char_index in cross_char_indices]
+        return [
+            self.candidate_char_vector(mask, chars, cross_char_index)
+            for cross_char_index in cross_char_indices
+        ]
 
-        words_indices = self.words_indices_without_failed(mask, chars, failed_indices)
-        words_subset = self.words_df[column_names].iloc[words_indices]
-        candidate_vectors = []
-        for column_name in column_names:
-            # For categorical columns, value_counts preserves all categories
-            counts: npt.NDArray[np.int32] = np.bincount(
-                words_subset[column_name],  # type: ignore
-                minlength=len(self.alphabet)
-            )  # type: ignore
-            candidate_vectors.append(counts)
-        return candidate_vectors
+    @lru_cache(maxsize=10000)
+    def candidate_char_vector(self, mask: Mask, chars: Word, cross_char_index):
+        column_name = f"word_split_char_{cross_char_index}"
+        words_indices = self.words_indices_without_failed(mask, chars)
+        words_subset = self.words_df[column_name].iloc[words_indices]
+        # For categorical columns, value_counts preserves all categories
+        counts: npt.NDArray[np.int32] = np.bincount(
+            words_subset,  # type: ignore
+            minlength=len(self.alphabet)
+        )  # type: ignore
+        return counts
 
     def __hash__(self) -> int:
         return hash(self.dataframe_hash)
